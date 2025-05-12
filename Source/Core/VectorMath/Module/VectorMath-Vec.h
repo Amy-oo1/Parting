@@ -107,6 +107,8 @@ namespace Math {
 
 		Type* Data(void) { return this->m_Data; }
 		const Type* Data(void) const { return this->m_Data; }
+
+		constexpr static Vec Zero(void) { return Vec{ static_cast<Type>(0) }; }
 	};
 
 	template <typename Type>
@@ -199,7 +201,7 @@ namespace Math {
 		Vec<Type, 3>& XYZ(void) { return *reinterpret_cast<Vec<Type, 3>*>(&this->X); }
 		const Vec<Type, 3>& XYZ(void) const { return *reinterpret_cast<const Vec<Type, 3>*>(&this->X); }
 
-		constexpr static Vec zero(void) { return Vec{ static_cast<Type>(0) }; }
+		constexpr static Vec Zero(void) { return Vec{ static_cast<Type>(0) }; }
 
 
 	};
@@ -382,32 +384,192 @@ namespace Math {
 	template<typename Type> constexpr Vec<bool, 4> operator >= (const Vec<Type, 4>& a, Type b) { return Vec<bool, 4>{a.X >= b, a.Y >= b, a.Z >= b, a.W >= b}; }
 
 
-	template <typename Type, Uint32 N>
-	Type Dot(const Vec<Type, N>& a, const Vec<Type, N>& b) {
+	template <typename Type, Uint32 N>Type Dot(const Vec<Type, N>& a, const Vec<Type, N>& b) {
 		Type result{ 0 };
 		for (Uint32 Index = 0; Index < N; ++Index)
 			result += a[Index] * b[Index];
 
 		return result;
 	}
-
-	template <typename Type>
-	constexpr Type Dot(const Vec<Type, 2>& a, const Vec<Type, 2>& b) { return a.X * b.X + a.Y * b.Y; }
-
-	template <typename Type>
-	constexpr Type Dot(const Vec<Type, 3>& a, const Vec<Type, 3>& b) { return a.X * b.X + a.Y * b.Y + a.Z * b.Z; }
-
-	template <typename Type>
-	constexpr Type Dot(const Vec<Type, 4>& a, const Vec<Type, 4>& b) { return a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W; }
+	template <typename Type>constexpr Type Dot(const Vec<Type, 2>& a, const Vec<Type, 2>& b) { return a.X * b.X + a.Y * b.Y; }
+	template <typename Type>constexpr Type Dot(const Vec<Type, 3>& a, const Vec<Type, 3>& b) { return a.X * b.X + a.Y * b.Y + a.Z * b.Z; }
+	template <typename Type>constexpr Type Dot(const Vec<Type, 4>& a, const Vec<Type, 4>& b) { return a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W; }
 
 
-	template <typename Type, Uint32 N>
-	Type LengthSquared(const Vec<Type, N>& a) { return Dot(a, a); }
+	template <typename Type, Uint32 N>Type LengthSquared(const Vec<Type, N>& a) { return Dot(a, a); }
+	template <typename Type, Uint32 N>Type Length(const Vec<Type, N>& a) { return Sqrt(LengthSquared(a)); }
 
-	template <typename Type, Uint32 N>
-	Type Length(const Vec<Type, N>& a) { return Sqrt(LengthSquared(a)); }
+	template <typename Type, Uint32 N>Vec<Type, N> Normalize(const Vec<Type, N>& a) { return a / Length(a); }
+
+	template <typename Type, Uint32 N> Vec<Type, N> Pow(const Vec<Type, N>& a, float p) {
+		Vec<Type, N> result;
+		for (Uint32 Index = 0; Index < N; ++Index)
+			result[Index] = Pow(a[Index], p);
+		return result;
+	}
+
+	template <typename Type, Uint32 N>Vec<bool, N> IsNear(const Vec<Type, N>& a, const Vec<Type, N>& b, float epsilon = Epsilon) {
+		Vec<bool, N> result;
+		for (int Index = 0; Index < N; ++Index)
+			result[Index] = IsNear(a[Index], b[Index], epsilon);
+		return result;
+	}
+	template <typename Type, Uint32 N>Vec<bool, N> IsNear(const Vec<Type, N>& a, Type b, float epsilon = Epsilon) {
+		Vec<bool, N> result;
+		for (Uint32 Index = 0; Index < N; ++Index)
+			result[Index] = IsNear(a[Index], b, epsilon);
+		return result;
+	}
+	template <typename Type, Uint32 N>Vec<bool, N> IsNear(Type a, const Vec<Type, N>& b, float epsilon = Epsilon) {
+		Vec<bool, N> result;
+		for (Uint32 Index = 0; Index < N; ++Index)
+			result[Index] = IsNear(a, b[Index], epsilon);
+		return result;
+	}
+
+	template <typename Type, Uint32 N>Vec<bool, N> Isfinite(const Vec<Type, N>& a) {
+		Vec<bool, N> result;
+		for (Uint32 Index = 0; Index < N; ++Index)
+			result[Index] = isfinite(a[Index]);
+		return result;
+	}
+
+	template <typename Type, Uint32 N>Vec<int, N> Round(const Vec<Type, N>& a) {
+		Vec<Uint32, N> result;
+		for (Uint32 Index = 0; Index < N; ++Index)
+			result[Index] = Round(a[Index]);
+		return result;
+	}
+
+	template <typename Type>constexpr Vec<Type, 3> Cross(const Vec<Type, 3>& a, const Vec<Type, 3>& b) {
+		return Vec<Type, 3>{
+			a.Y* b.Z - a.Z * b.Y,
+				a.Z* b.X - a.X * b.Z,
+				a.X* b.Y - a.Y * b.X
+		};
+	}
+
+	template <typename Type>constexpr Vec<Type, 2> Orthogonal(const Vec<Type, 2>& a) { return Vec<Type, 2>{ -a.Y, a.X }; }
+	template <typename Type>constexpr Vec<Type, 3> orthogonal(const Vec<Type, 3>& a) { return (Abs(a.X) > Abs(a.Z)) ? Vec<Type, 3>{ -a.Y, a.X, static_cast<Type>(0) } : Vec<Type, 3>{ static_cast<Type>(0), -a.Z, a.Y }; }
+
+	template <typename Type, Uint32 N>constexpr Vec<Type, N> Min(const Vec<Type, N>& a, const Vec<Type, N>& b) { return Select(a < b, a, b); }
+	template <typename Type>constexpr Vec<Type, 2> Min(const Vec<Type, 2>& a, const Vec<Type, 2>& b) {
+		Vec<Type, 2> result;
+		result.X = (a.X < b.X) ? a.X : b.X;
+		result.Y = (a.Y < b.Y) ? a.Y : b.Y;
+		return result;
+	}
+	template <typename Type>constexpr Vec<Type, 3> Min(const Vec<Type, 3>& a, const Vec<Type, 3>& b) {
+		Vec<Type, 3> result;
+		result.X = (a.X < b.X) ? a.X : b.X;
+		result.Y = (a.Y < b.Y) ? a.Y : b.Y;
+		result.Z = (a.Z < b.Z) ? a.Z : b.Z;
+		return result;
+	}
+	template <typename Type>constexpr Vec<Type, 4> Min(const Vec<Type, 4>& a, const Vec<Type, 4>& b) {
+		Vec<Type, 4> result;
+		result.X = (a.X < b.X) ? a.X : b.X;
+		result.Y = (a.Y < b.Y) ? a.Y : b.Y;
+		result.Z = (a.Z < b.Z) ? a.Z : b.Z;
+		result.W = (a.W < b.W) ? a.W : b.W;
+		return result;
+	}
 
 
+	template <typename Type, Uint32 N>constexpr Vec<Type, N> Max(const Vec<Type, N>& a, const Vec<Type, N>& b) { return Select(a < b, b, a); }
+	template <typename Type>constexpr Vec<Type, 2> Max(const Vec<Type, 2>& a, const Vec<Type, 2>& b) {
+		Vec<Type, 2> result;
+		result.X = (a.X > b.X) ? a.X : b.X;
+		result.Y = (a.Y > b.Y) ? a.Y : b.Y;
+		return result;
+	}
+	template <typename Type>constexpr Vec<Type, 3> Max(const Vec<Type, 3>& a, const Vec<Type, 3>& b) {
+		Vec<Type, 3> result;
+		result.X = (a.X > b.X) ? a.X : b.X;
+		result.Y = (a.Y > b.Y) ? a.Y : b.Y;
+		result.Z = (a.Z > b.Z) ? a.Z : b.Z;
+		return result;
+	}
+	template <typename Type>constexpr Vec<Type, 4> Max(const Vec<Type, 4>& a, const Vec<Type, 4>& b) {
+		Vec<Type, 4> result;
+		result.X = (a.X > b.X) ? a.X : b.X;
+		result.Y = (a.Y > b.Y) ? a.Y : b.Y;
+		result.Z = (a.Z > b.Z) ? a.Z : b.Z;
+		result.W = (a.W > b.W) ? a.W : b.W;
+		return result;
+	}
+
+	template <typename Type, Uint32 N>constexpr Vec<Type, N> Abs(const Vec<Type, N>& a) { return Select(a < static_cast<Type>(0), -a, a); }
+	template <typename Type>constexpr Vec<Type, 2> Abs(const Vec<Type, 2>& a) {
+		Vec<Type, 2> result;
+		result.X = Abs(a.X);
+		result.y = Abs(a.Y);
+		return result;
+	}
+	template <typename Type>constexpr Vec<Type, 3> Abs(const Vec<Type, 3>& a) {
+		Vec<Type, 3> result;
+		result.X = Abs(a.X);
+		result.y = Abs(a.Y);
+		result.Z = Abs(a.Z);
+		return result;
+	}
+	template <typename Type>constexpr Vec<Type, 4> Abs(const Vec<Type, 4>& a) {
+		Vec<Type, 4> result;
+		result.X = Abs(a.X);
+		result.y = Abs(a.Y);
+		result.Z = Abs(a.Z);
+		result.W = Abs(a.W);
+		return result;
+	}
+
+	template <typename Type, Uint32 N>Vec<Type, N> Saturate(const Vec<Type, N>& value) { return Clamp(value, Vec<Type, N>::Zero(), Vec<Type, N>{ static_cast<Type>(1) }); }
+
+	template<typename Type, Uint32 N> Vec<Type, N> Select(const Vec<bool, N>& cond, const Vec<Type, N>& a, const Vec<Type, N>& b);
+	template<typename Type> constexpr Vec<Type, 2> Select(const Vec<bool, 2>& cond, const Vec<Type, 2>& a, const Vec<Type, 2>& b) { return Vec<Type, 2>{ cond.X ? a.X : b.X, cond.Y ? a.Y : b.Y }; }
+	template<typename Type> constexpr Vec<Type, 3> Select(const Vec<bool, 3>& cond, const Vec<Type, 3>& a, const Vec<Type, 3>& b) { return Vec<Type, 3>{ cond.X ? a.X : b.X, cond.Y ? a.Y : b.Y, cond.Z ? a.Z : b.Z }; }
+	template<typename Type> constexpr Vec<Type, 4> Select(const Vec<bool, 4>& cond, const Vec<Type, 4>& a, const Vec<Type, 4>& b) { return Vec<Type, 4>{ cond.X ? a.X : b.X, cond.Y ? a.Y : b.Y, cond.Z ? a.Z : b.Z, cond.W ? a.W : b.W }; }
+
+	template<Uint32 N> bool Any(const Vec<bool, N>& a) {
+		for (Uint32 Index = 0; Index < N; ++Index)
+			if (a[Index]) return true;
+		return false;
+	}
+	template<> constexpr bool Any(const Vec<bool, 2>& a) { return a.X || a.Y; }
+	template<> constexpr bool Any(const Vec<bool, 3>& a) { return a.X || a.Y || a.Z; }
+	template<> constexpr bool Any(const Vec<bool, 4>& a) { return a.X || a.Y || a.Z || a.W; }
+
+	template<Uint32 N> bool All(const Vec<bool, N>& a) {
+		for (Uint32 Index = 0; Index < N; ++Index)
+			if (!a[Index]) return false;
+		return true;
+	}
+	template<> constexpr bool All(const Vec<bool, 2>& a) { return a.X && a.Y; }
+	template<> constexpr bool All(const Vec<bool, 3>& a) { return a.X && a.Y && a.Z; }
+	template<> constexpr bool All(const Vec<bool, 4>& a) { return a.X && a.Y && a.Z && a.W; }
+
+	template<Uint32 N> Vec<bool, N> BitVec(Uint32 bits);
+	template<> constexpr Vec<bool, 2> BitVec(Uint32 bits) { return Vec<bool, 2>{ (bits & 1) != 0, (bits & 2) != 0 }; }
+	template<> constexpr Vec<bool, 3> BitVec(Uint32 bits) { return Vec<bool, 3>{ (bits & 1) != 0, (bits & 2) != 0, (bits & 4) != 0 }; }
+	template<> constexpr Vec<bool, 4> BitVec(Uint32 bits) { return Vec<bool, 4>{ (bits & 1) != 0, (bits & 2) != 0, (bits & 4) != 0, (bits & 8) != 0 }; }
+
+
+	template <typename Type, Uint32 N>Type MinComponent(const Vec<Type, N>& a) {
+		Type result{ a[0] };
+		for (Uint32 Index = 1; Index < N; ++Index)
+			result = Min(result, a[Index]);
+		return result;
+	}
+
+	template <typename Type, Uint32 N>Type MaxComponent(const Vec<Type, N>& a) {
+		Type result{ a[0] };
+		for (Uint32 Index = 1; Index < N; ++Index)
+			result = Max(result, a[Index]);
+		return result;
+	}
+
+	template<Uint32 N>constexpr Vec<float, N> Degrees(const Vec<float, N>& rad) { return rad * (180.f / PI_F); }
+
+	template<int N>constexpr Vec<float, N> Radians(const Vec<float, N>& deg) { return deg * (PI_F / 180.f); }
 
 
 

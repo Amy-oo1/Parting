@@ -24,7 +24,9 @@ PARTING_EXPORT PARTING_SUBMODE_IMPORT(SSAOPass)
 #include "Core/Platform/Module/Platform.h"
 #include "Core/Utility/Module/Utility.h"
 
-#include "Engine/Render/Module/SSAOPass.h"
+#include "Engine/Render/Module/RenderPass-Base.h"
+#include "Engine/Render/Module/RenderPass-DepthPass.h"
+#include "Engine/Render/Module/RenderPass-SSAOPass.h"
 
 #endif // PARTING_MODULE_BUILD
 

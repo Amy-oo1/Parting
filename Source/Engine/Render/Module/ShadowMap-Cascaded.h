@@ -54,6 +54,9 @@ namespace Parting {
 
 
 	public:
+		Imp_Texture* Get_Texture(void)const { return this->m_ShadowMapTexture.Get(); }
+
+		void SetupProxyView(void);
 
 
 	private:
@@ -100,5 +103,13 @@ namespace Parting {
 			this->m_PerObjectShadows.emplace_back(MakeShared<PlanarShadowMap<APITag>>(device, this->m_ShadowMapTexture.Get(), numCascades + Object, cascadeViewport));
 			this->m_PerObjectShadows.back()->Set_FalloffDistance(0.f); // disable falloff on per-object shadows: their bboxes are short by design
 		}
+	}
+	template<RHI::APITagConcept APITag>
+	inline void CascadedShadowMap<APITag>::SetupProxyView(void) {
+		for (auto& cascade : this->m_Cascades)
+			cascade->SetupProxyView();
+
+		for (auto& perObjectShadow : this->m_PerObjectShadows)
+			perObjectShadow->SetupProxyView();
 	}
 }

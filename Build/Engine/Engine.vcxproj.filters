@@ -63,7 +63,7 @@
     <ClInclude Include="..\..\Source\Engine\Application\Module\GLFWWrapper.h">
       <Filter>Application\Module</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\Engine\Render\Module\SSAOPass.h">
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-SSAOPass.h">
       <Filter>Render\Module</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass.h">
@@ -106,6 +106,15 @@
       <Filter>Render\Module</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Engine\Render\Module\View.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Engine\Module\FrameBufferFactory.h">
+      <Filter>Engine\Modlue</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-DepthPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-Base.h">
       <Filter>Render\Module</Filter>
     </ClInclude>
   </ItemGroup>

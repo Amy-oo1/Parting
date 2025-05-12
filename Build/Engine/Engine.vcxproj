@@ -159,16 +159,19 @@
     <ClInclude Include="..\..\Source\Engine\Engine\Module\BindingCache.h" />
     <ClInclude Include="..\..\Source\Engine\Engine\Module\CommonRenderPasses.h" />
     <ClInclude Include="..\..\Source\Engine\Engine\Module\DescriptorTableManager.h" />
+    <ClInclude Include="..\..\Source\Engine\Engine\Module\FrameBufferFactory.h" />
     <ClInclude Include="..\..\Source\Engine\Engine\Module\SceneGraph.h" />
     <ClInclude Include="..\..\Source\Engine\Engine\Module\ShaderFactory.h" />
     <ClInclude Include="..\..\Source\Engine\Engine\Module\TextureCache.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\DrawStrategy.h" />
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-Base.h" />
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-DepthPass.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\ShadowMap-Base.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\ShadowMap-Cascaded.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\ShadowMap-Planar.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\ShadowMap.h" />
-    <ClInclude Include="..\..\Source\Engine\Render\Module\SSAOPass.h" />
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-SSAOPass.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\View.h" />
   </ItemGroup>
   <ItemGroup>

@@ -72,3 +72,11 @@ PARTING_EXPORT STDNODISCARD inline constexpr EnumType operator^ (EnumType lhs, E
 PARTING_EXPORT inline constexpr EnumType& operator|= (EnumType& lhs, EnumType rhs) noexcept { return lhs = lhs | rhs; }\
 PARTING_EXPORT inline constexpr EnumType& operator&= (EnumType& lhs, EnumType rhs) noexcept { return lhs = lhs & rhs; }\
 PARTING_EXPORT inline constexpr EnumType& operator^= (EnumType& lhs, EnumType rhs) noexcept { return lhs = lhs ^ rhs; }
+
+#define  FRIEDND_ENUM_CLASS_OPERATORS(EnumType) \
+STDNODISCARD friend inline constexpr EnumType operator| (EnumType lhs, EnumType rhs) noexcept { return static_cast<EnumType>(static_cast<UnderlyingType<EnumType>>(lhs) | static_cast<UnderlyingType<EnumType>>(rhs)); }\
+STDNODISCARD friend inline constexpr EnumType operator& (EnumType lhs, EnumType rhs) noexcept { return static_cast<EnumType>(static_cast<UnderlyingType<EnumType>>(lhs) & static_cast<UnderlyingType<EnumType>>(rhs)); }\
+STDNODISCARD friend inline constexpr EnumType operator^ (EnumType lhs, EnumType rhs) noexcept { return static_cast<EnumType>(static_cast<UnderlyingType<EnumType>>(lhs) ^ static_cast<UnderlyingType<EnumType>>(rhs)); }\
+friend inline constexpr EnumType& operator|= (EnumType& lhs, EnumType rhs) noexcept { return lhs = lhs | rhs; }\
+friend inline constexpr EnumType& operator&= (EnumType& lhs, EnumType rhs) noexcept { return lhs = lhs & rhs; }\
+friend inline constexpr EnumType& operator^= (EnumType& lhs, EnumType rhs) noexcept { return lhs = lhs ^ rhs; }

@@ -82,7 +82,7 @@ namespace Math {
 
 		static Mat Identity(void) { return Mat::Diagonal(Type{ 1 }); }
 
-		static Mat Zero(void) { return Mat(Type{ 0 }); }
+		static Mat Zero(void) { return Mat{ Type{ 0 } }; }
 	};
 
 	template <typename Type>
@@ -145,9 +145,9 @@ namespace Math {
 				Type{ 0 }, Value.Y };
 		}
 
-		constexpr static Mat Identity(void) { return this->Diagonal(Type{ 1 }); }
+		constexpr static Mat Identity(void) { return Mat<Type, 3, 3>::Diagonal(Type{ 1 }); }
 
-		constexpr static Mat Zero(void) { return Mat(Type{ 0 }); }
+		constexpr static Mat Zero(void) { return Mat{ static_cast<Type>(0) }; }
 
 
 	};
@@ -227,7 +227,7 @@ namespace Math {
 			};
 		}
 
-		constexpr static Mat Identity(void) { return this->Diagonal(static_cast<Type>(1)); }
+		constexpr static Mat Identity(void) { return Mat<Type, 3, 3>::Diagonal(static_cast<Type>(1)); }
 
 		constexpr static Mat Zero(void) { return Mat{ static_cast<Type>(0) }; }
 
@@ -382,7 +382,7 @@ namespace Math {
 			};
 		}
 
-		constexpr static Mat diagonal(Type diag) {
+		constexpr static Mat Diagonal(Type diag) {
 			return Mat{
 				diag, static_cast<Type>(0), static_cast<Type>(0),static_cast<Type>(0),
 				static_cast<Type>(0), diag, static_cast<Type>(0),static_cast<Type>(0),
@@ -390,8 +390,7 @@ namespace Math {
 				static_cast<Type>(0), static_cast<Type>(0), static_cast<Type>(0), diag
 			};
 		}
-
-		constexpr static Mat diagonal(Vec<Type, 4> Value) {
+		constexpr static Mat Diagonal(Vec<Type, 4> Value) {
 			return Mat{
 				Value.X, static_cast<Type>(0), static_cast<Type>(0),static_cast<Type>(0),
 				static_cast<Type>(0), Value.Y, static_cast<Type>(0),static_cast<Type>(0),
@@ -400,7 +399,7 @@ namespace Math {
 			};
 		}
 
-		constexpr static Mat Identity(void) { return this->Diagonal(static_cast<Type>(1)); }
+		constexpr static Mat Identity(void) { return Mat<Type, 4, 4>::Diagonal(static_cast<Type>(1)); }
 
 		constexpr static Mat Zero(void) { return Mat{ static_cast<Type>(0) }; }
 	};
@@ -494,22 +493,19 @@ namespace Math {
 #undef DEFINE_RELATIONAL_OPERATORS
 
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator - (const Mat<Type, RowCount, ColCount>& a) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> operator - (const Mat<Type, RowCount, ColCount>& a) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = -a.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator ! (const Mat<Type, RowCount, ColCount>& a) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> operator ! (const Mat<Type, RowCount, ColCount>& a) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = !a.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator ~ (const Mat<Type, RowCount, ColCount>& a) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> operator ~ (const Mat<Type, RowCount, ColCount>& a) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = ~a.m_Data[Index];
@@ -520,29 +516,25 @@ namespace Math {
 
 
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator * (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> operator * (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a * b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator * (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> operator * (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] * b;
 		return result;
 	};
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator / (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> operator / (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a / b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator / (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> operator / (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] / b;
@@ -552,106 +544,91 @@ namespace Math {
 
 
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator + (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount>& operator + (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] + b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator + (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator + (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a + b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator + (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator + (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] + b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator - (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount>& operator - (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] - b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator - (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator - (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a - b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator - (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator - (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] - b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator & (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount>& operator & (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] & b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator & (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator & (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a & b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator & (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator & (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] & b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator | (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount>& operator | (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] | b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator | (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator | (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a | b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator | (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator | (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] | b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator ^ (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount>& operator ^ (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] ^ b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator ^ (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator ^ (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a ^ b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator ^ (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator ^ (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] ^ b;
@@ -661,34 +638,29 @@ namespace Math {
 
 
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator *= (Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator *= (Mat<Type, RowCount, ColCount>& a, Type b) {
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			a.m_Data[Index] *= b;
 		return a;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator /= (Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator /= (Mat<Type, RowCount, ColCount>& a, Type b) {
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			a.m_Data[Index] /= b;
 		return a;
 	}
 
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator += (Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator += (Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			a.m_Data[Index] += b.m_Data[Index];
 		return a;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator += (Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator += (Mat<Type, RowCount, ColCount>& a, Type b) {
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			a.m_Data[Index] += b;
 		return a;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator -= (Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator -= (Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			a.m_Data[Index] -= b.m_Data[Index];
 		return a;
@@ -698,38 +670,32 @@ namespace Math {
 			a.m_Data[Index] -= b;
 		return a;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator &= (Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator &= (Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			a.m_Data[Index] &= b.m_Data[Index];
 		return a;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator &= (Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator &= (Mat<Type, RowCount, ColCount>& a, Type b) {
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			a.m_Data[Index] &= b;
 		return a;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator |= (Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator |= (Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			a.m_Data[Index] |= b.m_Data[Index];
 		return a;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator |= (Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator |= (Mat<Type, RowCount, ColCount>& a, Type b) {
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			a.m_Data[Index] |= b;
 		return a;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator ^= (Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator ^= (Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			a.m_Data[Index] ^= b.m_Data[Index];
 		return a;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator ^= (Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator ^= (Mat<Type, RowCount, ColCount>& a, Type b) {
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			a.m_Data[Index] ^= b;
 		return a;
@@ -738,127 +704,109 @@ namespace Math {
 
 
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator == (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator == (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] == b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator == (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator == (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a == b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator == (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator == (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] == b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator != (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator != (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] != b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator != (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator != (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a != b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator != (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator != (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] != b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator < (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator < (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] < b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator < (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator < (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a < b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator < (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator < (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] < b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator > (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator > (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] > b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator > (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator > (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a > b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator > (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator > (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] > b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator <= (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator <= (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] <= b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator <= (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator <= (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a <= b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator <= (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator <= (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] <= b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator >= (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator >= (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] >= b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator >= (Type a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator >= (Type a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a >= b.m_Data[Index];
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> operator >= (const Mat<Type, RowCount, ColCount>& a, Type b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<bool, RowCount, ColCount> operator >= (const Mat<Type, RowCount, ColCount>& a, Type b) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] >= b;
@@ -867,8 +815,7 @@ namespace Math {
 
 	// Matrix multiplication
 
-	template <typename Type, Uint32 RowCount, Uint32 Inner, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> operator * (const Mat<Type, RowCount, Inner>& a, const Mat<Type, Inner, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 Inner, Uint32 ColCount>	Mat<Type, RowCount, ColCount> operator * (const Mat<Type, RowCount, Inner>& a, const Mat<Type, Inner, ColCount>& b) {
 		auto result{ Mat<Type, RowCount, ColCount>::Zero() };
 		for (Uint32 RowIndex = 0; RowIndex < RowCount; ++RowIndex)
 			for (Uint32 ColIndex = 0; ColIndex < ColCount; ++ColIndex)
@@ -877,14 +824,12 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount>& operator *= (Mat<Type, RowCount, ColCount>& a, const Mat<Type, ColCount, ColCount>& b) { return a = a * b; }
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator *= (Mat<Type, RowCount, ColCount>& a, const Mat<Type, ColCount, ColCount>& b) { return a = a * b; }
 
 
 	// Matrix-vector multiplication
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Vec<Type, RowCount> operator * (const Mat<Type, RowCount, ColCount>& a, const Vec<Type, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Vec<Type, RowCount> operator * (const Mat<Type, RowCount, ColCount>& a, const Vec<Type, ColCount>& b) {
 		auto result{ Vec<Type, RowCount>::Zero() };
 		for (Uint32 RowIndex = 0; RowIndex < RowCount; ++RowIndex)
 			for (Uint32 ColIndex = 0; ColIndex < ColCount; ++ColIndex)
@@ -892,8 +837,7 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Vec<Type, ColCount> operator * (const Vec<Type, RowCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Vec<Type, ColCount> operator * (const Vec<Type, RowCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		auto result{ Vec<Type, ColCount>::Zero() };
 		for (Uint32 RowIndex = 0; RowIndex < RowCount; ++RowIndex)
 			for (Uint32 ColIndex = 0; ColIndex < ColCount; ++ColIndex)
@@ -901,8 +845,7 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type>
-	Vec<Type, 3> operator * (const Mat<Type, 3, 3>& a, const Vec<Type, 3>& b) {
+	template <typename Type>	Vec<Type, 3> operator * (const Mat<Type, 3, 3>& a, const Vec<Type, 3>& b) {
 		Vec<Type, 3> result;
 		result.X = a.Row0.X * b.X + a.Row0.Y * b.Y + a.Row0.Z * b.Z;
 		result.Y = a.Row1.X * b.X + a.Row1.Y * b.Y + a.Row1.Z * b.Z;
@@ -910,8 +853,7 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type>
-	Vec<Type, 3> operator * (const Vec<Type, 3>& a, const Mat<Type, 3, 3>& b) {
+	template <typename Type>	Vec<Type, 3> operator * (const Vec<Type, 3>& a, const Mat<Type, 3, 3>& b) {
 		Vec<Type, 3> result;
 		result.X = a.X * b.Row0.X + a.Y * b.Row1.X + a.Z * b.Row2.X;
 		result.Y = a.X * b.Row0.Y + a.Y * b.Row1.Y + a.Z * b.Row2.Y;
@@ -919,8 +861,7 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type>
-	Vec<Type, 4> operator * (const Mat<Type, 4, 4>& a, const Vec<Type, 4>& b) {
+	template <typename Type>	Vec<Type, 4> operator * (const Mat<Type, 4, 4>& a, const Vec<Type, 4>& b) {
 		Vec<Type, 4> result;
 		result.X = a.Row0.X * b.X + a.Row0.Y * b.Y + a.Row0.Z * b.Z + a.Row0.W * b.W;
 		result.Y = a.Row1.X * b.X + a.Row1.Y * b.Y + a.Row1.Z * b.Z + a.Row1.W * b.W;
@@ -929,8 +870,7 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type>
-	Vec<Type, 4> operator * (const Vec<Type, 4>& a, const Mat<Type, 4, 4>& b) {
+	template <typename Type>	Vec<Type, 4> operator * (const Vec<Type, 4>& a, const Mat<Type, 4, 4>& b) {
 		Vec<Type, 4> result;
 		result.X = a.X * b.Row0.X + a.Y * b.Row1.X + a.Z * b.Row2.X + a.W * b.row3.X;
 		result.Y = a.X * b.Row0.Y + a.Y * b.Row1.Y + a.Z * b.Row2.Y + a.W * b.row3.Y;
@@ -939,13 +879,11 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type, Uint32 N>
-	Vec<Type, N> operator *= (Vec<Type, N>& a, const Mat<Type, N, N>& b) { return a = a * b; }
+	template <typename Type, Uint32 N>	Vec<Type, N> operator *= (Vec<Type, N>& a, const Mat<Type, N, N>& b) { return a = a * b; }
 
 	// Other math functions
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, ColCount, RowCount> Transpose(const Mat<Type, RowCount, ColCount>& a) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, ColCount, RowCount> Transpose(const Mat<Type, RowCount, ColCount>& a) {
 		Mat<Type, ColCount, RowCount> result;
 		for (Uint32 RowIndex = 0; RowIndex < RowCount; ++RowIndex)
 			for (Uint32 ColIndex = 0; ColIndex < ColCount; ++ColIndex)
@@ -953,8 +891,7 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type, Uint32 N>
-	Mat<Type, N, N> Pow(const Mat<Type, N, N>& a, Uint32 b) {
+	template <typename Type, Uint32 N>Mat<Type, N, N> Pow(const Mat<Type, N, N>& a, Uint32 b) {
 		if (b <= 0)
 			return Mat<Type, N, N>::Identity();
 		if (b == 1)
@@ -970,8 +907,7 @@ namespace Math {
 		return oddpart * evenpart;
 	}
 
-	template <typename Type, Uint32 N>
-	Mat<Type, N, N> Inverse(const Mat<Type, N, N>& m) {
+	template <typename Type, Uint32 N>Mat<Type, N, N> Inverse(const Mat<Type, N, N>& m) {
 		// Calculate inverse using Gaussian elimination
 		auto a{ m }, b{ Mat<Type, N, N>::Identity() };
 
@@ -1013,10 +949,7 @@ namespace Math {
 		// and b should have been transformed into the inverse of the original a.
 		return b;
 	}
-
-	// Inverse specialization for 2x2
-	template <typename Type>
-	Mat<Type, 2, 2> Inverse(const Mat<Type, 2, 2>& a) {
+	template <typename Type>Mat<Type, 2, 2> Inverse(const Mat<Type, 2, 2>& a) {
 		Mat<Type, 2, 2> result{
 			a[1][1], -a[0][1],
 			-a[1][0], a[0][0]
@@ -1024,8 +957,7 @@ namespace Math {
 		return result / Determinant(a);
 	}
 
-	template <typename Type, Uint32 N>
-	Type Determinant(const Mat<Type, N, N>& m) {
+	template <typename Type, Uint32 N>Type Determinant(const Mat<Type, N, N>& m) {
 		// Calculate determinant using Gaussian elimination
 
 		Mat<Type, N, N> a = m;
@@ -1068,14 +1000,8 @@ namespace Math {
 		// and we've accumulated the original a's determinant in result.
 		return result;
 	}
-
-	// Determinant specialization for 2x2
-	template <typename Type>
-	Type Determinant(const Mat<Type, 2, 2>& a) { return Type{ a[0][0] * a[1][1] - a[0][1] * a[1][0] }; }
-
-	// Determinant specialization for 3x3
-	template <typename Type>
-	Type Determinant(const Mat<Type, 3, 3>& a) {
+	template <typename Type>Type Determinant(const Mat<Type, 2, 2>& a) { return Type{ a[0][0] * a[1][1] - a[0][1] * a[1][0] }; }
+	template <typename Type>Type Determinant(const Mat<Type, 3, 3>& a) {
 		return Type{
 			 (a[0][0] * a[1][1] * a[2][2]
 			+ a[0][1] * a[1][2] * a[2][0]
@@ -1087,63 +1013,50 @@ namespace Math {
 		};
 	}
 
-	template <typename Type, int N>
-	Type Trace(const Mat<Type, N, N>& a) {
+	template <typename Type, int N>Type Trace(const Mat<Type, N, N>& a) {
 		Type result{ 0 };
 		for (Uint32 RowIndex = 0; RowIndex < N; ++RowIndex)
 			result += a[RowIndex][RowIndex];
 		return result;
 	}
 
+	template <typename Type, Uint32 N>Mat<Type, N, N> Diagonal(Type a) { return Mat<Type, N, N>::Diagonal(a); }
+	template <typename Type, Uint32 N>Mat<Type, N, N> Diagonal(const Vec<Type, N>& a) { return Mat<Type, N, N>::Diagonal(a); }
 
-	template <typename Type, Uint32 N>
-	Mat<Type, N, N> Diagonal(Type a) { return Mat<Type, N, N>::Diagonal(a); }
-
-	template <typename Type, Uint32 N>
-	Mat<Type, N, N> Diagonal(const Vec<Type, N>& a) { return Mat<Type, N, N>::Diagonal(a); }
-
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> OuterProduct(const Vec<Type, RowCount>& a, const Vec<Type, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> OuterProduct(const Vec<Type, RowCount>& a, const Vec<Type, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 RowIndex = 0; RowIndex < RowCount; ++RowIndex)
 			result[RowIndex] = a[RowIndex] * b;
 		return result;
 	}
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> Isnear(const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b, float epsilon = Epsilon) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> IsNear(const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b, float epsilon = Epsilon) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 RowIndex = 0; RowIndex < RowCount * ColCount; ++RowIndex)
 			result.m_Data[RowIndex] = Isnear(a.m_Data[RowIndex], b.m_Data[RowIndex], epsilon);
 		return result;
 	}
-
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> isnear(Mat<Type, RowCount, ColCount> const& a, Type b, float epsilon = Epsilon) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> IsNear(Mat<Type, RowCount, ColCount> const& a, Type b, float epsilon = Epsilon) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 RowIndex = 0; RowIndex < RowCount * ColCount; ++RowIndex)
 			result.m_Data[RowIndex] = Isnear(a.m_Data[RowIndex], b, epsilon);
 		return result;
 	}
-
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> Isnear(Type a, const Mat<Type, RowCount, ColCount>& b, float epsilon = Epsilon) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> IsNear(Type a, const Mat<Type, RowCount, ColCount>& b, float epsilon = Epsilon) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 RowIndex = 0; RowIndex < RowCount * ColCount; ++RowIndex)
 			result.m_Data[RowIndex] = Isnear(a, b.m_Data[RowIndex], epsilon);
 		return result;
 	}
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<bool, RowCount, ColCount> Isfinite(const Mat<Type, RowCount, ColCount>& a) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> IsFinite(const Mat<Type, RowCount, ColCount>& a) {
 		Mat<bool, RowCount, ColCount> result;
 		for (Uint32 RowIndex = 0; RowIndex < RowCount * ColCount; ++RowIndex)
 			result.m_Data[RowIndex] = Isfinite(a.m_Data[RowIndex]);
 		return result;
 	}
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Uint32, RowCount, ColCount> Round(const Mat<Type, RowCount, ColCount>& a) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Uint32, RowCount, ColCount> Round(const Mat<Type, RowCount, ColCount>& a) {
 		Mat<Uint32, RowCount, ColCount> result;
 		for (Uint32 Indedx = 0; Indedx < RowCount * ColCount; ++Indedx)
 			result.m_Data[Indedx] = Round(a.m_Data[Indedx]);
@@ -1151,60 +1064,49 @@ namespace Math {
 	}
 
 
-
-	// Utilities for bool matrices
-
-	template <Uint32 RowCount, Uint32 ColCount>
-	bool Any(const Mat<bool, RowCount, ColCount>& a) {
+	template <Uint32 RowCount, Uint32 ColCount>bool Any(const Mat<bool, RowCount, ColCount>& a) {
 		bool result{ false };
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result = result || a.m_Data[Index];
 		return result;
 	}
 
-	template <Uint32 RowCount, Uint32 ColCount>
-	bool All(Mat<bool, RowCount, ColCount> const& a) {
+	template <Uint32 RowCount, Uint32 ColCount>bool All(Mat<bool, RowCount, ColCount> const& a) {
 		bool result{ true };
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result = result && a.m_Data[Index];
 		return result;
 	}
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> select(const Mat<bool, RowCount, ColCount>& cond, const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> Select(const Mat<bool, RowCount, ColCount>& cond, const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (int Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = cond.m_Data[Index] ? a.m_Data[Index] : b.m_Data[Index];
 		return result;
 	}
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> Min(const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) { return Select(a < b, a, b); }
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> Min(const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) { return Select(a < b, a, b); }
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> Max(const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) { return Select(a < b, b, a); }
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> Max(const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) { return Select(a < b, b, a); }
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> Abs(const Mat<Type, RowCount, ColCount>& a) { return Select(a < Type{ 0 }, -a, a); }
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> Abs(const Mat<Type, RowCount, ColCount>& a) { return Select(a < Type{ 0 }, -a, a); }
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Mat<Type, RowCount, ColCount> Saturate(const Mat<Type, RowCount, ColCount>& value) { return Clamp(value, Mat<Type, RowCount, ColCount>::Zero(), Mat<Type, RowCount, ColCount>{static_cast<Type>(1)}); }
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> Saturate(const Mat<Type, RowCount, ColCount>& value) { return Clamp(value, Mat<Type, RowCount, ColCount>::Zero(), Mat<Type, RowCount, ColCount>{static_cast<Type>(1)}); }
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Type MinComponent(const Mat<Type, RowCount, ColCount>& a) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Type MinComponent(const Mat<Type, RowCount, ColCount>& a) {
 		Type result = a.m_Data[0];
 		for (Uint32 Inex = 1; Inex < RowCount * ColCount; ++Inex)
 			result = Min(result, a.m_Data[Inex]);
 		return result;
 	}
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>
-	Type MaxComponent(const Mat<Type, RowCount, ColCount>& a) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Type MaxComponent(const Mat<Type, RowCount, ColCount>& a) {
 		Type result = a.m_Data[0];
 		for (Uint32 Index = 1; Index < RowCount * ColCount; ++Index)
 			result = Max(result, a.m_Data[Index]);
 		return result;
 	}
+
 
 
 

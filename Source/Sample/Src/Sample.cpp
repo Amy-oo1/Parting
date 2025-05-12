@@ -25,10 +25,12 @@
 
 #include "Engine/Render/Module/DrawStrategy.h"
 #include "Engine/Render/Module/ShadowMap.h"
+#include "Engine/Render/Module/RenderPass.h"
 
 #include "Engine/Engine/Module/BindingCache.h"
 #include "Engine/Engine/Module/DescriptorTableManager.h"
 #include "Engine/Engine/Module/ShaderFactory.h"
+#include "Engine/Engine/Module/FrameBufferFactory.h"
 
 #include "Engine/Application/Module/Application.h"
 
@@ -98,6 +100,13 @@ public:
 
 
 		this->m_ShadowMap = std::make_shared<Parting::CascadedShadowMap<CurrentAPI>>(this->m_DeviceManager->Get_Device(), 2048, 4, 0, shadowMapFormat);
+		this->m_ShadowMap->SetupProxyView();
+
+		this->m_ShadowFramebuffer = MakeShared<Parting::FrameBufferFactory<CurrentAPI>>(this->m_DeviceManager->Get_Device());
+		this->m_ShadowFramebuffer->DepthStencil = this->m_ShadowMap->Get_Texture();
+
+		this->m_ShadowDepthPass = MakeShared<Parting::DepthPass<CurrentAPI>>(this->m_DeviceManager->Get_Device(), this->m_ShadowFramebuffer);
+		this->m_ShadowDepthPass->DeferInit(*this->m_ShaderFactory, Parting::DepthPass<CurrentAPI>::CreateParameters{.DepthBias{ 100 }, .SlopeScaledDepthBias{ 4.f } });
 
 
 
@@ -108,19 +117,21 @@ public:
 
 private:
 	SmaplerUIData& m_UIData;
-	Parting::BindingCache<CurrentAPI>				m_BindingCache;
+	Parting::BindingCache<CurrentAPI>					m_BindingCache;
 
-	SharedPtr<RootFileSystem>						m_RootFs;
-	SharedPtr<NativeFileSystem>						m_NativeFs;
+	SharedPtr<RootFileSystem>							m_RootFs;
+	SharedPtr<NativeFileSystem>							m_NativeFs;
 
-	Path											m_SceneDir;
-	Vector<String>									m_SceneFilesAvailable;
-	SharedPtr<Parting::ShaderFactory<CurrentAPI>>	m_ShaderFactory;
+	Path												m_SceneDir;
+	Vector<String>										m_SceneFilesAvailable;
+	SharedPtr<Parting::ShaderFactory<CurrentAPI>>		m_ShaderFactory;
 
-	SharedPtr<Parting::InstancedOpaqueDrawStrategy> m_OpaqueDrawStrategy;
-	SharedPtr<Parting::TransparentDrawStrategy> m_TransparentDrawStrategy;
+	SharedPtr<Parting::InstancedOpaqueDrawStrategy>		m_OpaqueDrawStrategy;
+	SharedPtr<Parting::TransparentDrawStrategy>			m_TransparentDrawStrategy;
 
-	SharedPtr<Parting::CascadedShadowMap<CurrentAPI>>  m_ShadowMap;
+	SharedPtr<Parting::CascadedShadowMap<CurrentAPI>>	m_ShadowMap;
+	SharedPtr<Parting::FrameBufferFactory<CurrentAPI>>	m_ShadowFramebuffer;
+	SharedPtr<Parting::DepthPass<CurrentAPI>>			m_ShadowDepthPass;
 
 };
 

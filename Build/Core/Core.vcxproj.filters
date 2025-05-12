@@ -125,6 +125,9 @@
     <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Affine.h">
       <Filter>VectorMath\Module</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Frustum.h">
+      <Filter>VectorMath\Module</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Platform">

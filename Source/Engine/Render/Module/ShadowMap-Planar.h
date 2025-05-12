@@ -84,4 +84,16 @@ namespace Parting {
 		this->m_View->Set_Viewport(viewport);
 		this->m_View->Set_ArraySlice(arraySlice);
 	}
+
+	template<RHI::APITagConcept APITag>
+	inline void PlanarShadowMap<APITag>::SetupProxyView(void) {
+
+		Math::AffineF3 viewToWorld{ Math::LookatZ(Math::VecF3{ 0.f, 1.f, 0.f }, Math::VecF3{ 0.f, 0.f, 1.f }) };
+		Math::AffineF3 worldToView{ Math::Transpose(viewToWorld) };
+
+		Math::MatF44 projection{ Math::OrthoProjD3DStyle(-1.f, 1.f, -1.f, 1.f, -1.f, 1.f) };
+
+		this->m_View->Set_Matrices(worldToView, projection);
+		this->m_View->UpdateCache();
+	}
 }
