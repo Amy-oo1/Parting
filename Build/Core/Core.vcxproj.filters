@@ -1,0 +1,257 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\Source\Core\ModuleBuild.h" />
+    <ClInclude Include="..\..\Source\Core\Platform\Module\Platform.h">
+      <Filter>Platform\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Platform\Module\Platform-Type.h">
+      <Filter>Platform\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Utility\Module\Utility.h">
+      <Filter>Utility\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Utility\Module\Utility-SemanticControl.h">
+      <Filter>Utility\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Utility\Include\UtilityMacros.h">
+      <Filter>Utility\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Concurrent\Module\Concurrent.h">
+      <Filter>Concurrent\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Concurrent\Module\Concurrent-Atomic.h">
+      <Filter>Concurrent\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Logger\Module\Logger.h">
+      <Filter>Logger\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Logger\Include\LogMacros.h">
+      <Filter>Logger\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-SmartPointer.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Utility\Module\Utility-Traits.h">
+      <Filter>Utility\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Utility\Module\Utility-Function.h">
+      <Filter>Utility\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Utility\Module\Utility-Concept.h">
+      <Filter>Utility\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Platform\Module\Platform-Windows.h">
+      <Filter>Platform\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-Vector.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-BitSet.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Algorithm\Module\Algorithm.h">
+      <Filter>Algorithm\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-Optional.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\String\Module\String.h">
+      <Filter>String\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-Array.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Color\Module\Color.h">
+      <Filter>Color\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-Variant.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Concurrent\Module\Concurrent-Mutex.h">
+      <Filter>Concurrent\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-Map.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-Hash.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-Tuple.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Memory\Module\Memory.h">
+      <Filter>Memory\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Memory\Module\Memory-Alloctor.h">
+      <Filter>Memory\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Memory\Module\Memory-Tracker.h">
+      <Filter>Memory\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-Queue.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-Span.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-Functional.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-List.h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Vec.h">
+      <Filter>VectorMath\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Misc.h">
+      <Filter>VectorMath\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath.h">
+      <Filter>VectorMath\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Mat.h">
+      <Filter>VectorMath\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\VFS\Module\VFS.h">
+      <Filter>VFS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Container\Module\Container-Expected .h">
+      <Filter>Container\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Affine.h">
+      <Filter>VectorMath\Module</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{5171d76b-a3f6-46d2-9176-05a3b3b19774}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Include">
+      <UniqueIdentifier>{5f1a2371-e967-4b58-b91c-82856357dff2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Src">
+      <UniqueIdentifier>{5a02a042-adb4-4285-8c43-ddd893c1fe8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Module">
+      <UniqueIdentifier>{2ec7f223-a9c8-419a-afb6-2584cd0a2a78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility">
+      <UniqueIdentifier>{2c944657-3423-497b-92b0-037e0a440c4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility\Include">
+      <UniqueIdentifier>{d9a01ccd-2816-41a0-a493-7f6ec421fce0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility\Src">
+      <UniqueIdentifier>{17cf53b7-3c62-4159-a733-4a2a6c111c22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility\Module">
+      <UniqueIdentifier>{40dc7729-e8a4-4776-8b84-9c0a94f9ba4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Concurrent">
+      <UniqueIdentifier>{c5cea953-928d-4762-8148-7d872b848889}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Concurrent\Include">
+      <UniqueIdentifier>{5c85181e-abf3-453c-ab6d-6897909036d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Concurrent\Src">
+      <UniqueIdentifier>{11239198-252d-4b75-92ab-f672a7c9816e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Concurrent\Module">
+      <UniqueIdentifier>{0173da6d-9066-41bb-9a36-84684ff3576c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logger">
+      <UniqueIdentifier>{8b3a79c9-15d2-4908-9772-8d3aed334915}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logger\Include">
+      <UniqueIdentifier>{48ef66e6-6a6a-4747-858c-03295df31776}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logger\Src">
+      <UniqueIdentifier>{a72c116a-53b1-443a-9449-4fc72cdfc35f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logger\Module">
+      <UniqueIdentifier>{3a5022da-b4c8-4433-a84f-b56bccc5fc4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Container">
+      <UniqueIdentifier>{497e6dbe-43ce-4746-b31d-f8fb6afeffb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Container\Include">
+      <UniqueIdentifier>{ef94e2e0-7073-47fb-9d52-fa2144a1431e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Container\Src">
+      <UniqueIdentifier>{9481ef98-fe24-4148-a721-30b15a49cdd8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Container\Module">
+      <UniqueIdentifier>{173fabb3-bcb4-42e9-aa93-3d082210c6fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithm">
+      <UniqueIdentifier>{aa6d4abd-cfa7-4855-abca-82cc1e295130}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithm\Include">
+      <UniqueIdentifier>{9d908134-15ca-4c5d-847d-f6fa47db00c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithm\Src">
+      <UniqueIdentifier>{5c3f2a01-bb40-4033-95ae-9c542552f877}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithm\Module">
+      <UniqueIdentifier>{b39d8d79-886a-4214-b23b-64c9512492a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="String">
+      <UniqueIdentifier>{a7b9002b-713c-445e-bd2a-44c0704f2401}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="String\Include">
+      <UniqueIdentifier>{41d53912-c58b-487e-a00f-5688723d08c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="String\Src">
+      <UniqueIdentifier>{5e5bc31b-59f5-4c33-8150-f621cd9bb1af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="String\Module">
+      <UniqueIdentifier>{1a396528-e34e-4564-92aa-4aea9db0e7d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Color">
+      <UniqueIdentifier>{2baf4e4d-9fb5-4d8d-9e65-b7e1cadb7d8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Color\Include">
+      <UniqueIdentifier>{edd5a2b3-218c-4287-8847-349ae6567d97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Color\Src">
+      <UniqueIdentifier>{da68ba59-b851-4983-b32f-aa1c0d5f999c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Color\Module">
+      <UniqueIdentifier>{d5deb227-8cab-41bf-8093-a72fb7ccbbee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{f718bfc4-5bc5-4f8c-88e5-26c07d7e639a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory\Include">
+      <UniqueIdentifier>{1b21e88e-98f3-4da7-ad2e-7beaf10acdca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory\Src">
+      <UniqueIdentifier>{a31775a2-2da6-400f-b39c-292073b6ca19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory\Module">
+      <UniqueIdentifier>{c11c9c85-e712-4c3e-beca-d18fd2d34128}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VectorMath">
+      <UniqueIdentifier>{12f2774e-843d-47db-9cc2-09212f89a331}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VectorMath\Include">
+      <UniqueIdentifier>{3b442970-778c-4ee4-ac2c-eecdb5731984}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VectorMath\Src">
+      <UniqueIdentifier>{d1ed4f72-a613-40e8-a0d9-575a6eff65ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VectorMath\Module">
+      <UniqueIdentifier>{025cf855-33b5-4529-a199-cf532cb63f99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VFS">
+      <UniqueIdentifier>{97b095ff-429c-4621-838e-30fea15fb6d4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Source\Core\CoreEmptySrc.cpp" />
+  </ItemGroup>
+</Project>

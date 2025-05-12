@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Include">
+      <UniqueIdentifier>{f3a18988-6f32-46cd-8793-1618f95cd5f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src">
+      <UniqueIdentifier>{f26aaa00-d3fe-4885-b8fa-85b6c4b9f959}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Module">
+      <UniqueIdentifier>{6c6bb45f-a607-4bb6-8187-712e82e85ab5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Source\D3D12RHI\Src\D3D12RHISrcEmpty.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-Format.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\DirectX12Wrapper.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-Heap.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-Traits.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-Common.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-Texture.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-Buffer.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Include\DirectXMacros.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-Sampler.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-InputLayout.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-Shader.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-BlendState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-DepthStencilState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-ViewportState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-FrameBuffer.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-ShaderBinding.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-Pipeline.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-CommandList.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-RasterState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\D3D12RHI\Module\D3D12RHI-Device.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

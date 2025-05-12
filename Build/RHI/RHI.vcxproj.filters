@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Include">
+      <UniqueIdentifier>{4f56753b-cfda-447c-ba53-0f177cda5e6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Module">
+      <UniqueIdentifier>{dfb26088-b912-440f-b285-10e3c7c82fbc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src">
+      <UniqueIdentifier>{a736089f-2226-4d17-8728-0a86c4a5583f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Resource.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Format.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Sampler.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Heap.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Common.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Texture.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Traits.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Buffer.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-InputLayout.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Shader.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-BlendState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-RasterState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-DepthStencilState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-ViewportState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-FrameBuffer.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-ShaderBinding.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Pipeline.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Draw.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-CommandList.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Device.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\RHI-Utility.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\RHI\Module\StateTracking.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Source\RHI\RHIEmptySrc.cpp" />
+  </ItemGroup>
+</Project>

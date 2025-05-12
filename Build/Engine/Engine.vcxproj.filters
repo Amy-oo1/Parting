@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Application">
+      <UniqueIdentifier>{aaaf98a1-cc3c-4b0b-862e-2a1c269efcd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\Module">
+      <UniqueIdentifier>{3d842f9d-db24-4339-a557-b2c5d3e7fee4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\Include">
+      <UniqueIdentifier>{eb9e1484-0069-4a34-b8e7-df4f9b635460}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render">
+      <UniqueIdentifier>{9c3d6899-410c-46f7-815f-d8e31d4ce497}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{9c0ba237-9784-4a52-83d1-82db83a12c5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\Src">
+      <UniqueIdentifier>{dd09e100-8554-455b-91dc-fd44b827fa9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Include">
+      <UniqueIdentifier>{66753474-7bd6-494f-8260-50f9f3efae5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Src">
+      <UniqueIdentifier>{2d65b457-b433-4287-9f8d-8bf5b4ab47a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Module">
+      <UniqueIdentifier>{d41624a2-d35a-4dc1-b202-e2f1c9259930}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{e425a76b-f145-4526-b511-81ad3c528b31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Include">
+      <UniqueIdentifier>{5c44c700-1970-4c79-a0e0-3178d24b10e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Modlue">
+      <UniqueIdentifier>{b31e729c-b32b-4ad7-a506-83d760994ea5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Src">
+      <UniqueIdentifier>{ba58f07a-31b5-462e-b9a7-3ccead7f835d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThridParty">
+      <UniqueIdentifier>{13bf05d5-7693-4e63-a79b-0f1e5ba23dfc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThridParty\ShaderMake">
+      <UniqueIdentifier>{7e953743-a431-44d8-b05e-7d0cfe0f8b74}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Source\Engine\Application\Module\Application.h">
+      <Filter>Application\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Application\Module\DeviceManager.h">
+      <Filter>Application\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Application\Module\DeviceManager-Base.h">
+      <Filter>Application\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Application\Module\DeviceManager-D3D12.h">
+      <Filter>Application\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Application\Module\GLFWWrapper.h">
+      <Filter>Application\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\SSAOPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Application\Module\Application-Base.h">
+      <Filter>Application\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Engine\Module\BindingCache.h">
+      <Filter>Engine\Modlue</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Engine\Module\TextureCache.h">
+      <Filter>Engine\Modlue</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Engine\Module\DescriptorTableManager.h">
+      <Filter>Engine\Modlue</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Engine\Module\ShaderFactory.h">
+      <Filter>Application\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Engine\Module\CommonRenderPasses.h">
+      <Filter>Engine\Modlue</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\DrawStrategy.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Engine\Module\SceneGraph.h">
+      <Filter>Engine\Modlue</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\ShadowMap.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\ShadowMap-Base.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\ShadowMap-Cascaded.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\ShadowMap-Planar.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\View.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Source\Engine\EnghineSrcEmpty.cpp" />
+    <ClCompile Include="..\..\Source\ThirdParty\ShaderMake\src\ShaderBlob.cpp">
+      <Filter>ThridParty\ShaderMake</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
