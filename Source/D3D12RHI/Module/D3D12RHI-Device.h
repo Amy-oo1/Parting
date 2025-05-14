@@ -104,12 +104,8 @@ namespace RHI::D3D12 {
 	public:
 		D3D12Queue* Get_Queue(RHICommandQueue type) { return this->m_Queues[Tounderlying(type)].get(); }
 
-		RefCountPtr<D3D12RootSignature> BuildRootSignature(
-			const Array<RefCountPtr<BindingLayout>, g_MaxBindingLayoutCount>& pipelineLayouts, Uint32 Count,
-			bool allowInputLayout, bool isLocal,
-			const D3D12_ROOT_PARAMETER1* pCustomParameters = nullptr,
-			Uint32 numCustomParameters = 0
-		);
+		RefCountPtr<D3D12RootSignature> BuildRootSignature(const Span<const RefCountPtr<BindingLayout>>& pipelineLayouts, bool allowInputLayout, bool isLocal, const D3D12_ROOT_PARAMETER1* pCustomParameters = nullptr, Uint32 numCustomParameters = 0);
+
 		RefCountPtr<ID3D12PipelineState> CreateHandleForNativeGraphicsPipeline(D3D12RootSignature* rootSignature, ID3D12PipelineState* pipelineState, const RHIGraphicsPipelineDesc<D3D12Tag>& desc, const RHIFrameBufferInfo<D3D12Tag>& framebufferInfo) {
 			return nullptr;
 		}
@@ -122,15 +118,16 @@ namespace RHI::D3D12 {
 
 
 	private:
-		RefCountPtr<D3D12RootSignature> Get_RootSignature(const Array<RefCountPtr<BindingLayout>, g_MaxBindingLayoutCount>& pipelineLayouts, Uint32 Count, bool allowInputLayout) {
-			return nullptr;
-		}
+		RefCountPtr<D3D12RootSignature> Get_RootSignature(const Span<const RefCountPtr<BindingLayout>>& pipelineLayouts, bool allowInputLayout);
+
+
 		RefCountPtr<ID3D12PipelineState> CreatePipelineState(const RHIGraphicsPipelineDesc<D3D12Tag>& desc, D3D12RootSignature* pRS, const RHIFrameBufferInfo<D3D12Tag>& fbinfo) const {
 			return nullptr;
 		}
-		RefCountPtr<ID3D12PipelineState> CreatePipelineState(const RHIComputePipelineDesc<D3D12Tag>& desc, D3D12RootSignature* pRS) const {
-			return nullptr;
-		}
+
+		RefCountPtr<ID3D12PipelineState> CreatePipelineState(const RHIComputePipelineDesc<D3D12Tag>& desc, D3D12RootSignature* pRS) const;
+
+
 		RefCountPtr<ID3D12PipelineState> CreatePipelineState(const RHIMeshletPipelineDesc<D3D12Tag>& desc, D3D12RootSignature* pRS, const RHIFrameBufferInfo<D3D12Tag>& fbinfo) const {
 			return nullptr;
 		}
@@ -207,6 +204,7 @@ namespace RHI::D3D12 {
 
 
 		RefCountPtr<BindingLayout> Imp_CreateBindingLayout(const RHIBindingLayoutDesc& desc);
+		RefCountPtr<BindingSet> Imp_CreateBindingSet(const RHIBindingSetDesc<D3D12Tag>& desc, BindingLayout* layout);
 
 
 		RefCountPtr<CommandList> Imp_CreateCommandList(const RHICommandListParameters& desc);
@@ -296,7 +294,7 @@ namespace RHI::D3D12 {
 
 	//Src
 
-	RefCountPtr<D3D12RootSignature> Device::BuildRootSignature(const Array<RefCountPtr<BindingLayout>, g_MaxBindingLayoutCount>& pipelineLayouts, Uint32 Count, bool allowInputLayout, bool isLocal, const D3D12_ROOT_PARAMETER1* pCustomParameters, Uint32 numCustomParameters) {
+	RefCountPtr<D3D12RootSignature> Device::BuildRootSignature(const Span<const RefCountPtr<BindingLayout>>& pipelineLayouts, bool allowInputLayout, bool isLocal, const D3D12_ROOT_PARAMETER1* pCustomParameters, Uint32 numCustomParameters) {
 		D3D12RootSignature* rootsig{ new D3D12RootSignature{ this->m_Resources } };
 
 		// Assemble the root parameter table from the pipeline binding layouts
@@ -308,19 +306,16 @@ namespace RHI::D3D12 {
 		for (Uint32 index = 0; index < numCustomParameters; ++index)
 			rootParameters.push_back(pCustomParameters[index]);
 
-		for (Uint32 layoutIndex = 0; layoutIndex < Count; ++layoutIndex) {
-			if (pipelineLayouts[layoutIndex]->Get_Desc()) {//TODO :
-				BindingLayout* layout{ pipelineLayouts[layoutIndex].Get() };
-				auto rootParameterOffset{ static_cast<D3D12RootSignature::D3D12RootParameterIndex>(rootParameters.size()) };
+		for (const auto& layout : pipelineLayouts) {
+			auto rootParameterOffset{ static_cast<D3D12RootSignature::D3D12RootParameterIndex>(rootParameters.size()) };
 
-				rootsig->m_BindLayouts[rootsig->m_BindLayoutCount++] = MakePair(layout, rootParameterOffset);
+			rootsig->m_BindLayouts[rootsig->m_BindLayoutCount++] = MakePair(layout, rootParameterOffset);
 
-				rootParameters.insert(rootParameters.end(), layout->m_RootParameters.begin(), layout->m_RootParameters.begin() + layout->m_RootParameterCount);
+			rootParameters.insert(rootParameters.end(), layout->m_RootParameters.begin(), layout->m_RootParameters.begin() + layout->m_RootParameterCount);
 
-				if (layout->m_PushConstantByteSize) {
-					rootsig->m_PushConstantByteSize = layout->m_PushConstantByteSize;
-					rootsig->m_RootParameterPushConstants = layout->m_RootParameterPushConstants + rootParameterOffset;
-				}
+			if (layout->m_PushConstantByteSize > 0) {
+				rootsig->m_PushConstantByteSize = layout->m_PushConstantByteSize;
+				rootsig->m_RootParameterPushConstants = layout->m_RootParameterPushConstants + rootParameterOffset;
 			}
 
 			/*else if (pipelineLayouts[layoutIndex]->getBindlessDesc())
@@ -358,13 +353,47 @@ namespace RHI::D3D12 {
 
 		RefCountPtr<ID3DBlob> rsBlob;
 		RefCountPtr<ID3DBlob> errorBlob;
-		D3D12SerializeVersionedRootSignature(&rsDesc, &rsBlob, &errorBlob);
+		D3D12_CHECK(D3D12SerializeVersionedRootSignature(&rsDesc, &rsBlob, &errorBlob));
 
-		this->m_Context.Device->CreateRootSignature(0, rsBlob->GetBufferPointer(), rsBlob->GetBufferSize(), PARTING_IID_PPV_ARGS(&rootsig->m_RootSignature));
+		D3D12_CHECK(this->m_Context.Device->CreateRootSignature(0, rsBlob->GetBufferPointer(), rsBlob->GetBufferSize(), PARTING_IID_PPV_ARGS(&rootsig->m_RootSignature)));
 
 		return RefCountPtr<D3D12RootSignature>::Create(rootsig);
 	}
 
+	RefCountPtr<D3D12RootSignature> Device::Get_RootSignature(const Span<const RefCountPtr<BindingLayout>>& pipelineLayouts, bool allowInputLayout) {
+		Uint64 hash{ 0 };
+
+		for (const auto& layout : pipelineLayouts)
+			hash = HashCombine(hash, reinterpret_cast<Uint64>(layout.Get()));
+
+		hash = HashCombine(hash, allowInputLayout ? static_cast<Uint64>(1) : static_cast<Uint64>(0));
+
+		RefCountPtr<D3D12RootSignature> RootSignature{ this->m_Resources.RootSignatureCahe[hash] };//NOTE :must use temp Ref to write to map
+		if (nullptr == RootSignature) {
+			RootSignature = this->BuildRootSignature(pipelineLayouts, allowInputLayout, false);
+
+			ASSERT(nullptr != RootSignature);
+			RootSignature->m_Hash = hash;
+
+			this->m_Resources.RootSignatureCahe[hash] = RootSignature;
+		}
+
+		return RootSignature;
+	}
+
+	RefCountPtr<ID3D12PipelineState> Device::CreatePipelineState(const RHIComputePipelineDesc<D3D12Tag>& desc, D3D12RootSignature* pRS) const {
+		RefCountPtr<ID3D12PipelineState> Re;
+
+		D3D12_COMPUTE_PIPELINE_STATE_DESC d3d12desc{
+			.pRootSignature{ pRS->m_RootSignature },
+			.CS{.pShaderBytecode{ desc.CS->m_Bytecode.data() },	.BytecodeLength{ desc.CS->m_Bytecode.size() } },
+			.NodeMask { 1 },
+			.Flags{ D3D12_PIPELINE_STATE_FLAG_NONE }
+		};
+
+		D3D12_CHECK(this->m_Context.Device->CreateComputePipelineState(&d3d12desc, PARTING_IID_PPV_ARGS(&Re)));
+		return Re;
+	}
 
 
 
@@ -752,7 +781,7 @@ namespace RHI::D3D12 {
 		Buffer* buffer{ new Buffer(this->m_Context, this->m_Resources, desc) };
 
 		if (d.IsVolatile)
-			return RefCountPtr<Buffer>::Create(buffer);
+			return RefCountPtr<Buffer>::Create(buffer);//if vo , create a empty buffer
 
 		D3D12_RESOURCE_DESC& resourceDesc{ buffer->m_ResourceDesc };
 		resourceDesc.Width = buffer->m_Desc.ByteSize;
@@ -1161,12 +1190,33 @@ namespace RHI::D3D12 {
 	}
 
 	RefCountPtr<ComputePipeline> Device::Imp_CreateComputePipeline(const RHIComputePipelineDesc<D3D12Tag>& desc) {
-		return nullptr;
+		RefCountPtr<D3D12RootSignature> pRS{ this->Get_RootSignature(Span<const RefCountPtr<BindingLayout>>{ desc.BindingLayouts.data(), desc.BindingLayoutCount }, false) };
+		RefCountPtr<ID3D12PipelineState> pPSO{ this->CreatePipelineState(desc, pRS) };
+
+		ASSERT(nullptr != pPSO);
+
+		ComputePipeline* pso = new ComputePipeline{};
+
+		pso->m_Desc = desc;
+		pso->m_RootSignature = pRS;
+		pso->m_PipelineState = pPSO;
+
+		return RefCountPtr<ComputePipeline>::Create(pso);
 	}
 
 
 	RefCountPtr<BindingLayout> Device::Imp_CreateBindingLayout(const RHIBindingLayoutDesc& desc) {
 		return RefCountPtr<BindingLayout>::Create(new BindingLayout{ desc });//TODO :  if new throw a std::bad_alloc exception ,but i do not using this exception in the project
+	}
+
+	RefCountPtr<BindingSet> Device::Imp_CreateBindingSet(const RHIBindingSetDesc<D3D12Tag>& desc, BindingLayout* layout) {
+		BindingSet* Re{ new BindingSet{ this->m_Context, this->m_Resources } };
+
+		Re->m_Desc = desc;
+		Re->m_Layout = layout;
+		Re->CreateDescriptors();
+
+		return RefCountPtr<BindingSet>::Create(Re);
 	}
 
 
@@ -1281,7 +1331,7 @@ namespace RHI::D3D12 {
 		if (featureData.Support1 & D3D12_FORMAT_SUPPORT1_BLENDABLE)
 			result = result | RHIFormatSupport::Blendable;
 
-		if (formatMapping.SRVFormat != featureData.Format){
+		if (formatMapping.SRVFormat != featureData.Format) {
 			featureData.Format = formatMapping.SRVFormat;
 			featureData.Support1 = D3D12_FORMAT_SUPPORT1_NONE;
 			featureData.Support2 = D3D12_FORMAT_SUPPORT2_NONE;

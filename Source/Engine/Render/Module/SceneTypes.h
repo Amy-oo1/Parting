@@ -1,0 +1,209 @@
+#ifdef PARTING_MODULE_BUILD
+#include "Core/ModuleBuild.h"
+
+PARTING_GLOBAL_MODULE
+#include "Core/Utility/Include/UtilityMacros.h"
+#include "Core/Logger/Include/LogMacros.h"
+
+
+PARTING_IMPORT Platform;
+PARTING_IMPORT Utility;
+PARTING_IMPORT Algorithm;
+PARTING_IMPORT Container;
+PARTING_IMPORT VectorMath;
+PARTING_IMPORT Logger;
+
+
+PARTING_SUBMODULE(Parting, SSAOPass)
+
+
+#else
+#pragma once
+
+#include "Core/ModuleBuild.h"
+
+
+#include "Core/Utility/Include/UtilityMacros.h"
+#include "Core/Logger/Include/LogMacros.h"
+//Global
+
+#include "Core/Platform/Module/Platform.h"
+#include "Core/Utility/Module/Utility.h"
+#include "Core/Algorithm/Module/Algorithm.h"
+#include "Core/Container/Module/Container.h"
+#include "Core/VectorMath/Module/VectorMath.h"
+#include "Core/Logger/Module/Logger.h"
+
+#include "RHI/Module/RHI.h"
+#include "D3D12RHI/Module/D3D12RHI.h"
+
+#include "Engine/Engine/Module/DescriptorTableManager.h"
+
+#include "Shader/bindless.h"
+
+#endif // PARTING_MODULE_BUILD
+
+namespace Parting {
+
+
+	enum class TextureAlphaMode :Uint8 {
+		UNKNOWN = 0,
+		STRAIGHT = 1,
+		PREMULTIPLIED = 2,
+		OPAQUE = 3,
+		CUSTOM = 4,
+	};
+
+	enum class MaterialDomain : Uint8 {
+		Opaque,
+		AlphaTested,
+		AlphaBlended,
+		Transmissive,
+		TransmissiveAlphaTested,
+		TransmissiveAlphaBlended,
+
+		Count
+	};
+
+	template<RHI::APITagConcept APITag>
+	struct LoadedTexture final {
+		using Imp_Texture = typename RHI::RHITypeTraits<APITag>::Imp_Texture;
+
+		RHI::RefCountPtr<typename RHI::RHITypeTraits<APITag>::Imp_Texture> Texture;//TODO Fix
+		TextureAlphaMode AlphaMode{ TextureAlphaMode::UNKNOWN };
+		Uint32 OriginalBitsPerPixel{ 0 };
+		DescriptorHandle<APITag> BindlessDescriptor;
+		String FilePath;
+		String MimeType;
+	};
+
+
+	template<RHI::APITagConcept APITag>
+	struct Material final {
+		using Imp_Buffer = typename RHI::RHITypeTraits<APITag>::Imp_Buffer;
+		String Name;
+		String ModelFileName;		// where this material originated from, e.g. GLTF file name
+		Int32 MaterialIndexInModel{ -1 };  // index of the material in the model file
+		MaterialDomain Domain{ MaterialDomain::Opaque };
+		SharedPtr<LoadedTexture<APITag>> BaseOrDiffuseTexture; // metal-rough: base color; spec-gloss: diffuse color; .a = opacity (both modes)
+		SharedPtr<LoadedTexture<APITag>> MetalRoughOrSpecularTexture; // metal-rough: ORM map; spec-gloss: specular color, .a = glossiness
+		SharedPtr<LoadedTexture<APITag>> NormalTexture;
+		SharedPtr<LoadedTexture<APITag>> EmissiveTexture;
+		SharedPtr<LoadedTexture<APITag>> OcclusionTexture;
+		SharedPtr<LoadedTexture<APITag>> TransmissionTexture; // see KHR_materials_transmission; undefined on specular-gloss materials
+		SharedPtr<LoadedTexture<APITag>> OpacityTexture; // for renderers that store opacity or alpha mask separately, overrides baseOrDiffuse.a
+		RHI::RefCountPtr<Imp_Buffer> MaterialConstants;
+		Math::VecF3 BaseOrDiffuseColor{ 1.f }; // metal-rough: base color, spec-gloss: diffuse color (if no texture present)
+		Math::VecF3 SpecularColor{ 0.f }; // spec-gloss: specular color
+		Math::VecF3 EmissiveColor{ 0.f };
+		float EmissiveIntensity{ 1.f }; // additional multiplier for emissiveColor
+		float Metalness{ 0.f }; // metal-rough only
+		float Roughness{ 0.f }; // both metal-rough and spec-gloss
+		float Opacity{ 1.f }; // for transparent materials; multiplied by diffuse.a if present
+		float AlphaCutoff{ 0.5f }; // for alpha tested materials
+		float TransmissionFactor{ 0.f }; // see KHR_materials_transmission; undefined on specular-gloss materials
+		float NormalTextureScale{ 1.f };
+		float OcclusionStrength{ 1.f };
+		Math::VecF2 NormalTextureTransformScale{ 1.f };
+
+		// Toggle between two PBR models: metal-rough and specular-gloss.
+		// See the comments on the other fields here.
+		bool UseSpecularGlossModel{ false };
+
+		// Subsurface Scattering
+		bool EnableSubsurfaceScattering{ false };
+		struct SubsurfaceParams final {
+			Math::VecF3 TransmissionColor{ 0.5f };
+			Math::VecF3 ScatteringColor{ 0.5f };
+			float Scale{ 1.f };
+			float Anisotropy{ 0.f };
+		} Subsurface;
+
+		// Hair
+		bool EnableHair{ false };
+		struct HairParams final {
+			Math::VecF3 BaseColor{ 1.0f };
+			float Melanin{ 0.5f };
+			float MelaninRedness{ 0.5f };
+			float LongitudinalRoughness{ 0.25f };
+			float AzimuthalRoughness{ 0.6f };
+			float DiffuseReflectionWeight{ 0.0f };
+			Math::VecF3 DiffuseReflectionTint{ 0.0f };
+			float IOR{ 1.55f };
+			float CuticleAngle{ 3.0f };
+		} Hair;
+
+		// Toggles for the textures. Only effective if the corresponding texture is non-null.
+		bool EnableBaseOrDiffuseTexture{ true };
+		bool EnableMetalRoughOrSpecularTexture{ true };
+		bool EnableNormalTexture{ true };
+		bool EnableEmissiveTexture{ true };
+		bool EnableOcclusionTexture{ true };
+		bool EnableTransmissionTexture{ true };
+		bool EnableOpacityTexture{ true };
+
+		bool DoubleSided{ false };
+
+		// Useful when metalness and roughness are packed into a 2-channel texture for BC5 encoding.
+		bool MetalnessInRedChannel{ false };
+
+		int MaterialID{ 0 };
+		bool Dirty{ true }; // set this to true to make Scene update the material data
+
+	};
+
+
+
+	struct SceneLoadingStats final {
+		Atomic<Uint32> ObjectsTotal;
+		Atomic<Uint32> ObjectsLoaded;
+	};
+
+	HEADER_INLINE SceneLoadingStats g_LoadingStats;
+
+
+
+
+
+
+
+	RHI::RHIVertexAttributeDesc BuildVertexAttributeDesc(RHI::RHIVertexAttributeDescBuilder& builder, RHI::RHIVertexAttribute attribute, const char* name, Uint32 bufferIndex) {
+		builder.Set_Attribute(attribute).Set_Name(name).Set_BufferIndex(bufferIndex);
+
+		switch (attribute) {
+			using enum RHI::RHIVertexAttribute;;
+		case Position:case PrevPosition:
+			builder.Set_Format(RHI::RHIFormat::RGB32_FLOAT).Set_ElementStride(sizeof(Math::VecF3));
+			break;
+
+		case TexCoord1:case TexCoord2:
+			builder.Set_Format(RHI::RHIFormat::RG32_FLOAT).Set_ElementStride(sizeof(Math::VecF2));
+			break;
+
+		case Normal:case Tangent:
+			builder.Set_Format(RHI::RHIFormat::RGBA8_SNORM).Set_ElementStride(sizeof(Uint32));
+			break;
+
+		case Transform:
+			builder.Set_Format(RHI::RHIFormat::RGBA32_FLOAT).Set_ElementStride(sizeof(InstanceData))
+				.Set_ArrayCount(3)
+				.Set_Offset(offsetof(InstanceData, Transform))
+				.Set_IsInstanced(true);
+			break;
+
+		case PrevTransform:
+			builder.Set_Format(RHI::RHIFormat::RGBA32_FLOAT).Set_ElementStride(sizeof(InstanceData))
+				.Set_ArrayCount(3)
+				.Set_Offset(offsetof(InstanceData, PrevTransform))
+				.Set_IsInstanced(true);
+			break;
+
+		case COUNT: default:
+			ASSERT(false);
+			break;
+		}
+
+		return builder.Build();
+	}
+
+}

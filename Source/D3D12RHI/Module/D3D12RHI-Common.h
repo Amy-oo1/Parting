@@ -259,7 +259,7 @@ namespace RHI::D3D12 {
 		Array<Pair<BingLayOutVariant, D3D12RootParameterIndex>, g_MaxBindingLayoutCount> m_BindLayouts;
 		RemoveCV<decltype(g_MaxBindingLayoutCount)>::type m_BindLayoutCount{ 0 };
 
-		RefCountPtr<ID3D12RootSignature> m_RootSignature{ nullptr };
+		RefCountPtr<ID3D12RootSignature> m_RootSignature;
 
 		Uint32 m_PushConstantByteSize{ 0 };
 		D3D12RootParameterIndex m_RootParameterPushConstants{ ~0u };
@@ -666,7 +666,7 @@ namespace RHI::D3D12 {
 	}
 
 	inline void D3D12StaticDescriptorHeap::Imp_ReleaseDescriptor(D3D12DescriptorIndex Offset, Uint32 Count) {
-		ASSERT(Count >= 1);
+		//ASSERT(Count >= 1);
 
 		{
 			LockGuard lock{ this->m_Mutex };

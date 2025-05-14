@@ -23,6 +23,8 @@
 
 #include "D3D12RHI/Module/D3D12RHI.h"
 
+#include "Engine/Render/Module/Camera.h"
+
 #include "Engine/Render/Module/DrawStrategy.h"
 #include "Engine/Render/Module/ShadowMap.h"
 #include "Engine/Render/Module/RenderPass.h"
@@ -31,6 +33,8 @@
 #include "Engine/Engine/Module/DescriptorTableManager.h"
 #include "Engine/Engine/Module/ShaderFactory.h"
 #include "Engine/Engine/Module/FrameBufferFactory.h"
+
+#include "Engine/Render/Module/Sence.h"
 
 #include "Engine/Application/Module/Application.h"
 
@@ -55,6 +59,7 @@ struct SmaplerUIData final {
 
 
 class FeatureSample :public Parting::ApplicationBase<CurrentAPI> {
+	using Imp_CommandList = RHI::RHITypeTraits<CurrentAPI>::Imp_CommandList;
 public:
 	FeatureSample(::DeviceManager* deviceManager, SmaplerUIData& ui, const String& sceneName) :
 		ApplicationBase{ deviceManager },
@@ -105,14 +110,42 @@ public:
 		this->m_ShadowFramebuffer = MakeShared<Parting::FrameBufferFactory<CurrentAPI>>(this->m_DeviceManager->Get_Device());
 		this->m_ShadowFramebuffer->DepthStencil = this->m_ShadowMap->Get_Texture();
 
-		this->m_ShadowDepthPass = MakeShared<Parting::DepthPass<CurrentAPI>>(this->m_DeviceManager->Get_Device(), this->m_ShadowFramebuffer);
+		this->m_ShadowDepthPass = MakeShared<Parting::DepthPass<CurrentAPI>>(this->m_DeviceManager->Get_Device(), this->m_CommonPasses);
 		this->m_ShadowDepthPass->DeferInit(*this->m_ShaderFactory, Parting::DepthPass<CurrentAPI>::CreateParameters{.DepthBias{ 100 }, .SlopeScaledDepthBias{ 4.f } });
 
+		this->m_CommandList = this->m_DeviceManager->Get_Device()->CreateCommandList();
 
+		this->m_FirstPersonCamera.Set_MoveSpeed(3.f);
+		this->m_ThirdPersonCamera.Set_MoveSpeed(3.f);
 
+		this->Set_AsyncLoad(false);
+		/*this->Set_AsyncLoad(true);*/
+
+		if (sceneName.empty())
+			this->SetCurrentScene(ApplicationBase<CurrentAPI>::FindPreferredScene(this->m_SceneFilesAvailable, "Sponza.gltf"));
+		else
+			this->SetCurrentScene(sceneName);
 
 	}
 
+
+public:
+	bool LoadScene(SharedPtr<IFileSystem> fs, const Path& sceneFileName) override {
+		//TODO :add Time Show
+
+		this->m_Scene = MakeUnique<Parting::Scene<CurrentAPI>>(this->m_DeviceManager->Get_Device(), *this->m_ShaderFactory, fs, this->m_TextureCache, nullptr, nullptr);
+
+		//TODO add time cast info
+
+		return this->m_Scene->Load(sceneFileName);
+	}
+
+	void SetCurrentScene(const String& sceneName) {
+		if (sceneName == this->m_CurrentSceneName)
+			return;
+
+		this->BeginLoadingScene(this->m_NativeFs, this->m_CurrentSceneName = sceneName);
+	}
 
 
 private:
@@ -125,6 +158,7 @@ private:
 	Path												m_SceneDir;
 	Vector<String>										m_SceneFilesAvailable;
 	SharedPtr<Parting::ShaderFactory<CurrentAPI>>		m_ShaderFactory;
+	SharedPtr<Parting::Scene<CurrentAPI>>				m_Scene;
 
 	SharedPtr<Parting::InstancedOpaqueDrawStrategy>		m_OpaqueDrawStrategy;
 	SharedPtr<Parting::TransparentDrawStrategy>			m_TransparentDrawStrategy;
@@ -132,6 +166,14 @@ private:
 	SharedPtr<Parting::CascadedShadowMap<CurrentAPI>>	m_ShadowMap;
 	SharedPtr<Parting::FrameBufferFactory<CurrentAPI>>	m_ShadowFramebuffer;
 	SharedPtr<Parting::DepthPass<CurrentAPI>>			m_ShadowDepthPass;
+
+	RHI::RefCountPtr<Imp_CommandList> 					m_CommandList;
+
+	bool												m_PreviousViewsValid{ false };
+	Parting::FirstPersonCamera							m_FirstPersonCamera;
+	Parting::ThirdPersonCamera							m_ThirdPersonCamera;
+
+	String												m_CurrentSceneName;
 
 };
 

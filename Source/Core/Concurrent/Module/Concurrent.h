@@ -17,5 +17,6 @@ PARTING_EXPORT PARTING_SUBMODE_IMPORT(Concurrent, Mutex)
 
 #include "Core/Concurrent/Module/Concurrent-Atomic.h"
 #include "Core/Concurrent/Module/Concurrent-Mutex.h"
+#include "Core/Concurrent/Module/Concurrent-Thread.h"
 
 #endif // PARTING_MODULE_BUILD

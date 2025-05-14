@@ -474,7 +474,7 @@ namespace RHI::D3D12 {
 							m_Instance->ReferencedResources.push_back(bindingSet);
 					}
 
-					if (m_EnableAutomaticBarriers && (updateThisSet || bindingSet->m_HasUavBindings)) // UAV bindings may place UAV barriers on the same binding set
+					if (m_EnableAutomaticBarriers && (updateThisSet || bindingSet->m_HasUAVBindings)) // UAV bindings may place UAV barriers on the same binding set
 						this->SetResourceStatesForBindingSet(bindingSet);
 				}
 				/*else if (updateThisSet)
@@ -573,7 +573,7 @@ namespace RHI::D3D12 {
 							m_Instance->ReferencedResources.push_back(bindingSet);
 					}
 
-					if (m_EnableAutomaticBarriers && (updateThisSet || bindingSet->m_HasUavBindings)) // UAV bindings may place UAV barriers on the same binding set
+					if (m_EnableAutomaticBarriers && (updateThisSet || bindingSet->m_HasUAVBindings)) // UAV bindings may place UAV barriers on the same binding set
 						this->SetResourceStatesForBindingSet(bindingSet);
 				}
 				/*else if (updateThisSet)

@@ -116,6 +116,7 @@ namespace RHI::D3D12 {
 		friend class RHIComputePipeline<ComputePipeline, D3D12Tag>;
 
 		friend class CommandList;
+		friend class Device;
 	public:
 		ComputePipeline(void) = default;
 		~ComputePipeline(void) = default;
@@ -125,8 +126,8 @@ namespace RHI::D3D12 {
 
 	private:
 		RHIComputePipelineDesc<D3D12Tag> m_Desc;
-		RefCountPtr<D3D12RootSignature> m_RootSignature{ nullptr };
-		RefCountPtr<ID3D12PipelineState> m_PipelineState{ nullptr };
+		RefCountPtr<D3D12RootSignature> m_RootSignature;
+		RefCountPtr<ID3D12PipelineState> m_PipelineState;
 
 	private:
 		RHIObject Imp_GetNativeObject(RHIObjectType type)const noexcept;

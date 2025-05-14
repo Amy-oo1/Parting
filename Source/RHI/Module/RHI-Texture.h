@@ -238,14 +238,23 @@ namespace RHI {
 		STDNODISCARD constexpr bool operator!=(const RHITextureBindingKey&)const noexcept = default;
 	};
 
+	Function<Uint64(const RHITextureSubresourceSet&)> g_TextureSubresourceSetHash = [](const RHITextureSubresourceSet& set) noexcept {
+		Uint64 hash{ 0 };
+		hash = HashCombine(hash, set.BaseMipLevel);
+		hash = HashCombine(hash, set.MipLevelCount);
+		hash = HashCombine(hash, set.BaseArraySlice);
+		hash = HashCombine(hash, set.ArraySliceCount);
+
+		return hash;
+	};
+
+
+
 	Function<Uint64(const RHITextureBindingKey&)> g_TextureBindingKeyHash = [](const RHITextureBindingKey& key)noexcept {
 		// Hash function for RHITextureBindingKey
 		Uint64 hash = 0;
 
-		hash = HashCombine(hash, key.SubresourceSet.BaseArraySlice);
-		hash = HashCombine(hash, key.SubresourceSet.ArraySliceCount);
-		hash = HashCombine(hash, key.SubresourceSet.BaseMipLevel);
-		hash = HashCombine(hash, key.SubresourceSet.MipLevelCount);
+		hash = HashCombine(hash, g_TextureSubresourceSetHash(key.SubresourceSet));
 
 		hash = HashCombine(hash, Hash<UnderlyingType<RHIFormat>>()(Tounderlying(key.Format)));
 		hash = HashCombine(hash, Hash<bool>()(key.IsReadOnlyDSV));

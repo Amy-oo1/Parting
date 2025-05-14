@@ -55,8 +55,28 @@ namespace Parting {
 		ApplicationBase(typename ManageTypeTraits<APITag>::DeviceManager* deviceManager) :
 			IRenderPass<APITag>{ deviceManager } {}
 
-	protected:
+	public:
 		Vector<String> FindScenes(IFileSystem& fs, const Path& path);
+
+		void Set_AsyncLoad(bool isAsync) { this->m_IsAsyncLoad = isAsync; }
+
+		// searches for a given substring in the list of scenes, returns that name if found;
+		// if not found, returns the first scene in the list.
+		static String FindPreferredScene(const Vector<String>& available, const String& preferred);
+
+
+	public:
+
+
+		virtual void BeginLoadingScene(SharedPtr<IFileSystem> fs, const Path& scenePath);
+
+		virtual bool LoadScene(SharedPtr<IFileSystem> fs, const Path& sceneFileName) = 0;
+
+
+	protected:
+		virtual void SceneUnloading(void) { this->m_SceneLoaded = false; }
+		virtual void SceneLoaded(void);
+
 
 
 	protected:
@@ -67,11 +87,15 @@ namespace Parting {
 		SharedPtr<TextureCache<APITag>> m_TextureCache;
 		SharedPtr<CommonRenderPasses<APITag>> m_CommonPasses;
 
+		UniquePtr<Thread> m_SceneLoadingThread;
+
 	private:
 
 
 
 	};
+
+
 	template<RHI::APITagConcept APITag>
 	inline Vector<String> ApplicationBase<APITag>::FindScenes(IFileSystem& fs, const Path& path) {
 		static Vector<String> sceneExtensions{ ".scene.json", ".gltf", ".glb" };
@@ -106,4 +130,50 @@ namespace Parting {
 
 		return scenes;
 	}
+
+	template<RHI::APITagConcept APITag>
+	inline String ApplicationBase<APITag>::FindPreferredScene(const Vector<String>& available, const String& preferred) {
+		if (available.empty())
+			return String{};
+
+		for (const auto& s : available)
+			if (s.find(preferred) != String::npos)
+				return s;
+
+		return available.front();
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline void ApplicationBase<APITag>::BeginLoadingScene(SharedPtr<IFileSystem> fs, const Path& scenePath) {
+		if (this->m_SceneLoaded)
+			this->SceneUnloading();
+
+		this->m_AllTexturesFinalized = false;
+
+		if (nullptr != this->m_TextureCache)
+			this->m_TextureCache->Reset();
+
+		this->m_DeviceManager->Get_Device()->WaitForIdle();
+		this->m_DeviceManager->Get_Device()->RunGarbageCollection();
+
+		if (this->m_IsAsyncLoad)
+			this->m_SceneLoadingThread = MakeUnique<Thread>(
+				[this, fs, scenePath](void) {
+					this->m_SceneLoaded = this->LoadScene(fs, scenePath);
+				}
+			);
+		else {
+			this->m_SceneLoaded = this->LoadScene(fs, scenePath);
+			this->SceneLoaded();
+		}
+
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline void ApplicationBase<APITag>::SceneLoaded(void) {
+		if (nullptr != this->m_TextureCache) {
+			this->m_TextureCache->ProcessRenderingThreadCommands(*this->m_CommonPasses, 0.0f);
+		}
+	}
+
 }

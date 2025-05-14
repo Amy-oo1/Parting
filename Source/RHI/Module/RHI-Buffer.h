@@ -111,6 +111,17 @@ namespace RHI {
 		
 		constexpr const RHIBufferDesc& Build(void) const { return this->m_Desc; }
 
+		STDNODISCARD static RHIBufferDesc CreateVolatileConstantBufferDesc(Uint32 ByteSize, Uint32 MaxVersions) {
+			return RHIBufferDesc{
+				.ByteSize{ ByteSize },
+				.MaxVersions{ MaxVersions },
+				.IsConstantBuffer {true },
+				.IsVolatile { true }
+			};
+		}
+
+
+
 	private:
 		RHIBufferDesc m_Desc{};
 	};
@@ -149,7 +160,8 @@ namespace RHI {
 		STDNODISCARD const RHIBufferDesc& Get_Desc(void) const { return this->Get_Derived()->Imp_Get_Desc(); }
 		STDNODISCARD GPUVirtualAddress Get_GPUVirtualAddress(void) const { return this->Get_Derived()->Imp_Get_GPUVirtualAddress(); }
 	private:
-		STDNODISCARD Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
+		STDNODISCARD Derived* Get_Derived(void)noexcept { return static_cast<Derived*>(this); }
+		STDNODISCARD const Derived* Get_Derived(void)const noexcept { return static_cast<const Derived*>(this); }
 	private:
 		const RHIBufferDesc& Imp_Get_Desc(void) const { LOG_ERROR("No Imp"); return RHIBufferDesc{}; }
 		GPUVirtualAddress Imp_Get_GPUVirtualAddress(void) const { LOG_ERROR("No Imp"); return 0; }

@@ -929,7 +929,7 @@ namespace Math {
 			}
 
 			// Divide the whole row by the pivot element
-			if (a[ColIndex][ColIndex] != Type{ 1 }) {								// Skip if already equal to 1
+			if (a[ColIndex][ColIndex] != static_cast<Type>(1)) {// Skip if already equal to 1
 				Type scale{ a[ColIndex][ColIndex] };
 				a[ColIndex] /= scale;
 				b[ColIndex] /= scale;
@@ -939,7 +939,7 @@ namespace Math {
 			// Subtract this row from others to make the rest of column j zero
 			for (Uint32 RowIndex = 0; RowIndex < N; ++RowIndex)
 				if ((RowIndex != ColIndex) && (Abs(a[RowIndex][ColIndex]) > Epsilon)) {	// skip rows already zero
-					Type scale = -a[RowIndex][ColIndex];
+					Type scale{ -a[RowIndex][ColIndex] };
 					a[RowIndex] += a[ColIndex] * scale;
 					b[RowIndex] += b[ColIndex] * scale;
 				}

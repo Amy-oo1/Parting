@@ -52,7 +52,9 @@ inline Function<void(StringView)> EnumerateToVector(Vector<String>& v) { return 
 //I do not want to use CRTP, becase ratner tan render file ,it just need call a virtual func 
 class IBlob {
 public:
+	IBlob(void) = default;
 	virtual ~IBlob(void) = default;
+public:
 	STDNODISCARD virtual const void* Get_Data(void) const = 0;
 	STDNODISCARD virtual Uint64 Get_Size(void) const = 0;
 
@@ -63,6 +65,7 @@ public:
 class Blob : public IBlob {
 public:
 	Blob(void* data, Uint64 size) :
+		IBlob{},
 		m_Data{ data },
 		m_Size{ size } {
 

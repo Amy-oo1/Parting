@@ -145,6 +145,7 @@
     <ClInclude Include="..\..\Source\Core\Color\Module\Color.h" />
     <ClInclude Include="..\..\Source\Core\Concurrent\Module\Concurrent-Atomic.h" />
     <ClInclude Include="..\..\Source\Core\Concurrent\Module\Concurrent-Mutex.h" />
+    <ClInclude Include="..\..\Source\Core\Concurrent\Module\Concurrent-Thread.h" />
     <ClInclude Include="..\..\Source\Core\Concurrent\Module\Concurrent.h" />
     <ClInclude Include="..\..\Source\Core\Container\Module\Container-Array.h" />
     <ClInclude Include="..\..\Source\Core\Container\Module\Container-Expected .h" />

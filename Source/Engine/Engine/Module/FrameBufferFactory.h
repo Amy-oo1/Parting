@@ -53,7 +53,7 @@ namespace Parting {
 
 	private:
 		RHI::RefCountPtr<Imp_Device> m_Device;
-		UnorderedMap<RHI::RHITextureSubresourceSet, RHI::RefCountPtr<Imp_FrameBuffer>> m_FrameBufferCache;
+		UnorderedMap<RHI::RHITextureSubresourceSet, RHI::RefCountPtr<Imp_FrameBuffer>, decltype(RHI::g_TextureSubresourceSetHash)> m_FrameBufferCache{ 0, RHI::g_TextureSubresourceSetHash };
 
 
 	};

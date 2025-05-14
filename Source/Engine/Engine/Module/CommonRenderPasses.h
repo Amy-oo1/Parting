@@ -43,8 +43,17 @@ PARTING_IMPORT Utility;
 #endif // PARTING_MODULE_BUILD
 
 namespace Parting {
+
+
+	template<RHI::APITagConcept APITag>
+	class DepthPass;
+
+
+
 	template<RHI::APITagConcept APITag>
 	class CommonRenderPasses final {
+		friend class DepthPass<APITag>;
+
 		using Imp_Device = typename RHI::RHITypeTraits<APITag>::Imp_Device;
 		using Imp_CommandList = typename RHI::RHITypeTraits<APITag>::Imp_CommandList;
 		using Imp_BindingLayout = typename RHI::RHITypeTraits<APITag>::Imp_BindingLayout;
@@ -126,7 +135,7 @@ namespace Parting {
 			commandList->WriteTexture(this->m_GrayTexture, 0, 0, &grayImage, 0);
 			commandList->WriteTexture(this->m_WhiteTexture, 0, 0, &whiteImage, 0);
 
-			for (Uint32 arraySlice = 0; arraySlice < 6; ++arraySlice){
+			for (Uint32 arraySlice = 0; arraySlice < 6; ++arraySlice) {
 				commandList->WriteTexture(this->m_BlackTexture2DArray, arraySlice, 0, &blackImage, 0);
 				commandList->WriteTexture(this->m_WhiteTexture2DArray, arraySlice, 0, &whiteImage, 0);
 				commandList->WriteTexture(this->m_BlackCubeMapArray, arraySlice, 0, &blackImage, 0);

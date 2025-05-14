@@ -71,7 +71,7 @@ PARTING_SUBMODE_IMPORT(ShaderBinding)
 
 namespace RHI {
 
-	PARTING_EXPORT enum class RHIPrimitiveType : Uint8{
+	PARTING_EXPORT enum class RHIPrimitiveType : Uint8 {
 		PointList,
 		LineList,
 		LineStrip,
@@ -99,7 +99,7 @@ namespace RHI {
 		RHISinglePassStereoState SinglePassStereo;
 	};
 
-	PARTING_EXPORT enum class RHIVariableShadingRate : Uint8{
+	PARTING_EXPORT enum class RHIVariableShadingRate : Uint8 {
 		e1x1,
 		e1x2,
 		e2x1,
@@ -109,7 +109,7 @@ namespace RHI {
 		e4x4
 	};
 
-	PARTING_EXPORT enum class RHIShadingRateCombiner : Uint8{
+	PARTING_EXPORT enum class RHIShadingRateCombiner : Uint8 {
 		Passthrough,
 		Override,
 		Min,
@@ -128,7 +128,7 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	struct RHIGraphicsPipelineDesc final {
+		struct RHIGraphicsPipelineDesc final {
 		using Imp_InputLayout = typename RHITypeTraits<APITag>::Imp_InputLayout;
 		using Imp_Shader = typename RHITypeTraits<APITag>::Imp_Shader;
 		using Imp_BindingLayout = typename RHITypeTraits<APITag>::Imp_BindingLayout;
@@ -151,78 +151,95 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	class RHIGraphicsPipelineDescBuilder final {
+		class RHIGraphicsPipelineDescBuilder final {
 		using Imp_InputLayout = typename RHITypeTraits<APITag>::Imp_InputLayout;
 		using Imp_Shader = typename RHITypeTraits<APITag>::Imp_Shader;
 		using Imp_BindingLayout = typename RHITypeTraits<APITag>::Imp_BindingLayout;
-	public:
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Reset(void) { this->m_Desc = RHIGraphicsPipelineDesc{}; return *this; }
-		
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_PrimType(RHIPrimitiveType primType) { this->m_Desc.PrimType = primType; return *this; }
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_PatchControlPoints(Uint32 patchControlPoints) { this->m_Desc.PatchControlPoints = patchControlPoints; return *this; }
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_InputLayout(Imp_InputLayout* inputLayout) { this->m_Desc.InputLayout = inputLayout; return *this; }
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_VS(Imp_Shader* shader) { this->m_Desc.VS = shader; return *this; }
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_HS(Imp_Shader* shader) { this->m_Desc.HS = shader; return *this; }
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_DS(Imp_Shader* shader) { this->m_Desc.DS = shader; return *this; }
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_GS(Imp_Shader* shader) { this->m_Desc.GS = shader; return *this; }
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_PS(Imp_Shader* shader) { this->m_Desc.PS = shader; return *this; }
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_RenderState(const RHIRenderState& renderState) { this->m_Desc.RenderState = renderState; return *this; }
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_ShadingRateState(const RHIVariableRateShadingState& shadingRateState) { this->m_Desc.ShadingRateState = shadingRateState; return *this; }
-		
-		STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& AddBindingLayout(Imp_BindingLayout* bindingLayout) { this->m_Desc.BindingLayouts[this->m_Desc.BindingLayoutCount++] = bindingLayout; return *this; }
+		public:
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Reset(void) { this->m_Desc = RHIGraphicsPipelineDesc{}; return *this; }
 
-		STDNODISCARD constexpr const RHIGraphicsPipelineDesc<APITag>& Build(void) { return this->m_Desc; }
-	private:
-		RHIGraphicsPipelineDesc<APITag> m_Desc{};
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_PrimType(RHIPrimitiveType primType) { this->m_Desc.PrimType = primType; return *this; }
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_PatchControlPoints(Uint32 patchControlPoints) { this->m_Desc.PatchControlPoints = patchControlPoints; return *this; }
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_InputLayout(Imp_InputLayout* inputLayout) { this->m_Desc.InputLayout = inputLayout; return *this; }
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_VS(Imp_Shader* shader) { this->m_Desc.VS = shader; return *this; }
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_HS(Imp_Shader* shader) { this->m_Desc.HS = shader; return *this; }
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_DS(Imp_Shader* shader) { this->m_Desc.DS = shader; return *this; }
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_GS(Imp_Shader* shader) { this->m_Desc.GS = shader; return *this; }
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_PS(Imp_Shader* shader) { this->m_Desc.PS = shader; return *this; }
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_RenderState(const RHIRenderState& renderState) { this->m_Desc.RenderState = renderState; return *this; }
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_ShadingRateState(const RHIVariableRateShadingState& shadingRateState) { this->m_Desc.ShadingRateState = shadingRateState; return *this; }
+
+			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& AddBindingLayout(Imp_BindingLayout* bindingLayout) { this->m_Desc.BindingLayouts[this->m_Desc.BindingLayoutCount++] = bindingLayout; return *this; }
+
+			STDNODISCARD constexpr const RHIGraphicsPipelineDesc<APITag>& Build(void) { return this->m_Desc; }
+		private:
+			RHIGraphicsPipelineDesc<APITag> m_Desc{};
 	};
 
 	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
-	class RHIGraphicsPipeline :public RHIResource<Derived> {
+		class RHIGraphicsPipeline :public RHIResource<Derived> {
 		friend class RHIResource<Derived>;
-	protected:
-		RHIGraphicsPipeline(void) = default;
-		virtual ~RHIGraphicsPipeline(void) = default;
+		protected:
+			RHIGraphicsPipeline(void) = default;
+			virtual ~RHIGraphicsPipeline(void) = default;
 
-	public:
-		STDNODISCARD const RHIGraphicsPipelineDesc<APITag>& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }
-		STDNODISCARD const RHIFrameBufferInfo<APITag>& Get_FrameBufferInfo(void)const { return this->Get_Derived()->Imp_Get_FrameBufferInfo(); }
+		public:
+			STDNODISCARD const RHIGraphicsPipelineDesc<APITag>& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }
+			STDNODISCARD const RHIFrameBufferInfo<APITag>& Get_FrameBufferInfo(void)const { return this->Get_Derived()->Imp_Get_FrameBufferInfo(); }
 
-	private:
-		STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
-	private:
-		const RHIGraphicsPipelineDesc<APITag>& Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return RHIGraphicsPipelineDesc<APITag>{}; }
-		const RHIFrameBufferInfo<APITag>& Imp_Get_FrameBufferInfo(void)const { LOG_ERROR("No Imp"); return RHIFrameBufferInfo<APITag>{}; }
+		private:
+			STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
+		private:
+			const RHIGraphicsPipelineDesc<APITag>& Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return RHIGraphicsPipelineDesc<APITag>{}; }
+			const RHIFrameBufferInfo<APITag>& Imp_Get_FrameBufferInfo(void)const { LOG_ERROR("No Imp"); return RHIFrameBufferInfo<APITag>{}; }
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	struct RHIComputePipelineDesc final {
+		struct RHIComputePipelineDesc final {
 		using Imp_Shader = typename RHITypeTraits<APITag>::Imp_Shader;
 		using Imp_BindingLayout = typename RHITypeTraits<APITag>::Imp_BindingLayout;
 
-		Imp_Shader* CS{ nullptr };
+		RefCountPtr<Imp_Shader> CS{ nullptr };
 
-		Array<Imp_BindingLayout*, g_MaxBindingLayoutCount> BindingLayouts;
+		Array<RefCountPtr<Imp_BindingLayout>, g_MaxBindingLayoutCount> BindingLayouts;
 		RemoveCV<decltype(g_MaxBindingLayoutCount)>::type BindingLayoutCount{ 0 };
 	};
 
-	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
-	class RHIComputePipeline :public RHIResource<Derived> {
-		friend class RHIResource<Derived>;
-	protected:
-		RHIComputePipeline(void) = default;
-		virtual ~RHIComputePipeline(void) = default;
-
+	template<APITagConcept APITag>
+	struct RHIComputePipelineDescBuilder final {
+		using Imp_Shader = typename RHITypeTraits<APITag>::Imp_Shader;
+		using Imp_BindingLayout = typename RHITypeTraits<APITag>::Imp_BindingLayout;
 	public:
-		STDNODISCARD const RHIComputePipelineDesc<APITag>& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }
+		constexpr RHIComputePipelineDescBuilder& Reset(void) { this->m_Desc = RHIComputePipelineDesc{}; return *this; }
+
+		constexpr RHIComputePipelineDescBuilder& Set_CS(RefCountPtr<Imp_Shader> shader) { this->m_Desc.CS = shader; return *this; }
+
+		constexpr RHIComputePipelineDescBuilder& AddBindingLayout(RefCountPtr<Imp_BindingLayout> bindingLayout) { this->m_Desc.BindingLayouts[this->m_Desc.BindingLayoutCount++] = bindingLayout; return *this; }
+
+		STDNODISCARD constexpr const RHIComputePipelineDesc<APITag>& Build(void) { return this->m_Desc; }
 
 	private:
-		STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
-	private:
-		const RHIComputePipelineDesc<APITag>& Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return RHIComputePipelineDesc<APITag>{}; }
+		RHIComputePipelineDesc<APITag> m_Desc{};
+	};
+
+	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
+		class RHIComputePipeline :public RHIResource<Derived> {
+		friend class RHIResource<Derived>;
+		protected:
+			RHIComputePipeline(void) = default;
+			virtual ~RHIComputePipeline(void) = default;
+
+		public:
+			STDNODISCARD const RHIComputePipelineDesc<APITag>& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }
+
+		private:
+			STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
+		private:
+			const RHIComputePipelineDesc<APITag>& Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return RHIComputePipelineDesc<APITag>{}; }
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	struct RHIMeshletPipelineDesc final {
+		struct RHIMeshletPipelineDesc final {
 		using Imp_Shader = typename RHITypeTraits<APITag>::Imp_Shader;
 		using Imp_BindingLayout = typename RHITypeTraits<APITag>::Imp_BindingLayout;
 
@@ -240,21 +257,21 @@ namespace RHI {
 
 
 	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
-	class RHIMeshletPipeline :public RHIResource<Derived> {
+		class RHIMeshletPipeline :public RHIResource<Derived> {
 		friend class RHIResource<Derived>;
-	protected:
-		RHIMeshletPipeline(void) = default;
-		PARTING_VIRTUAL ~RHIMeshletPipeline(void) = default;
+		protected:
+			RHIMeshletPipeline(void) = default;
+			PARTING_VIRTUAL ~RHIMeshletPipeline(void) = default;
 
-	public:
-		STDNODISCARD const RHIMeshletPipelineDesc<APITag>& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }
-		STDNODISCARD const RHIFrameBufferInfo<APITag>& Get_FrameBufferInfo(void)const { return this->Get_Derived()->Imp_Get_FrameBufferInfo(); }
+		public:
+			STDNODISCARD const RHIMeshletPipelineDesc<APITag>& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }
+			STDNODISCARD const RHIFrameBufferInfo<APITag>& Get_FrameBufferInfo(void)const { return this->Get_Derived()->Imp_Get_FrameBufferInfo(); }
 
-	private:
-		STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
-	private:
-		const RHIMeshletPipelineDesc<APITag>& Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return RHIMeshletPipelineDesc<APITag>{}; }
-		const RHIFrameBufferInfo<APITag>& Imp_Get_FrameBufferInfo(void)const { LOG_ERROR("No Imp"); return RHIFrameBufferInfo<APITag>{}; }
+		private:
+			STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
+		private:
+			const RHIMeshletPipelineDesc<APITag>& Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return RHIMeshletPipelineDesc<APITag>{}; }
+			const RHIFrameBufferInfo<APITag>& Imp_Get_FrameBufferInfo(void)const { LOG_ERROR("No Imp"); return RHIFrameBufferInfo<APITag>{}; }
 	};
 
 }

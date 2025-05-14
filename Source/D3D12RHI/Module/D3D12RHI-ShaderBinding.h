@@ -388,6 +388,7 @@ namespace RHI::D3D12 {
 		friend class RHIBindingSet<BindingSet, D3D12Tag>;
 
 		friend class CommandList;
+		friend class Device;
 	public:
 		BindingSet(const Context& context, D3D12DeviceResources& resources) :
 			RHIBindingSet<BindingSet, D3D12Tag>{},
@@ -410,11 +411,11 @@ namespace RHI::D3D12 {
 	private:
 
 	private:
-		const Context& m_Context{};
+		const Context& m_Context;
 		D3D12DeviceResources& m_DeviceResourcesRef;
 
 		RHIBindingSetDesc<D3D12Tag> m_Desc{};
-		RefCountPtr<BindingLayout> m_Layout{ nullptr };
+		RefCountPtr<BindingLayout> m_Layout;
 
 		D3D12DescriptorIndex m_DescriptorTableSRVetc{ 0 };
 		D3D12DescriptorIndex m_DescriptorTableSamplers{ 0 };
@@ -422,7 +423,7 @@ namespace RHI::D3D12 {
 		D3D12DescriptorIndex m_RootParameterIndexSamplers{ 0 };
 		bool m_DescriptorTableValidSRVetc{ false };
 		bool m_DescriptorTableValidSamplers{ false };
-		bool m_HasUavBindings{ false };
+		bool m_HasUAVBindings{ false };
 
 		Array<Pair<D3D12RootParameterIndex, Buffer*>, g_MaxVolatileConstantBufferCountPerLayout> m_RootParametersVolatileCB;
 		RemoveCV<decltype(g_MaxVolatileConstantBufferCountPerLayout)>::type m_VolatileCBCount{ 0 };
@@ -480,11 +481,11 @@ namespace RHI::D3D12 {
 							Found = true;
 							break;
 						}
+					}
 
-						if (!Found) {
-							D3D12_SAMPLER_DESC DefaultSamplerDesc{};
-							this->m_Context.Device->CreateSampler(&DefaultSamplerDesc, descriptorHandle);
-						}
+					if (!Found) {
+						D3D12_SAMPLER_DESC DefaultSamplerDesc{};
+						this->m_Context.Device->CreateSampler(&DefaultSamplerDesc, descriptorHandle);
 					}
 				}
 
@@ -547,7 +548,7 @@ namespace RHI::D3D12 {
 							else
 								Buffer::CreateNullUAV(descriptorHandle, Binding.Format, this->m_Context);
 
-							this->m_HasUavBindings = true;
+							this->m_HasUAVBindings = true;
 							Found = true;
 							break;
 						}
@@ -576,7 +577,7 @@ namespace RHI::D3D12 {
 							else
 								ASSERT(false);//TODO :
 
-							this->m_HasUavBindings = true;
+							this->m_HasUAVBindings = true;
 							Found = true;
 							break;
 						}
@@ -603,7 +604,7 @@ namespace RHI::D3D12 {
 							SamplerFeedbackTexture* TempSamplerFeedbackTexture{ Get<RefCountPtr<SamplerFeedbackTexture>>(Binding.ResourcePtr).Get() };
 							TempSamplerFeedbackTexture->CreateUAV(descriptorHandle);
 
-							this->m_HasUavBindings = true;
+							this->m_HasUAVBindings = true;
 							Found = true;
 							break;
 						}

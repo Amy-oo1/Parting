@@ -117,6 +117,30 @@
     <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-Base.h">
       <Filter>Render\Module</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\SceneTypes.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\MaterialBindingCache.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\Camera.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\Camera-Base.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\Camera-FirstPerson.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\Camera-ThirdPerson.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\Sence.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\GLTFImporter.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\Engine\EnghineSrcEmpty.cpp" />
