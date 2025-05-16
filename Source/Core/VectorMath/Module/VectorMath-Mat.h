@@ -827,7 +827,7 @@ namespace Math {
 	template <typename Type, Uint32 RowCount, Uint32 ColCount>	Mat<Type, RowCount, ColCount>& operator *= (Mat<Type, RowCount, ColCount>& a, const Mat<Type, ColCount, ColCount>& b) { return a = a * b; }
 
 
-	// Matrix-vector multiplication
+	// Matrix-Vec multiplication
 
 	template <typename Type, Uint32 RowCount, Uint32 ColCount>Vec<Type, RowCount> operator * (const Mat<Type, RowCount, ColCount>& a, const Vec<Type, ColCount>& b) {
 		auto result{ Vec<Type, RowCount>::Zero() };

@@ -38,7 +38,7 @@ namespace Math {
 
 		constexpr Plane(void) = default;
 		constexpr Plane(const Plane&) = default;
-		constexpr Plane(const Vec<float, 3>& n, float d) : m_Normal{ n }, m_Distance{ d } {}
+		constexpr Plane(const Vec<float, 3>& N, float d) : m_Normal{ N }, m_Distance{ d } {}
 		constexpr Plane(float x, float y, float z, float d) : m_Normal{ x, y, z }, m_Distance{ d } {}
 
 		Plane Normalize(void) const {
@@ -85,9 +85,9 @@ namespace Math {
 		Frustum(const Mat<float, 4, 4>& viewProjMatrix, bool isReverseProjection);
 
 		bool IntersectsWith(const Vec<float, 3>& point) const;
-		/*bool intersectsWith(const box3& box) const;*/
+		/*bool intersectsWith(const box3& Box) const;*/
 
-		static constexpr Uint32 numCorners = 8;
+		static constexpr Uint32 NumCorners = 8;
 		Vec<float, 3> Get_Corner(Corners index) const;
 
 		Frustum Normalize(void) const {

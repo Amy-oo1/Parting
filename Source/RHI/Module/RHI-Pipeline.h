@@ -199,7 +199,7 @@ namespace RHI {
 		using Imp_Shader = typename RHITypeTraits<APITag>::Imp_Shader;
 		using Imp_BindingLayout = typename RHITypeTraits<APITag>::Imp_BindingLayout;
 
-		RefCountPtr<Imp_Shader> CS{ nullptr };
+		RefCountPtr<Imp_Shader> CS;
 
 		Array<RefCountPtr<Imp_BindingLayout>, g_MaxBindingLayoutCount> BindingLayouts;
 		RemoveCV<decltype(g_MaxBindingLayoutCount)>::type BindingLayoutCount{ 0 };

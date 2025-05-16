@@ -13,6 +13,7 @@
 #include "Core/VectorMath/Module/VectorMath-Vec.h"
 #include "Core/VectorMath/Module/VectorMath-Mat.h"
 #include "Core/VectorMath/Module/VectorMath-Affine.h"
+#include "Core/VectorMath/Module/VectorMath-Box.h"
 #include "Core/VectorMath/Module/VectorMath-Frustum.h"
 
 namespace Math {
@@ -36,6 +37,12 @@ namespace Math {
 	using AffineF2 = Affine<float, 2>;
 	using AffineF3 = Affine<float, 3>;
 	using AffineF4 = Affine<float, 4>;
+
+	using BoxF2 = Box<float, 2>;
+	using BoxF3 = Box<float, 3>;
+
+	using BoxI2 = Box<Int32, 2>;
+	using BoxI3 = Box<Int32, 3>;
 
 
 

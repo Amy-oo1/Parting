@@ -177,6 +177,7 @@
     <ClInclude Include="..\..\Source\Core\Utility\Module\Utility-Traits.h" />
     <ClInclude Include="..\..\Source\Core\Utility\Module\Utility.h" />
     <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Affine.h" />
+    <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Box.h" />
     <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Frustum.h" />
     <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Mat.h" />
     <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Misc.h" />

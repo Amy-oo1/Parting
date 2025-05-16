@@ -136,8 +136,8 @@ namespace RHI {
 		RHIOffset3D Offset{ .X{ 0 }, .Y{ 0 }, .Z{ 0 } };
 		RHIExtent3D Extent{ .Width{ Max_Uint32 }, .Height{ Max_Uint32 }, .Depth{ Max_Uint32 } };// means the entire dimension is part of the region resolve() below will translate these values into actual dimensions
 
-		Uint32 MipLevel{ 0 };
-		Uint32 ArraySlice{ 0 };
+		Uint32 MipLevel{ 0 };//TODO 
+		Uint32 ArraySlice{ 0 };//TODO swap member loaction 
 
 		STDNODISCARD RHITextureSlice Resolve(const RHITextureDesc& desc)const {
 			auto slice{ *this };

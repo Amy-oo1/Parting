@@ -209,7 +209,6 @@ namespace Parting {
 			commonPasses.m_AnisotropicWrapSampler.Get(),
 			commonPasses.m_GrayTexture.Get()
 		);
-
 	}
 
 	template<RHI::APITagConcept APITag>

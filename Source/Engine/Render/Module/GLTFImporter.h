@@ -23,7 +23,17 @@ PARTING_IMPORT Utility;
 
 #include "ThirdParty/ShaderMake/include/ShaderMake/ShaderBlob.h"
 #include "ThirdParty/taskflow/taskflow.hpp"
+
+
+#if defined (_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4996) // Silence warning from tinyEXR
+#endif
+#define CGLTF_IMPLEMENTATION
 #include "ThirdParty/cgltf/cgltf.h"
+#if defined (_MSC_VER)
+#pragma warning(pop)
+#endif
 
 #include "Core/Platform/Module/Platform.h"
 #include "Core/Utility/Module/Utility.h"
@@ -90,7 +100,7 @@ namespace Parting {
 	};
 
 
-	cgltf_result cgltf_read_file_vfs(const struct cgltf_memory_options* memory_options, const struct cgltf_file_options* file_options, const char* path, cgltf_size* size, void** data) {
+	cgltf_result cgltf_read_file_vfs(const cgltf_memory_options* memory_options, const cgltf_file_options* file_options, const char* path, cgltf_size* size, void** data) {
 		cgltf_vfs_context* context{ static_cast<cgltf_vfs_context*>(file_options->user_data) };
 
 		auto blob{ context->Fs->ReadFile(path) };
@@ -103,7 +113,7 @@ namespace Parting {
 		if (nullptr != size)
 			*size = blob->Get_Size();
 		if (nullptr != data)
-			*data = (void*)blob->Get_Data();
+			*data = const_cast<void*>(blob->Get_Data());
 
 		return cgltf_result_success;
 	}
@@ -156,7 +166,7 @@ namespace Parting {
 						goto fail; // expecting a non-negative integer; non-value results in CGLTF_ERROR_JSON which is negative
 
 					if (static_cast<Uint64>(index) >= objects->images_count) {
-						LOG_ERROR("Invalid image index {1} specified in glTF texture definition"/*, index*/);
+						LOG_ERROR("Invalid image index  specified in glTF texture definition"/*, index*/);
 
 						return nullptr;
 					}
@@ -326,9 +336,7 @@ namespace Parting {
 				i = cgltf_skip_json(tokens, i + 1);
 
 			if (i < 0)
-			{
 				return i;
-			}
 		}
 
 		return i;
@@ -338,16 +346,16 @@ namespace Parting {
 	// Note: SSS and Hair can't be set at the same time on the same material
 	template<RHI::APITagConcept APITag>
 	const void ParseMaterialExtensions(cgltf_options* options, const cgltf_material* material, Material<APITag>* matInfo) {
-		for (Uint64 i = 0; i < material->extensions_count; ++i) {
-			const cgltf_extension& ext{ material->extensions[i] };
+		for (Uint64 Index = 0; Index < material->extensions_count; ++Index) {
+			const cgltf_extension& ext{ material->extensions[Index] };
 
 			if (nullptr != ext.name || nullptr != ext.data)
 				continue;
 
-			if (strcmp(ext.name, "NV_materials_subsurface") != 0 && strcmp(ext.name, "NV_materials_hair") != 0)
+			if (strcmp(ext.name, "NV_materials_subsurface") != 0 && strcmp(ext.name, "NV_materials_hair") != 0)//TODO msvc hash a err
 				continue;
 
-			Uint64 extensionLength{ strlen(ext.data) };
+			Uint64 extensionLength{ strlen(ext.data) };//TODO msvc hash a err
 			if (extensionLength > 1024)
 				return; // safeguard against weird inputs
 
@@ -358,7 +366,7 @@ namespace Parting {
 			Int32 numTokens{ jsmn_parse(&parser, ext.data, extensionLength, nullptr, 0) };
 
 			// allocate the tokens on the stack
-			jsmntok_t* tokens{ static_cast<jsmntok_t*>(_alloca(numTokens * sizeof(jsmntok_t))) };
+			jsmntok_t* tokens{ static_cast<jsmntok_t*>(_alloca(numTokens * sizeof(jsmntok_t))) };//TODO msvc hash a err
 
 			// reset the parser and parse
 			jsmn_init(&parser);
@@ -377,8 +385,8 @@ namespace Parting {
 			const Uint8* json_chunk{ reinterpret_cast<Uint8*>(ext.data) };
 			Int32 k{ 0 };
 			if (strcmp(ext.name, "NV_materials_subsurface") == 0) {
-				matInfo->enableSubsurfaceScattering = true;
-				cgltf_subsurface gltf_subsurface{};
+				matInfo->EnableSubsurfaceScattering = true;
+				cgltf_subsurface gltf_subsurface;
 				cgltf_parse_json_subsurface(options, tokens, k, json_chunk, &gltf_subsurface);
 
 				matInfo->Subsurface.TransmissionColor = Math::VecF3{ gltf_subsurface.transmission_color[0], gltf_subsurface.transmission_color[1], gltf_subsurface.transmission_color[2] };
@@ -388,7 +396,7 @@ namespace Parting {
 			}
 			else if (strcmp(ext.name, "NV_materials_hair") == 0) {
 				matInfo->EnableHair = true;
-				cgltf_hair gltf_hair{};
+				cgltf_hair gltf_hair;
 				cgltf_parse_json_hair(options, tokens, k, json_chunk, &gltf_hair);
 
 				matInfo->Hair.BaseColor = Math::VecF3{ gltf_hair.base_color[0], gltf_hair.base_color[1], gltf_hair.base_color[2] };
@@ -426,7 +434,7 @@ namespace Parting {
 		// TODO: sparse accessor support
 		const cgltf_buffer_view* view{ accessor->buffer_view };
 		const Uint8* data{ reinterpret_cast<Uint8*>(view->buffer->data) + view->offset + accessor->offset };
-		const Uint64 stride{ view->stride ? view->stride : defaultStride };
+		const Uint64 stride{ 0 != view->stride ? view->stride : defaultStride };
 		return MakePair(data, stride);
 	}
 
@@ -465,9 +473,9 @@ namespace Parting {
 			return false;
 		}
 
-		cgltf_result res{ cgltf_load_buffers(&options, objects, normalizedFileName.c_str()) };
+		res = cgltf_load_buffers(&options, objects, normalizedFileName.c_str());//NOTE : glft or bin this func will parse werr
 		if (res != cgltf_result_success) {
-			LOG_ERROR("Failed to load buffers for glTF file{1}: "/*, normalizedFileName.c_str(), cgltf_error_to_string(res)*/);
+			LOG_ERROR("Failed to load buffers for glTF file : "/*, normalizedFileName.c_str(), cgltf_error_to_string(res)*/);
 			return false;
 		}
 
@@ -480,20 +488,23 @@ namespace Parting {
 			// See if the extensions include a DDS image
 			const cgltf_image* ddsImage{ ParseDDSImage(texture, objects) };
 
-			if ((!texture->image || (!texture->image->uri && !texture->image->buffer_view)) &&
-				(!ddsImage || (!ddsImage->uri && !ddsImage->buffer_view)))
+			if ((nullptr == texture->image || (nullptr == texture->image->uri && nullptr == texture->image->buffer_view)) &&
+				(nullptr == ddsImage || (nullptr == ddsImage->uri && nullptr == ddsImage->buffer_view)))
 				return nullptr;
 
 			// Pick either DDS or standard image, prefer DDS
-			const cgltf_image* activeImage{ (ddsImage && (ddsImage->uri || ddsImage->buffer_view)) ? ddsImage : texture->image };
+			const cgltf_image* activeImage{
+				(nullptr != ddsImage && (nullptr != ddsImage->uri || nullptr != ddsImage->buffer_view)) ?
+				ddsImage :
+				texture->image
+			};
 
 			if (auto it{ textures.find(activeImage) }; it != textures.end())
 				return it->second;
 
 			SharedPtr<LoadedTexture<APITag>> loadedTexture;
 
-			if (activeImage->buffer_view)
-			{
+			if (activeImage->buffer_view) {
 				// If the image has inline data, like coming from a GLB container, use that.
 
 				const Uint8* dataPtr{ static_cast<const Uint8*>(activeImage->buffer_view->buffer->data) + activeImage->buffer_view->offset };
@@ -523,7 +534,7 @@ namespace Parting {
 					textureData = MakeShared<Blob>(dataCopy, dataSize);
 				}
 
-				Uint64 imageIndex{ activeImage - objects->images };
+				Int64 imageIndex{ activeImage - objects->images };
 				String name{ activeImage->name ? activeImage->name : fileName.filename().generic_string() + "[" + std::to_string(imageIndex) + "]" };
 				String mimeType{ activeImage->mime_type ? activeImage->mime_type : "" };
 
@@ -532,104 +543,98 @@ namespace Parting {
 				else
 					loadedTexture = textureCache.LoadTextureFromMemoryDeferred(textureData, name, mimeType, sRGB);
 			}
-			else
-			{
+			else {
 				// Decode %-encoded characters in the URI, because cgltf doesn't do that for some reason.
-				std::string uri = activeImage->uri;
+				String uri{ activeImage->uri };
 				cgltf_decode_uri(uri.data());
 
 				// No inline data - read a file.
-				std::filesystem::path filePath = fileName.parent_path() / uri;
+				Path filePath{ fileName.parent_path() / uri };
 
 				// Try to replace the texture with DDS, if enabled.
-				if (c_SearchForDds && !ddsImage)
-				{
-					std::filesystem::path filePathDDS = filePath;
+				if (c_SearchForDDS && !ddsImage) {
+					Path filePathDDS{ filePath };
 
 					filePathDDS.replace_extension(".dds");
 
-					if (m_fs->fileExists(filePathDDS))
+					if (m_FS->FileExists(filePathDDS))
 						filePath = filePathDDS;
 				}
 
-#ifdef DONUT_WITH_TASKFLOW
 				if (executor)
 					loadedTexture = textureCache.LoadTextureFromFileAsync(filePath, sRGB, *executor);
 				else
-#endif
 					loadedTexture = textureCache.LoadTextureFromFileDeferred(filePath, sRGB);
 			}
-			textures[activeImage] = loadedTexture;
-			return loadedTexture;
+
+			return textures[activeImage] = loadedTexture;
 			};
 
-		std::unordered_map<const cgltf_material*, std::shared_ptr<Material>> materials;
+		UnorderedMap<const cgltf_material*, SharedPtr<Material<APITag>>> materials;
 
-		for (size_t mat_idx = 0; mat_idx < objects->materials_count; mat_idx++)
-		{
-			const cgltf_material& material = objects->materials[mat_idx];
+		for (Uint64 mat_idx = 0; mat_idx < objects->materials_count; ++mat_idx) {
+			const cgltf_material& material{ objects->materials[mat_idx] };
 
-			std::shared_ptr<Material> matinfo = m_SceneTypeFactory->CreateMaterial();
-			if (material.name)
-				matinfo->name = material.name;
-			matinfo->modelFileName = normalizedFileName;
-			matinfo->materialIndexInModel = int(mat_idx);
+			auto matinfo{ MakeShared<Material<APITag>>() };
+			if (nullptr != material.name)
+				matinfo->Name = material.name;
+			matinfo->ModelFileName = normalizedFileName;
+			matinfo->MaterialIndexInModel = static_cast<Int32>(mat_idx);
 
 			bool useTransmission = false;
 
-			if (material.has_pbr_specular_glossiness)
-			{
-				matinfo->useSpecularGlossModel = true;
-				matinfo->baseOrDiffuseTexture = load_texture(material.pbr_specular_glossiness.diffuse_texture.texture, true);
-				matinfo->metalRoughOrSpecularTexture = load_texture(material.pbr_specular_glossiness.specular_glossiness_texture.texture, true);
-				matinfo->baseOrDiffuseColor = material.pbr_specular_glossiness.diffuse_factor;
-				matinfo->specularColor = material.pbr_specular_glossiness.specular_factor;
-				matinfo->roughness = 1.f - material.pbr_specular_glossiness.glossiness_factor;
-				matinfo->opacity = material.pbr_specular_glossiness.diffuse_factor[3];
+			if (material.has_pbr_specular_glossiness) {
+				matinfo->UseSpecularGlossModel = true;
+				matinfo->BaseOrDiffuseTexture = load_texture(material.pbr_specular_glossiness.diffuse_texture.texture, true);
+				matinfo->MetalRoughOrSpecularTexture = load_texture(material.pbr_specular_glossiness.specular_glossiness_texture.texture, true);
+				matinfo->BaseOrDiffuseColor = material.pbr_specular_glossiness.diffuse_factor;
+				matinfo->SpecularColor = material.pbr_specular_glossiness.specular_factor;
+				matinfo->Roughness = 1.f - material.pbr_specular_glossiness.glossiness_factor;
+				matinfo->Opacity = material.pbr_specular_glossiness.diffuse_factor[3];
 			}
-			else if (material.has_pbr_metallic_roughness)
-			{
-				matinfo->useSpecularGlossModel = false;
-				matinfo->baseOrDiffuseTexture = load_texture(material.pbr_metallic_roughness.base_color_texture.texture, true);
-				matinfo->metalRoughOrSpecularTexture = load_texture(material.pbr_metallic_roughness.metallic_roughness_texture.texture, false);
-				matinfo->baseOrDiffuseColor = material.pbr_metallic_roughness.base_color_factor;
-				matinfo->metalness = material.pbr_metallic_roughness.metallic_factor;
-				matinfo->roughness = material.pbr_metallic_roughness.roughness_factor;
-				matinfo->opacity = material.pbr_metallic_roughness.base_color_factor[3];
+			else if (material.has_pbr_metallic_roughness) {
+				matinfo->UseSpecularGlossModel = false;
+				matinfo->BaseOrDiffuseTexture = load_texture(material.pbr_metallic_roughness.base_color_texture.texture, true);
+				matinfo->MetalRoughOrSpecularTexture = load_texture(material.pbr_metallic_roughness.metallic_roughness_texture.texture, false);
+				matinfo->BaseOrDiffuseColor = material.pbr_metallic_roughness.base_color_factor;
+				matinfo->Metalness = material.pbr_metallic_roughness.metallic_factor;
+				matinfo->Roughness = material.pbr_metallic_roughness.roughness_factor;
+				matinfo->Opacity = material.pbr_metallic_roughness.base_color_factor[3];
 			}
 
-			if (material.has_transmission)
-			{
-				if (material.has_pbr_specular_glossiness)
-				{
-					log::warning("Material '%s' uses the KHR_materials_transmission extension, which is undefined on materials using the "
-						"KHR_materials_pbrSpecularGlossiness extension model.", material.name ? material.name : "<Unnamed>");
+			if (material.has_transmission) {
+				if (material.has_pbr_specular_glossiness) {
+					LOG_ERROR("Material  uses the KHR_materials_transmission extension, which is undefined on materials using the "
+						"KHR_materials_pbrSpecularGlossiness extension model."/*, material.name ? material.name : "<Unnamed>"*/);
 				}
 
-				matinfo->transmissionTexture = load_texture(material.transmission.transmission_texture.texture, false);
-				matinfo->transmissionFactor = material.transmission.transmission_factor;
+				matinfo->TransmissionTexture = load_texture(material.transmission.transmission_texture.texture, false);
+				matinfo->TransmissionFactor = material.transmission.transmission_factor;
 				useTransmission = true;
 			}
 
-			matinfo->emissiveTexture = load_texture(material.emissive_texture.texture, true);
-			matinfo->emissiveColor = material.emissive_factor;
-			matinfo->emissiveIntensity = dm::maxComponent(matinfo->emissiveColor);
-			if (matinfo->emissiveIntensity > 0.f)
-				matinfo->emissiveColor /= matinfo->emissiveIntensity;
+			matinfo->EmissiveTexture = load_texture(material.emissive_texture.texture, true);
+			matinfo->EmissiveColor = material.emissive_factor;
+			matinfo->EmissiveIntensity = Math::MaxComponent(matinfo->EmissiveColor);
+			if (matinfo->EmissiveIntensity > 0.f)
+				matinfo->EmissiveColor /= matinfo->EmissiveIntensity;
 			else
-				matinfo->emissiveIntensity = 1.f;
-			matinfo->normalTexture = load_texture(material.normal_texture.texture, false);
-			matinfo->normalTextureScale = material.normal_texture.scale;
-			matinfo->occlusionTexture = load_texture(material.occlusion_texture.texture, false);
-			matinfo->occlusionStrength = material.occlusion_texture.scale;
-			matinfo->alphaCutoff = material.alpha_cutoff;
-			matinfo->doubleSided = material.double_sided;
+				matinfo->EmissiveIntensity = 1.f;
+			matinfo->NormalTexture = load_texture(material.normal_texture.texture, false);
+			matinfo->NormalTextureScale = material.normal_texture.scale;
+			matinfo->OcclusionTexture = load_texture(material.occlusion_texture.texture, false);
+			matinfo->OcclusionStrength = material.occlusion_texture.scale;
+			matinfo->AlphaCutoff = material.alpha_cutoff;
+			matinfo->DoubleSided = material.double_sided;
 
 			// Texture transformation extension:
 			// Only scaling transformation for normal map texture coordinate is supported in importer.
 			// All other transformations(offset, rotation) and all transformations for other textures is ignored.
 			// This is for saving memory of material buffer, and the usage for other textures of this extension is very limited.
-			matinfo->normalTextureTransformScale = material.normal_texture.has_transform ? dm::float2(material.normal_texture.transform.scale[0], material.normal_texture.transform.scale[1]) : dm::float2(1.0f);
+			matinfo->NormalTextureTransformScale =
+				material.normal_texture.has_transform ?
+				Math::VecF2{ material.normal_texture.transform.scale[0], material.normal_texture.transform.scale[1] } :
+				Math::VecF2{ 1.0f };
 			// Log warnings for all unsupported texture coordinate transformations
 			if (material.pbr_metallic_roughness.base_color_texture.has_transform ||
 				material.pbr_metallic_roughness.metallic_roughness_texture.has_transform ||
@@ -640,16 +645,14 @@ namespace Parting {
 				(material.normal_texture.has_transform &&
 					(material.normal_texture.transform.rotation != 0.0f ||
 						material.normal_texture.transform.offset[0] != 0.0f ||
-						material.normal_texture.transform.offset[1] != 0.0f)))
-			{
-				log::warning("Material '%s' uses the KHR_texture_transform extension, which is not supported on non-scale transformations and all textures except normal", material.name ? material.name : "<Unnamed>");
+						material.normal_texture.transform.offset[1] != 0.0f))) {
+				LOG_ERROR("Material {} uses the KHR_texture_transform extension, which is not supported on non-scale transformations and all textures except normal"/*, material.name ? material.name : "<Unnamed>"*/);
 			}
 
-			switch (material.alpha_mode)
-			{
-			case cgltf_alpha_mode_opaque: matinfo->domain = useTransmission ? MaterialDomain::Transmissive : MaterialDomain::Opaque; break;
-			case cgltf_alpha_mode_mask: matinfo->domain = useTransmission ? MaterialDomain::TransmissiveAlphaTested : MaterialDomain::AlphaTested; break;
-			case cgltf_alpha_mode_blend: matinfo->domain = useTransmission ? MaterialDomain::TransmissiveAlphaBlended : MaterialDomain::AlphaBlended; break;
+			switch (material.alpha_mode) {
+			case cgltf_alpha_mode_opaque: matinfo->Domain = useTransmission ? MaterialDomain::Transmissive : MaterialDomain::Opaque; break;
+			case cgltf_alpha_mode_mask: matinfo->Domain = useTransmission ? MaterialDomain::TransmissiveAlphaTested : MaterialDomain::AlphaTested; break;
+			case cgltf_alpha_mode_blend: matinfo->Domain = useTransmission ? MaterialDomain::TransmissiveAlphaBlended : MaterialDomain::AlphaBlended; break;
 			default: break;
 			}
 
@@ -659,248 +662,232 @@ namespace Parting {
 			materials[&material] = matinfo;
 		}
 
-		size_t totalIndices = 0;
-		size_t totalVertices = 0;
-		size_t morphTargetTotalVertices = 0;
-		bool hasJoints = false;
+		Uint64
+			totalIndices{ 0 },
+			totalVertices{ 0 },
+			morphTargetTotalVertices{ 0 };
+		bool hasJoints{ false };
 
-		for (size_t mesh_idx = 0; mesh_idx < objects->meshes_count; mesh_idx++)
-		{
-			const cgltf_mesh& mesh = objects->meshes[mesh_idx];
+		for (Uint64 mesh_idx = 0; mesh_idx < objects->meshes_count; ++mesh_idx) {
+			const cgltf_mesh& mesh{ objects->meshes[mesh_idx] };
 
-			for (size_t prim_idx = 0; prim_idx < mesh.primitives_count; prim_idx++)
-			{
-				const cgltf_primitive& prim = mesh.primitives[prim_idx];
+			for (Uint64 prim_idx = 0; prim_idx < mesh.primitives_count; ++prim_idx) {
+				const cgltf_primitive& prim{ mesh.primitives[prim_idx] };
 
 				if ((prim.type != cgltf_primitive_type_triangles &&
 					prim.type != cgltf_primitive_type_line_strip &&
 					prim.type != cgltf_primitive_type_lines) ||
 					prim.attributes_count == 0)
-				{
-					continue;
-				}
+					continue;// only support
 
-				if (prim.indices)
+				if (nullptr != prim.indices)
 					totalIndices += prim.indices->count;
 				else
 					totalIndices += prim.attributes->data->count;
 				totalVertices += prim.attributes->data->count;
 
-				if (!hasJoints)
-				{
-					// Detect if the primitive has joints or weights attributes.
-					for (size_t attr_idx = 0; attr_idx < prim.attributes_count; attr_idx++)
-					{
-						const cgltf_attribute& attr = prim.attributes[attr_idx];
-						if (attr.type == cgltf_attribute_type_joints || attr.type == cgltf_attribute_type_weights)
-						{
+				if (!hasJoints)	// Detect if the primitive has joints or weights attributes.
+					for (Uint64 attr_idx = 0; attr_idx < prim.attributes_count; ++attr_idx) {
+						const cgltf_attribute& attr{ prim.attributes[attr_idx] };
+						if (attr.type == cgltf_attribute_type_joints || attr.type == cgltf_attribute_type_weights) {
 							hasJoints = true;
 							break;
 						}
 					}
-				}
 			}
 		}
 
-		auto buffers = std::make_shared<BufferGroup>();
+		SharedPtr<BufferGroup<APITag>> buffers{ MakeShared<BufferGroup<APITag>>() };
 
-		buffers->indexData.resize(totalIndices);
-		buffers->positionData.resize(totalVertices);
-		buffers->normalData.resize(totalVertices);
-		buffers->tangentData.resize(totalVertices);
-		buffers->texcoord1Data.resize(totalVertices);
-		buffers->radiusData.resize(totalVertices);
-		if (hasJoints)
-		{
+		buffers->IndexData.resize(totalIndices);
+		buffers->PositionData.resize(totalVertices);
+		buffers->NormalData.resize(totalVertices);
+		buffers->TangentData.resize(totalVertices);
+		buffers->Texcoord1Data.resize(totalVertices);
+		buffers->RadiusData.resize(totalVertices);
+		if (hasJoints) {
 			// Allocate joint/weight arrays for all the vertices in the model.
 			// This is wasteful in case the model has both skinned and non-skinned meshes; TODO: improve.
-			buffers->jointData.resize(totalVertices);
-			buffers->weightData.resize(totalVertices);
+			buffers->JointData.resize(totalVertices);
+			buffers->WeightData.resize(totalVertices);
 		}
 
 		morphTargetTotalVertices = totalVertices;
 		totalIndices = 0;
 		totalVertices = 0;
 
-		std::unordered_map<const cgltf_mesh*, std::shared_ptr<MeshInfo>> meshMap;
+		UnorderedMap<const cgltf_mesh*, SharedPtr<MeshInfo<APITag>>> meshMap;
 
-		std::vector<float3> computedTangents;
-		std::vector<float3> computedBitangents;
-		std::vector<std::shared_ptr<MeshInfo>> meshes;
-		std::shared_ptr<Material> emptyMaterial;
+		Vector<Math::VecF3> computedTangents;
+		Vector<Math::VecF3> computedBitangents;
+		Vector<SharedPtr<MeshInfo<APITag>>> meshes;
+		SharedPtr<Material<APITag>> emptyMaterial;
 
-		for (size_t mesh_idx = 0; mesh_idx < objects->meshes_count; mesh_idx++)
-		{
-			const cgltf_mesh& mesh = objects->meshes[mesh_idx];
+		for (Uint64 mesh_idx = 0; mesh_idx < objects->meshes_count; ++mesh_idx) {
+			const cgltf_mesh& mesh{ objects->meshes[mesh_idx] };
 
-			std::shared_ptr<MeshInfo> minfo = m_SceneTypeFactory->CreateMesh();
-			if (mesh.name) minfo->name = mesh.name;
-			minfo->buffers = buffers;
-			minfo->indexOffset = (uint32_t)totalIndices;
-			minfo->vertexOffset = (uint32_t)totalVertices;
+			SharedPtr<MeshInfo<APITag>> minfo{ MakeShared<MeshInfo<APITag>>() };
+			if (nullptr != mesh.name)
+				minfo->Name = mesh.name;
+			minfo->Buffers = buffers;
+			minfo->IndexOffset = static_cast<uint32_t>(totalIndices);
+			minfo->VertexOffset = static_cast<uint32_t>(totalVertices);
 			meshes.push_back(minfo);
 
 			meshMap[&mesh] = minfo;
 
-			size_t morphTargetDataCount = 0;
-			std::vector<std::vector<dm::float3>> morphTargetData;
+			Uint64 morphTargetDataCount{ 0 };
+			Vector<Vector<Math::VecF3>> morphTargetData;
 
-			for (size_t prim_idx = 0; prim_idx < mesh.primitives_count; prim_idx++)
-			{
-				const cgltf_primitive& prim = mesh.primitives[prim_idx];
+			for (Uint64 prim_idx = 0; prim_idx < mesh.primitives_count; ++prim_idx) {
+				const cgltf_primitive& prim{ mesh.primitives[prim_idx] };
 
 				if ((prim.type != cgltf_primitive_type_triangles &&
 					prim.type != cgltf_primitive_type_line_strip &&
 					prim.type != cgltf_primitive_type_lines) ||
 					prim.attributes_count == 0)
-				{
 					continue;
-				}
 
 				if (prim.type == cgltf_primitive_type_line_strip ||
 					prim.type == cgltf_primitive_type_lines)
-				{
-					minfo->type = MeshType::CurvePolytubes;
-				}
+					minfo->Type = MeshType::CurvePolytubes;
 
-				if (prim.indices)
-				{
-					assert(prim.indices->component_type == cgltf_component_type_r_32u ||
+				if (nullptr != prim.indices) {
+					ASSERT(prim.indices->component_type == cgltf_component_type_r_32u ||
 						prim.indices->component_type == cgltf_component_type_r_16u ||
 						prim.indices->component_type == cgltf_component_type_r_8u);
-					assert(prim.indices->type == cgltf_type_scalar);
+					ASSERT(prim.indices->type == cgltf_type_scalar);
 				}
 
-				const cgltf_accessor* positions = nullptr;
-				const cgltf_accessor* normals = nullptr;
-				const cgltf_accessor* tangents = nullptr;
-				const cgltf_accessor* texcoords = nullptr;
-				const cgltf_accessor* joint_weights = nullptr;
-				const cgltf_accessor* joint_indices = nullptr;
-				const cgltf_accessor* radius = nullptr;
+				const cgltf_accessor* positions{ nullptr };
+				const cgltf_accessor* normals{ nullptr };
+				const cgltf_accessor* tangents{ nullptr };
+				const cgltf_accessor* texcoords{ nullptr };
+				const cgltf_accessor* joint_weights{ nullptr };
+				const cgltf_accessor* joint_indices{ nullptr };
+				const cgltf_accessor* radius{ nullptr };
 
-				for (size_t attr_idx = 0; attr_idx < prim.attributes_count; attr_idx++)
-				{
-					const cgltf_attribute& attr = prim.attributes[attr_idx];
+				for (Uint64 attr_idx = 0; attr_idx < prim.attributes_count; ++attr_idx) {
+					const cgltf_attribute& attr{ prim.attributes[attr_idx] };
 
-					switch (attr.type)
-					{
+					switch (attr.type) {
 					case cgltf_attribute_type_position:
-						assert(attr.data->type == cgltf_type_vec3);
-						assert(attr.data->component_type == cgltf_component_type_r_32f);
+						ASSERT(attr.data->type == cgltf_type_vec3);
+						ASSERT(attr.data->component_type == cgltf_component_type_r_32f);
 						positions = attr.data;
 						break;
+
 					case cgltf_attribute_type_normal:
-						assert(attr.data->type == cgltf_type_vec3);
-						assert(attr.data->component_type == cgltf_component_type_r_32f);
+						ASSERT(attr.data->type == cgltf_type_vec3);
+						ASSERT(attr.data->component_type == cgltf_component_type_r_32f);
 						normals = attr.data;
 						break;
+
 					case cgltf_attribute_type_tangent:
-						assert(attr.data->type == cgltf_type_vec4);
-						assert(attr.data->component_type == cgltf_component_type_r_32f);
+						ASSERT(attr.data->type == cgltf_type_vec4);
+						ASSERT(attr.data->component_type == cgltf_component_type_r_32f);
 						tangents = attr.data;
 						break;
+
 					case cgltf_attribute_type_texcoord:
-						assert(attr.data->type == cgltf_type_vec2);
-						assert(attr.data->component_type == cgltf_component_type_r_32f);
+						ASSERT(attr.data->type == cgltf_type_vec2);
+						ASSERT(attr.data->component_type == cgltf_component_type_r_32f);
 						if (attr.index == 0)
 							texcoords = attr.data;
 						break;
+
 					case cgltf_attribute_type_joints:
-						assert(attr.data->type == cgltf_type_vec4);
-						assert(attr.data->component_type == cgltf_component_type_r_8u || attr.data->component_type == cgltf_component_type_r_16u);
+						ASSERT(attr.data->type == cgltf_type_vec4);
+						ASSERT(attr.data->component_type == cgltf_component_type_r_8u || attr.data->component_type == cgltf_component_type_r_16u);
 						joint_indices = attr.data;
 						break;
+
 					case cgltf_attribute_type_weights:
-						assert(attr.data->type == cgltf_type_vec4);
-						assert(attr.data->component_type == cgltf_component_type_r_8u || attr.data->component_type == cgltf_component_type_r_16u || attr.data->component_type == cgltf_component_type_r_32f);
+						ASSERT(attr.data->type == cgltf_type_vec4);
+						ASSERT(attr.data->component_type == cgltf_component_type_r_8u || attr.data->component_type == cgltf_component_type_r_16u || attr.data->component_type == cgltf_component_type_r_32f);
 						joint_weights = attr.data;
 						break;
+
 					case cgltf_attribute_type_custom:
-						if (strncmp(attr.name, "_RADIUS", 7) == 0)
-						{
-							assert(attr.data->type == cgltf_type_scalar);
-							assert(attr.data->component_type == cgltf_component_type_r_32f);
+						if (strncmp(attr.name, "_RADIUS", 7) == 0) {
+							ASSERT(attr.data->type == cgltf_type_scalar);
+							ASSERT(attr.data->component_type == cgltf_component_type_r_32f);
 							radius = attr.data;
 						}
 						break;
-					default:
-						break;
+
+					default:break;
 					}
 				}
 
-				assert(positions);
+				ASSERT(nullptr != positions);
 
-				size_t indexCount = 0;
+				Uint64 indexCount{ 0 };
 
-				if (prim.indices)
-				{
+				if (nullptr != prim.indices) {
 					indexCount = prim.indices->count;
 
 					// copy the indices
-					auto [indexSrc, indexStride] = cgltf_buffer_iterator(prim.indices, 0);
+					auto [indexSrc, indexStride] { cgltf_buffer_iterator(prim.indices, 0) };
 
-					uint32_t* indexDst = buffers->indexData.data() + totalIndices;
+					Uint32* indexDst{ buffers->IndexData.data() + totalIndices };
 
-					switch (prim.indices->component_type)
-					{
+					switch (prim.indices->component_type) {
 					case cgltf_component_type_r_8u:
-						if (!indexStride) indexStride = sizeof(uint8_t);
-						for (size_t i_idx = 0; i_idx < indexCount; i_idx++)
-						{
-							*indexDst = *(const uint8_t*)indexSrc;
+						if (0 == indexStride)
+							indexStride = sizeof(Uint8);
+						for (Uint64 i_idx = 0; i_idx < indexCount; ++i_idx) {
+							*indexDst = *reinterpret_cast<const Uint8*>(indexSrc);
 
 							indexSrc += indexStride;
-							indexDst++;
+							++indexDst;
 						}
 						break;
+
 					case cgltf_component_type_r_16u:
-						if (!indexStride) indexStride = sizeof(uint16_t);
-						for (size_t i_idx = 0; i_idx < indexCount; i_idx++)
-						{
-							*indexDst = *(const uint16_t*)indexSrc;
+						if (0 == indexStride)
+							indexStride = sizeof(Uint16);
+						for (Uint64 i_idx = 0; i_idx < indexCount; ++i_idx) {
+							*indexDst = *reinterpret_cast<const Uint16*>(indexSrc);
 
 							indexSrc += indexStride;
-							indexDst++;
+							++indexDst;
 						}
 						break;
+
 					case cgltf_component_type_r_32u:
-						if (!indexStride) indexStride = sizeof(uint32_t);
-						for (size_t i_idx = 0; i_idx < indexCount; i_idx++)
-						{
-							*indexDst = *(const uint32_t*)indexSrc;
+						if (0 == indexStride)
+							indexStride = sizeof(Uint32);
+						for (Uint64 i_idx = 0; i_idx < indexCount; ++i_idx) {
+							*indexDst = *reinterpret_cast<const Uint32*>(indexSrc);
 
 							indexSrc += indexStride;
-							indexDst++;
+							++indexDst;
 						}
 						break;
-					default:
-						assert(false);
+
+					default:ASSERT(false); break;
 					}
 				}
-				else
-				{
+				else {
 					indexCount = positions->count;
 
 					// generate the indices
-					uint32_t* indexDst = buffers->indexData.data() + totalIndices;
-					for (size_t i_idx = 0; i_idx < indexCount; i_idx++)
-					{
-						*indexDst = (uint32_t)i_idx;
-						indexDst++;
+					Uint32* indexDst{ buffers->IndexData.data() + totalIndices };
+					for (Uint64 i_idx = 0; i_idx < indexCount; ++i_idx) {
+						*indexDst = static_cast<Uint32>(i_idx);
+						++indexDst;
 					}
 				}
 
-				dm::box3 bounds = dm::box3::empty();
+				Math::BoxF3 bounds{ Math::BoxF3::Empty() };
 
-				if (positions)
-				{
-					auto [positionSrc, positionStride] = cgltf_buffer_iterator(positions, sizeof(float) * 3);
-					float3* positionDst = buffers->positionData.data() + totalVertices;
+				if (nullptr != positions) {
+					auto [positionSrc, positionStride] { cgltf_buffer_iterator(positions, sizeof(float) * 3) };
+					Math::VecF3* positionDst{ buffers->PositionData.data() + totalVertices };
 
-					for (size_t v_idx = 0; v_idx < positions->count; v_idx++)
-					{
-						*positionDst = (const float*)positionSrc;
+					for (Uint64 v_idx = 0; v_idx < positions->count; ++v_idx) {
+						*positionDst = reinterpret_cast<const float*>(positionSrc);
 
 						bounds |= *positionDst;
 
@@ -909,13 +896,11 @@ namespace Parting {
 					}
 				}
 
-				if (radius)
-				{
-					auto [radiusSrc, radiusStride] = cgltf_buffer_iterator(radius, sizeof(float));
-					float* radiusDst = buffers->radiusData.data() + totalVertices;
-					for (size_t v_idx = 0; v_idx < radius->count; v_idx++)
-					{
-						*radiusDst = *(const float*)radiusSrc;
+				if (nullptr != radius) {
+					auto [radiusSrc, radiusStride] { cgltf_buffer_iterator(radius, sizeof(float)) };
+					float* radiusDst{ buffers->RadiusData.data() + totalVertices };
+					for (Uint64 v_idx = 0; v_idx < radius->count; ++v_idx) {
+						*radiusDst = *reinterpret_cast<const float*>(radiusSrc);
 
 						bounds |= *radiusDst;
 
@@ -924,153 +909,135 @@ namespace Parting {
 					}
 				}
 				else
-				{
-					buffers->radiusData.clear();
-				}
+					buffers->RadiusData.clear();
 
-				if (normals)
-				{
-					assert(normals->count == positions->count);
+				if (nullptr != normals) {
+					ASSERT(normals->count == positions->count);
 
-					auto [normalSrc, normalStride] = cgltf_buffer_iterator(normals, sizeof(float) * 3);
-					uint32_t* normalDst = buffers->normalData.data() + totalVertices;
+					auto [normalSrc, normalStride] { cgltf_buffer_iterator(normals, sizeof(float) * 3) };
+					Uint32* normalDst{ buffers->NormalData.data() + totalVertices };//NOTEL : glTF normal is vec3, but we use snorm8 in our engine
 
-					for (size_t v_idx = 0; v_idx < normals->count; v_idx++)
-					{
-						float3 normal = (const float*)normalSrc;
-						*normalDst = vectorToSnorm8(normal);
+					for (Uint64 v_idx = 0; v_idx < normals->count; ++v_idx) {
+						Math::VecF3 normal{ reinterpret_cast<const float*>(normalSrc) };
+						*normalDst = Math::VecFToSnorm8(normal);
 
 						normalSrc += normalStride;
 						++normalDst;
 					}
 				}
 
-				if (tangents)
-				{
-					assert(tangents->count == positions->count);
+				if (nullptr != tangents) {
+					ASSERT(tangents->count == positions->count);
 
-					auto [tangentSrc, tangentStride] = cgltf_buffer_iterator(tangents, sizeof(float) * 4);
-					uint32_t* tangentDst = buffers->tangentData.data() + totalVertices;
+					auto [tangentSrc, tangentStride] { cgltf_buffer_iterator(tangents, sizeof(float) * 4) };
+					Uint32* tangentDst{ buffers->TangentData.data() + totalVertices };//NOTEL : glTF normal is vec4, but we use snorm8 in our engine
 
-					for (size_t v_idx = 0; v_idx < tangents->count; v_idx++)
-					{
-						float4 tangent = (const float*)tangentSrc;
-						*tangentDst = vectorToSnorm8(tangent);
+					for (Uint64 v_idx = 0; v_idx < tangents->count; ++v_idx) {
+						Math::VecF4 tangent{ reinterpret_cast<const float*>(tangentSrc) };
+						*tangentDst = Math::VecFToSnorm8(tangent);
 
 						tangentSrc += tangentStride;
 						++tangentDst;
 					}
 				}
 
-				if (texcoords)
-				{
-					assert(texcoords->count == positions->count);
+				if (nullptr != texcoords) {
+					ASSERT(texcoords->count == positions->count);
 
-					auto [texcoordSrc, texcoordStride] = cgltf_buffer_iterator(texcoords, sizeof(float) * 2);
-					float2* texcoordDst = buffers->texcoord1Data.data() + totalVertices;
+					auto [texcoordSrc, texcoordStride] { cgltf_buffer_iterator(texcoords, sizeof(float) * 2) };
+					Math::VecF2* texcoordDst{ buffers->Texcoord1Data.data() + totalVertices };
 
-					for (size_t v_idx = 0; v_idx < texcoords->count; v_idx++)
-					{
-						*texcoordDst = (const float*)texcoordSrc;
+					for (Uint64 v_idx = 0; v_idx < texcoords->count; ++v_idx) {
+						*texcoordDst = reinterpret_cast<const float*>(texcoordSrc);
 
 						texcoordSrc += texcoordStride;
 						++texcoordDst;
 					}
 				}
-				else
-				{
-					float2* texcoordDst = buffers->texcoord1Data.data() + totalVertices;
-					for (size_t v_idx = 0; v_idx < positions->count; v_idx++)
-					{
-						*texcoordDst = float2(0.f);
+				else {
+					Math::VecF2* texcoordDst{ buffers->Texcoord1Data.data() + totalVertices };
+					for (Uint64 v_idx = 0; v_idx < positions->count; ++v_idx) {
+						*texcoordDst = Math::VecF2::Zero();
 						++texcoordDst;
 					}
 				}
 
-				if (normals && texcoords && (!tangents || c_ForceRebuildTangents))
-				{
-					auto [positionSrc, positionStride] = cgltf_buffer_iterator(positions, sizeof(float) * 3);
-					auto [texcoordSrc, texcoordStride] = cgltf_buffer_iterator(texcoords, sizeof(float) * 2);
-					auto [normalSrc, normalStride] = cgltf_buffer_iterator(normals, sizeof(float) * 3);
-					const uint32_t* indexSrc = buffers->indexData.data() + totalIndices;
+				if (nullptr != normals && nullptr != texcoords && (nullptr == tangents || c_ForceRebuildTangents)) {
+					auto [positionSrc, positionStride] { cgltf_buffer_iterator(positions, sizeof(float) * 3) };
+					auto [texcoordSrc, texcoordStride] { cgltf_buffer_iterator(texcoords, sizeof(float) * 2) };
+					auto [normalSrc, normalStride] { cgltf_buffer_iterator(normals, sizeof(float) * 3) };
+					const Uint32* indexSrc{ buffers->IndexData.data() + totalIndices };
 
-					computedTangents.resize(positions->count);
-					std::fill(computedTangents.begin(), computedTangents.end(), float3(0.f));
+					computedTangents.assign(positions->count, Math::VecF3::Zero());
+					computedBitangents.assign(positions->count, Math::VecF3::Zero());
 
-					computedBitangents.resize(positions->count);
-					std::fill(computedBitangents.begin(), computedBitangents.end(), float3(0.f));
-
-					for (size_t t_idx = 0; t_idx < indexCount / 3; t_idx++)
-					{
-						uint3 tri = indexSrc;
+					for (Uint64 t_idx = 0; t_idx < indexCount / 3; ++t_idx) {
+						Math::VecU3 tri{ indexSrc };
 						indexSrc += 3;
 
-						float3 p0 = (const float*)(positionSrc + positionStride * tri.x);
-						float3 p1 = (const float*)(positionSrc + positionStride * tri.y);
-						float3 p2 = (const float*)(positionSrc + positionStride * tri.z);
+						Math::VecF3 p0{ reinterpret_cast<const float*>(positionSrc + positionStride * tri.X) };
+						Math::VecF3 p1{ reinterpret_cast<const float*>(positionSrc + positionStride * tri.Y) };
+						Math::VecF3 p2{ reinterpret_cast<const float*>(positionSrc + positionStride * tri.Z) };
 
-						float2 t0 = (const float*)(texcoordSrc + texcoordStride * tri.x);
-						float2 t1 = (const float*)(texcoordSrc + texcoordStride * tri.y);
-						float2 t2 = (const float*)(texcoordSrc + texcoordStride * tri.z);
+						Math::VecF2 t0{ reinterpret_cast<const float*>(texcoordSrc + texcoordStride * tri.X) };
+						Math::VecF2 t1{ reinterpret_cast<const float*>(texcoordSrc + texcoordStride * tri.Y) };
+						Math::VecF2 t2{ reinterpret_cast<const float*>(texcoordSrc + texcoordStride * tri.Z) };
 
-						float3 dPds = p1 - p0;
-						float3 dPdt = p2 - p0;
+						Math::VecF3 dPds{ p1 - p0 };
+						Math::VecF3 dPdt{ p2 - p0 };
 
-						float2 dTds = t1 - t0;
-						float2 dTdt = t2 - t0;
-						float r = 1.0f / (dTds.x * dTdt.y - dTds.y * dTdt.x);
-						float3 tangent = r * (dPds * dTdt.y - dPdt * dTds.y);
-						float3 bitangent = r * (dPdt * dTds.x - dPds * dTdt.x);
+						Math::VecF2 dTds{ t1 - t0 };
+						Math::VecF2 dTdt{ t2 - t0 };
+						float r{ 1.0f / (dTds.X * dTdt.Y - dTds.Y * dTdt.X) };
+						Math::VecF3 tangent{ r * (dPds * dTdt.Y - dPdt * dTds.Y) };
+						Math::VecF3 bitangent{ r * (dPdt * dTds.X - dPds * dTdt.X) };
 
-						float tangentLength = length(tangent);
-						float bitangentLength = length(bitangent);
-						if (tangentLength > 0 && bitangentLength > 0)
-						{
+						float tangentLength{ Math::Length(tangent) };
+						float bitangentLength{ Math::Length(bitangent) };
+						if (tangentLength > 0 && bitangentLength > 0) {
 							tangent /= tangentLength;
 							bitangent /= bitangentLength;
 
-							computedTangents[tri.x] += tangent;
-							computedTangents[tri.y] += tangent;
-							computedTangents[tri.z] += tangent;
-							computedBitangents[tri.x] += bitangent;
-							computedBitangents[tri.y] += bitangent;
-							computedBitangents[tri.z] += bitangent;
+							computedTangents[tri.X] += tangent;
+							computedTangents[tri.Y] += tangent;
+							computedTangents[tri.Z] += tangent;
+							computedBitangents[tri.X] += bitangent;
+							computedBitangents[tri.Y] += bitangent;
+							computedBitangents[tri.Z] += bitangent;
 						}
 					}
 
-					uint8_t* tangentSrc = nullptr;
-					size_t tangentStride = 0;
-					if (tangents)
-					{
-						auto pair = cgltf_buffer_iterator(tangents, sizeof(float) * 4);
-						tangentSrc = const_cast<uint8_t*>(pair.first);
+					Uint8* tangentSrc{ nullptr };
+					Uint64 tangentStride{ 0 };
+					if (nullptr != tangents) {
+						/*Tie(tangentSrc, tangentStride) = cgltf_buffer_iterator(tangents, sizeof(float) * 4);*/
+
+						auto pair{ cgltf_buffer_iterator(tangents, sizeof(float) * 4) };
+						tangentSrc = const_cast<Uint8*>(pair.first);
 						tangentStride = pair.second;
 					}
 
-					uint32_t* tangentDst = buffers->tangentData.data() + totalVertices;
+					Uint32* tangentDst{ buffers->TangentData.data() + totalVertices };
 
-					for (size_t v_idx = 0; v_idx < positions->count; v_idx++)
-					{
-						float3 normal = (const float*)normalSrc;
-						float3 tangent = computedTangents[v_idx];
-						float3 bitangent = computedBitangents[v_idx];
+					for (Uint64 v_idx = 0; v_idx < positions->count; ++v_idx) {
+						Math::VecF3 normal{ reinterpret_cast<const float*>(normalSrc) };
+						Math::VecF3 tangent{ computedTangents[v_idx] };
+						Math::VecF3 bitangent = computedBitangents[v_idx];
 
-						float sign = 0;
-						float tangentLength = length(tangent);
-						float bitangentLength = length(bitangent);
-						if (tangentLength > 0 && bitangentLength > 0)
-						{
+						float sign{ 0 };
+						float tangentLength{ Math::Length(tangent) };
+						float bitangentLength{ Math::Length(bitangent) };
+
+						if (tangentLength > 0 && bitangentLength > 0) {
 							tangent /= tangentLength;
 							bitangent /= bitangentLength;
-							float3 cross_b = cross(normal, tangent);
-							sign = (dot(cross_b, bitangent) > 0) ? -1.f : 1.f;
+							sign = (Math::Dot(Math::Cross(normal, tangent), bitangent) > 0) ? -1.f : 1.f;
 						}
 
-						*tangentDst = vectorToSnorm8(float4(tangent, sign));
+						*tangentDst = Math::VecFToSnorm8(Math::VecF4{ tangent, sign });
 
-						if (c_ForceRebuildTangents && tangents)
-						{
-							*(float4*)tangentSrc = float4(tangent, sign);
+						if (c_ForceRebuildTangents && nullptr != tangents) {
+							*reinterpret_cast<Math::VecF4*>(tangentSrc) = Math::VecF4{ tangent, sign };
 							tangentSrc += tangentStride;
 						}
 
@@ -1079,37 +1046,34 @@ namespace Parting {
 					}
 				}
 
-				if (joint_indices)
-				{
-					minfo->isSkinPrototype = true;
+				if (nullptr != joint_indices) {
+					minfo->IsSkinPrototype = true;
 
-					assert(joint_indices->count == positions->count);
+					ASSERT(joint_indices->count == positions->count);
 
-					auto [jointSrc, jointStride] = cgltf_buffer_iterator(joint_indices, 0);
-					vector<uint16_t, 4>* jointDst = buffers->jointData.data() + totalVertices;
+					auto [jointSrc, jointStride] { cgltf_buffer_iterator(joint_indices /*sizeof(Uint8) * 4*/, 0) };//NOTE: 8 or 16 ? no know
+					Math::Vec<Uint16, 4>* jointDst{ buffers->JointData.data() + totalVertices };
 
-					if (joint_indices->component_type == cgltf_component_type_r_8u)
-					{
-						if (!jointStride) jointStride = sizeof(uint8_t) * 4;
+					if (joint_indices->component_type == cgltf_component_type_r_8u) {
+						if (0 == jointStride)
+							jointStride = sizeof(Uint8) * 4;
 
-						for (size_t v_idx = 0; v_idx < joint_indices->count; v_idx++)
-						{
-							*jointDst = dm::vector<uint16_t, 4>(jointSrc[0], jointSrc[1], jointSrc[2], jointSrc[3]);
+						for (Uint64 v_idx = 0; v_idx < joint_indices->count; ++v_idx) {
+							*jointDst = Math::Vec<Uint16, 4>{ jointSrc[0], jointSrc[1], jointSrc[2], jointSrc[3] };
 
 							jointSrc += jointStride;
 							++jointDst;
 						}
 					}
-					else
-					{
-						assert(joint_indices->component_type == cgltf_component_type_r_16u);
+					else {
+						ASSERT(joint_indices->component_type == cgltf_component_type_r_16u);
 
-						if (!jointStride) jointStride = sizeof(uint16_t) * 4;
+						if (0 == jointStride)
+							jointStride = sizeof(Uint16) * 4;
 
-						for (size_t v_idx = 0; v_idx < joint_indices->count; v_idx++)
-						{
-							const uint16_t* jointSrcUshort = (const uint16_t*)jointSrc;
-							*jointDst = dm::vector<uint16_t, 4>(jointSrcUshort[0], jointSrcUshort[1], jointSrcUshort[2], jointSrcUshort[3]);
+						for (Uint64 v_idx = 0; v_idx < joint_indices->count; ++v_idx) {
+							const Uint16* jointSrcUshort{ reinterpret_cast<const Uint16*>(jointSrc) };
+							*jointDst = Math::Vec<Uint16, 4>{ jointSrcUshort[0], jointSrcUshort[1], jointSrcUshort[2], jointSrcUshort[3] };
 
 							jointSrc += jointStride;
 							++jointDst;
@@ -1117,57 +1081,45 @@ namespace Parting {
 					}
 				}
 
-				if (joint_weights)
-				{
-					minfo->isSkinPrototype = true;
+				if (nullptr != joint_weights) {
+					minfo->IsSkinPrototype = true;
 
-					assert(joint_weights->count == positions->count);
+					ASSERT(joint_weights->count == positions->count);
 
-					auto [weightSrc, weightStride] = cgltf_buffer_iterator(joint_weights, 0);
-					float4* weightDst = buffers->weightData.data() + totalVertices;
+					auto [weightSrc, weightStride] { cgltf_buffer_iterator(joint_weights, 0) };
+					Math::VecF4* weightDst{ buffers->WeightData.data() + totalVertices };
 
-					if (joint_weights->component_type == cgltf_component_type_r_8u)
-					{
-						if (!weightStride) weightStride = sizeof(uint8_t) * 4;
+					if (joint_weights->component_type == cgltf_component_type_r_8u) {
+						if (0 == weightStride)
+							weightStride = sizeof(Uint8) * 4;
 
-						for (size_t v_idx = 0; v_idx < joint_indices->count; v_idx++)
-						{
-							*weightDst = dm::float4(
-								float(weightSrc[0]) / 255.f,
-								float(weightSrc[1]) / 255.f,
-								float(weightSrc[2]) / 255.f,
-								float(weightSrc[3]) / 255.f);
+						for (Uint64 v_idx = 0; v_idx < joint_indices->count; ++v_idx) {
+							*weightDst = Math::VecF4{ static_cast<float>(weightSrc[0]) / static_cast<float>(Max_Uint8),static_cast<float>(weightSrc[1]) / static_cast<float>(Max_Uint8),static_cast<float>(weightSrc[2]) / static_cast<float>(Max_Uint8),static_cast<float>(weightSrc[3]) / static_cast<float>(Max_Uint8) };
 
 							weightSrc += weightStride;
 							++weightDst;
 						}
 					}
-					else if (joint_weights->component_type == cgltf_component_type_r_16u)
-					{
-						if (!weightStride) weightStride = sizeof(uint16_t) * 4;
+					else if (joint_weights->component_type == cgltf_component_type_r_16u) {
+						if (0 == weightStride)
+							weightStride = sizeof(Uint16) * 4;
 
-						for (size_t v_idx = 0; v_idx < joint_indices->count; v_idx++)
-						{
-							const uint16_t* weightSrcUshort = (const uint16_t*)weightSrc;
-							*weightDst = dm::float4(
-								float(weightSrcUshort[0]) / 65535.f,
-								float(weightSrcUshort[1]) / 65535.f,
-								float(weightSrcUshort[2]) / 65535.f,
-								float(weightSrcUshort[3]) / 65535.f);
+						for (Uint64 v_idx = 0; v_idx < joint_indices->count; ++v_idx) {
+							const Uint16* weightSrcUshort{ reinterpret_cast<const Uint16*>(weightSrc) };
+							*weightDst = Math::VecF4{ static_cast<float>(weightSrcUshort[0]) / static_cast<float>(Max_Uint16),static_cast<float>(weightSrcUshort[1]) / static_cast<float>(Max_Uint16),static_cast<float>(weightSrcUshort[2]) / static_cast<float>(Max_Uint16),static_cast<float>(weightSrcUshort[3]) / static_cast<float>(Max_Uint16) };
 
 							weightSrc += weightStride;
 							++weightDst;
 						}
 					}
-					else
-					{
-						assert(joint_weights->component_type == cgltf_component_type_r_32f);
+					else {
+						ASSERT(joint_weights->component_type == cgltf_component_type_r_32f);
 
-						if (!weightStride) weightStride = sizeof(float) * 4;
+						if (0 == weightStride)
+							weightStride = sizeof(float) * 4;
 
-						for (size_t v_idx = 0; v_idx < joint_indices->count; v_idx++)
-						{
-							*weightDst = (const float*)weightSrc;
+						for (Uint64 v_idx = 0; v_idx < joint_indices->count; ++v_idx) {
+							*weightDst = reinterpret_cast<const float*>(weightSrc);
 
 							weightSrc += weightStride;
 							++weightDst;
@@ -1175,63 +1127,56 @@ namespace Parting {
 					}
 				}
 
-				auto geometry = m_SceneTypeFactory->CreateMeshGeometry();
-				if (prim.material)
-				{
-					geometry->material = materials[prim.material];
-				}
-				else
-				{
-					log::warning("Geometry %d for mesh '%s' doesn't have a material.", uint32_t(minfo->geometries.size()), minfo->name.c_str());
-					if (!emptyMaterial)
-					{
-						emptyMaterial = std::make_shared<Material>();
-						emptyMaterial->name = "(empty)";
+				SharedPtr<MeshGeometry<APITag>> geometry{ MakeShared<MeshGeometry<APITag>>() };
+				if (nullptr != prim.material)
+					geometry->Material = materials[prim.material];
+				else {
+					LOG_ERROR("Geometry  for mesh  doesn't have a material."/*, uint32_t(minfo->geometries.size()), minfo->name.c_str()*/);
+					if (nullptr == emptyMaterial) {
+						emptyMaterial = MakeShared<Material<APITag>>();
+						emptyMaterial->Name = String{ "(empty)" };
 					}
-					geometry->material = emptyMaterial;
+					geometry->Material = emptyMaterial;
 				}
 
-				if (prim.targets_count > 0)
-				{
-					minfo->isMorphTargetAnimationMesh = true;
+				if (prim.targets_count > 0) {
+					minfo->IsMorphTargetAnimationMesh = true;
 					morphTargetData.resize(prim.targets_count);
 
-					for (uint32_t target_idx = 0; target_idx < prim.targets_count; target_idx++)
-					{
-						const cgltf_morph_target& target = prim.targets[target_idx];
-						const cgltf_accessor* target_positions = nullptr;
-						const cgltf_accessor* target_normals = nullptr;
+					for (Uint64 target_idx = 0; target_idx < prim.targets_count; ++target_idx) {
+						const cgltf_morph_target& target{ prim.targets[target_idx] };
+						const cgltf_accessor* target_positions{ nullptr };
+						const cgltf_accessor* target_normals{ nullptr };
 
-						for (size_t attr_idx = 0; attr_idx < target.attributes_count; attr_idx++)
-						{
-							const cgltf_attribute& attr = target.attributes[attr_idx];
-							switch (attr.type)
-							{
+						for (Uint64 attr_idx = 0; attr_idx < target.attributes_count; ++attr_idx) {
+							const cgltf_attribute& attr{ target.attributes[attr_idx] };
+							switch (attr.type) {
 							case cgltf_attribute_type_position:
-								assert(attr.data->type == cgltf_type_vec3);
-								assert(attr.data->component_type == cgltf_component_type_r_32f);
+								ASSERT(attr.data->type == cgltf_type_vec3);
+								ASSERT(attr.data->component_type == cgltf_component_type_r_32f);
 								target_positions = attr.data;
 								break;
+
 							case cgltf_attribute_type_normal:
-								assert(attr.data->type == cgltf_type_vec3);
-								assert(attr.data->component_type == cgltf_component_type_r_32f);
+								ASSERT(attr.data->type == cgltf_type_vec3);
+								ASSERT(attr.data->component_type == cgltf_component_type_r_32f);
 								target_normals = attr.data;
 								break;
+
+							default: break;
 							}
 						}
 
-						if (target_positions)
-						{
-							auto [positionSrc, positionStride] = cgltf_buffer_iterator(positions, sizeof(float) * 3);
-							auto [morphTargetPositionSrc, morphTargetPositionStride] = cgltf_buffer_iterator(target_positions, sizeof(float) * 3);
+						if (nullptr != target_positions) {
+							auto [positionSrc, positionStride] { cgltf_buffer_iterator(positions, sizeof(float) * 3) };
+							auto [morphTargetPositionSrc, morphTargetPositionStride] { cgltf_buffer_iterator(target_positions, sizeof(float) * 3) };
 
 							auto& morphTargetCurrentFrameData = morphTargetData[target_idx];
 							morphTargetCurrentFrameData.resize(morphTargetTotalVertices);
 
-							float3* morphTargetCurrentData = morphTargetCurrentFrameData.data() + totalVertices;
-							for (size_t v_idx = 0; v_idx < positions->count; v_idx++)
-							{
-								*morphTargetCurrentData = *(const float3*)morphTargetPositionSrc;
+							Math::VecF3* morphTargetCurrentData{ morphTargetCurrentFrameData.data() + totalVertices };
+							for (Uint64 v_idx = 0; v_idx < positions->count; ++v_idx) {
+								*morphTargetCurrentData = *reinterpret_cast<const Math::VecF3*>(morphTargetPositionSrc);
 
 								bounds |= *morphTargetCurrentData;
 
@@ -1246,458 +1191,64 @@ namespace Parting {
 					}
 				}
 
-				geometry->indexOffsetInMesh = minfo->totalIndices;
-				geometry->vertexOffsetInMesh = minfo->totalVertices;
-				geometry->numIndices = (uint32_t)indexCount;
-				geometry->numVertices = (uint32_t)positions->count;
-				geometry->objectSpaceBounds = bounds;
-				switch (prim.type)
-				{
+				geometry->IndexOffsetInMesh = minfo->TotalIndices;
+				geometry->VertexOffsetInMesh = minfo->TotalVertices;
+				geometry->NumIndices = static_cast<Uint32>(indexCount);
+				geometry->NumVertices = static_cast<Uint32>(positions->count);
+				geometry->ObjectSpaceBounds = bounds;
+				switch (prim.type) {
 				case cgltf_primitive_type_triangles:
-					geometry->type = MeshGeometryPrimitiveType::Triangles;
+					geometry->Type = MeshGeometryPrimitiveType::Triangles;
 					break;
+
 				case cgltf_primitive_type_lines:
-					geometry->type = MeshGeometryPrimitiveType::Lines;
+					geometry->Type = MeshGeometryPrimitiveType::Lines;
 					break;
+
 				case cgltf_primitive_type_line_strip:
-					geometry->type = MeshGeometryPrimitiveType::LineStrip;
+					geometry->Type = MeshGeometryPrimitiveType::LineStrip;
 					break;
+
+				default: break;
 				}
 
-				minfo->objectSpaceBounds |= bounds;
-				minfo->totalIndices += geometry->numIndices;
-				minfo->totalVertices += geometry->numVertices;
-				minfo->geometries.push_back(geometry);
+				minfo->ObjectSpaceBounds |= bounds;
+				minfo->TotalIndices += geometry->NumIndices;
+				minfo->TotalVertices += geometry->NumVertices;
+				minfo->Geometries.push_back(geometry);
 
-				totalIndices += geometry->numIndices;
-				totalVertices += geometry->numVertices;
+				totalIndices += geometry->NumIndices;
+				totalVertices += geometry->NumVertices;
 			}
 
-			if (morphTargetData.size() > 0)
-			{
-				size_t morphTargetDataSize = 0;
+			if (morphTargetData.size() > 0) {
+				Uint64 morphTargetDataSize{ 0 };
 
-				const size_t morphTargetFrameBufferSize = morphTargetData[0].size() * sizeof(float4);
-				buffers->morphTargetData.reserve(morphTargetDataCount);
-				buffers->morphTargetBufferRange.reserve(morphTargetData.size());
+				const Uint64 morphTargetFrameBufferSize{ morphTargetData[0].size() * sizeof(Math::VecF4) };
+				buffers->MorphTargetData.reserve(morphTargetDataCount);
+				buffers->MorphTargetBufferRange.reserve(morphTargetData.size());
 
 				morphTargetDataCount = 0;
-				for (const auto& morphTargetCurrentFrameData : morphTargetData)
-				{
-					nvrhi::BufferRange range = {};
-					range.byteOffset = morphTargetDataCount * sizeof(float4);
-					range.byteSize = morphTargetFrameBufferSize;
-					buffers->morphTargetBufferRange.push_back(range);
+				for (const auto& morphTargetCurrentFrameData : morphTargetData) {
+					RHI::RHIBufferRange range{
+						.Offset { morphTargetDataCount * sizeof(Math::VecF4) },
+						.ByteSize { morphTargetFrameBufferSize }
+					};
+					buffers->MorphTargetBufferRange.push_back(range);
 
-					for (const auto& morphTargetCurrentData : morphTargetCurrentFrameData)
-					{
-						buffers->morphTargetData.push_back(float4(morphTargetCurrentData, 0.0f));
+					for (const auto& morphTargetCurrentData : morphTargetCurrentFrameData) {
+						buffers->MorphTargetData.push_back(Math::VecF4{ morphTargetCurrentData, 0.f });
 						++morphTargetDataCount;
 					}
-					morphTargetDataSize += range.byteSize;
+
+					morphTargetDataSize += range.ByteSize;
 				}
 			}
 		}
 
-		std::unordered_map<const cgltf_camera*, std::shared_ptr<SceneCamera>> cameraMap;
-		for (size_t camera_idx = 0; camera_idx < objects->cameras_count; camera_idx++)
-		{
-			const cgltf_camera* src = &objects->cameras[camera_idx];
-			std::shared_ptr<SceneCamera> dst;
 
-			if (src->type == cgltf_camera_type_perspective)
-			{
-				std::shared_ptr<PerspectiveCamera> perspectiveCamera = std::make_shared<PerspectiveCamera>();
-
-				perspectiveCamera->zNear = src->data.perspective.znear;
-				if (src->data.perspective.has_zfar)
-					perspectiveCamera->zFar = src->data.perspective.zfar;
-				perspectiveCamera->verticalFov = src->data.perspective.yfov;
-				if (src->data.perspective.has_aspect_ratio)
-					perspectiveCamera->aspectRatio = src->data.perspective.aspect_ratio;
-
-				dst = perspectiveCamera;
-			}
-			else
-			{
-				std::shared_ptr<OrthographicCamera> orthographicCamera = std::make_shared<OrthographicCamera>();
-
-				orthographicCamera->zNear = src->data.orthographic.znear;
-				orthographicCamera->zFar = src->data.orthographic.zfar;
-				orthographicCamera->xMag = src->data.orthographic.xmag;
-				orthographicCamera->yMag = src->data.orthographic.ymag;
-
-				dst = orthographicCamera;
-			}
-
-			cameraMap[src] = dst;
-		}
-
-		std::unordered_map<const cgltf_light*, std::shared_ptr<Light>> lightMap;
-		for (size_t light_idx = 0; light_idx < objects->lights_count; light_idx++)
-		{
-			const cgltf_light* src = &objects->lights[light_idx];
-			std::shared_ptr<Light> dst;
-
-			switch (src->type)  // NOLINT(clang-diagnostic-switch-enum)
-			{
-			case cgltf_light_type_directional: {
-				auto directional = std::make_shared<DirectionalLight>();
-				directional->irradiance = src->intensity;
-				directional->color = src->color;
-				dst = directional;
-				break;
-			}
-			case cgltf_light_type_point: {
-				auto point = std::make_shared<PointLight>();
-				point->intensity = src->intensity;
-				point->color = src->color;
-				point->range = src->range;
-				dst = point;
-				break;
-			}
-			case cgltf_light_type_spot: {
-				auto spot = std::make_shared<SpotLight>();
-				spot->intensity = src->intensity;
-				spot->color = src->color;
-				spot->range = src->range;
-				spot->innerAngle = dm::degrees(src->spot_inner_cone_angle);
-				spot->outerAngle = dm::degrees(src->spot_outer_cone_angle);
-				dst = spot;
-				break;
-			}
-			default:
-				break;
-			}
-
-			if (dst)
-			{
-				lightMap[src] = dst;
-			}
-		}
-
-		// build the scene graph
-		std::shared_ptr<SceneGraph> graph = std::make_shared<SceneGraph>();
-		std::shared_ptr<SceneGraphNode> root = std::make_shared<SceneGraphNode>();
-		std::unordered_map<cgltf_node*, std::shared_ptr<SceneGraphNode>> nodeMap;
-		std::vector<cgltf_node*> skinnedNodes;
-
-		struct StackItem
-		{
-			std::shared_ptr<SceneGraphNode> dstParent;
-			cgltf_node** srcNodes = nullptr;
-			size_t srcCount = 0;
-		};
-		std::vector<StackItem> stack;
-
-		root->SetName(fileName.filename().generic_string());
-
-		int unnamedCameraCounter = 1;
-
-		StackItem context;
-		context.dstParent = root;
-		context.srcNodes = objects->scene->nodes;
-		context.srcCount = objects->scene->nodes_count;
-
-		while (context.srcCount > 0)
-		{
-			cgltf_node* src = *context.srcNodes;
-			++context.srcNodes;
-			--context.srcCount;
-
-			auto dst = std::make_shared<SceneGraphNode>();
-
-			nodeMap[src] = dst;
-
-			if (src->has_matrix)
-			{
-				// decompose the matrix into TRS
-				affine3 aff = affine3(&src->matrix[0],
-					&src->matrix[4], &src->matrix[8], &src->matrix[12]);
-
-				double3 translation;
-				double3 scaling;
-				dquat rotation;
-
-				decomposeAffine(dm::daffine3(aff), &translation, &rotation, &scaling);
-
-				dst->SetTransform(&translation, &rotation, &scaling);
-			}
-			else
-			{
-				if (src->has_scale)
-					dst->SetScaling(dm::double3(dm::float3(src->scale)));
-				if (src->has_rotation)
-					dst->SetRotation(dm::dquat(dm::quat::fromXYZW(src->rotation)));
-				if (src->has_translation)
-					dst->SetTranslation(dm::double3(dm::float3(src->translation)));
-			}
-
-			if (src->name)
-				dst->SetName(src->name);
-
-			graph->Attach(context.dstParent, dst);
-
-			if (src->skin)
-			{
-				// process the skinned nodes later, when the graph is constructed
-				skinnedNodes.push_back(src);
-			}
-			else if (src->mesh)
-			{
-				auto found = meshMap.find(src->mesh);
-
-				if (found != meshMap.end())
-				{
-					auto leaf = m_SceneTypeFactory->CreateMeshInstance(found->second);
-					dst->SetLeaf(leaf);
-				}
-			}
-
-			if (src->camera)
-			{
-				auto found = cameraMap.find(src->camera);
-
-				if (found != cameraMap.end())
-				{
-					auto camera = found->second;
-
-					if (dst->GetLeaf())
-					{
-						auto node = std::make_shared<SceneGraphNode>();
-						node->SetLeaf(camera);
-						graph->Attach(dst, node);
-					}
-					else
-					{
-						dst->SetLeaf(camera);
-					}
-
-					if (src->camera->name)
-					{
-						camera->SetName(src->camera->name);
-					}
-					else if (camera->GetName().empty())
-					{
-						camera->SetName("Camera" + std::to_string(unnamedCameraCounter));
-						++unnamedCameraCounter;
-					}
-				}
-			}
-
-			if (src->light)
-			{
-				auto found = lightMap.find(src->light);
-
-				if (found != lightMap.end())
-				{
-					auto light = found->second;
-
-					if (dst->GetLeaf())
-					{
-						auto node = std::make_shared<SceneGraphNode>();
-						node->SetLeaf(light);
-						graph->Attach(dst, node);
-					}
-					else
-					{
-						dst->SetLeaf(light);
-					}
-				}
-			}
-
-			if (src->children_count)
-			{
-				stack.push_back(context);
-				context.dstParent = dst;
-				context.srcNodes = src->children;
-				context.srcCount = src->children_count;
-			}
-			else
-			{
-				// go up the stack until we find a node where some nodes are left
-				while (context.srcCount == 0 && !stack.empty())
-				{
-					context = stack.back();
-					stack.pop_back();
-				}
-			}
-		}
-
-		for (auto* src : skinnedNodes)
-		{
-			assert(src->skin);
-			assert(src->mesh);
-
-			std::shared_ptr<MeshInfo> prototypeMesh;
-			auto found = meshMap.find(src->mesh);
-			if (found != meshMap.end())
-			{
-				prototypeMesh = found->second;
-				assert(prototypeMesh->isSkinPrototype);
-
-				auto skinnedInstance = std::make_shared<SkinnedMeshInstance>(m_SceneTypeFactory, prototypeMesh);
-				skinnedInstance->joints.resize(src->skin->joints_count);
-
-				for (size_t joint_idx = 0; joint_idx < src->skin->joints_count; joint_idx++)
-				{
-					SkinnedMeshJoint& joint = skinnedInstance->joints[joint_idx];
-					cgltf_accessor_read_float(src->skin->inverse_bind_matrices, joint_idx, joint.inverseBindMatrix.m_data, 16);
-					joint.node = nodeMap[src->skin->joints[joint_idx]];
-
-					auto jointNode = joint.node.lock();
-					if (!jointNode->GetLeaf())
-					{
-						jointNode->SetLeaf(std::make_shared<SkinnedMeshReference>(skinnedInstance));
-					}
-				}
-
-				auto dst = nodeMap[src];
-				dst->SetLeaf(skinnedInstance);
-			}
-		}
-
-		result.rootNode = root;
-
-		auto animationContainer = root;
-		if (objects->animations_count > 1)
-		{
-			animationContainer = std::make_shared<SceneGraphNode>();
-			animationContainer->SetName("Animations");
-			graph->Attach(root, animationContainer);
-		}
-
-		std::unordered_map<const cgltf_animation_sampler*, std::shared_ptr<animation::Sampler>> animationSamplers;
-
-		for (size_t a_idx = 0; a_idx < objects->animations_count; a_idx++)
-		{
-			const cgltf_animation* srcAnim = &objects->animations[a_idx];
-			auto dstAnim = std::make_shared<SceneGraphAnimation>();
-
-			animationSamplers.clear();
-
-			for (size_t s_idx = 0; s_idx < srcAnim->samplers_count; s_idx++)
-			{
-				const cgltf_animation_sampler* srcSampler = &srcAnim->samplers[s_idx];
-				const cgltf_animation_channel* srcChannel = &srcAnim->channels[s_idx];
-				auto dstSampler = std::make_shared<animation::Sampler>();
-
-				switch (srcSampler->interpolation)
-				{
-				case cgltf_interpolation_type_linear:
-					if (srcChannel->target_path == cgltf_animation_path_type_rotation)
-						dstSampler->SetInterpolationMode(animation::InterpolationMode::Slerp);
-					else
-						dstSampler->SetInterpolationMode(animation::InterpolationMode::Linear);
-					break;
-				case cgltf_interpolation_type_step:
-					dstSampler->SetInterpolationMode(animation::InterpolationMode::Step);
-					break;
-				case cgltf_interpolation_type_cubic_spline:
-					dstSampler->SetInterpolationMode(animation::InterpolationMode::HermiteSpline);
-					break;
-				default:
-					break;
-				}
-
-				const cgltf_accessor* times = srcSampler->input;
-				const cgltf_accessor* values = srcSampler->output;
-				assert(times->type == cgltf_type_scalar);
-
-				for (size_t sample_idx = 0; sample_idx < times->count; sample_idx++)
-				{
-					animation::Keyframe keyframe;
-
-					bool timeRead = cgltf_accessor_read_float(times, sample_idx, &keyframe.time, 1);
-
-					bool valueRead;
-					if (srcSampler->interpolation == cgltf_interpolation_type_cubic_spline)
-					{
-						valueRead = cgltf_accessor_read_float(values, sample_idx * 3 + 0, &keyframe.inTangent.x, 4);
-						valueRead = cgltf_accessor_read_float(values, sample_idx * 3 + 1, &keyframe.value.x, 4);
-						valueRead = cgltf_accessor_read_float(values, sample_idx * 3 + 2, &keyframe.outTangent.x, 4);
-					}
-					else
-					{
-						valueRead = cgltf_accessor_read_float(values, sample_idx, &keyframe.value.x, 4);
-					}
-
-					if (timeRead && valueRead)
-						dstSampler->AddKeyframe(keyframe);
-				}
-
-				if (!dstSampler->GetKeyframes().empty())
-					animationSamplers[srcSampler] = dstSampler;
-				else
-					log::warning("Animation channel imported with no keyframes, ignoring.");
-			}
-
-			for (size_t channel_idx = 0; channel_idx < srcAnim->channels_count; channel_idx++)
-			{
-				const cgltf_animation_channel* srcChannel = &srcAnim->channels[channel_idx];
-
-				auto dstNode = nodeMap[srcChannel->target_node];
-				if (!dstNode)
-					continue;
-
-				AnimationAttribute attribute;
-				switch (srcChannel->target_path)
-				{
-				case cgltf_animation_path_type_translation:
-					attribute = AnimationAttribute::Translation;
-					break;
-
-				case cgltf_animation_path_type_rotation:
-					attribute = AnimationAttribute::Rotation;
-					break;
-
-				case cgltf_animation_path_type_scale:
-					attribute = AnimationAttribute::Scaling;
-					break;
-
-				case cgltf_animation_path_type_weights:
-				case cgltf_animation_path_type_invalid:
-				default:
-					log::warning("Unsupported glTF animation taregt: %d", srcChannel->target_path);
-					continue;
-				}
-
-				auto dstSampler = animationSamplers[srcChannel->sampler];
-				if (!dstSampler)
-					continue;
-
-				auto dstTrack = std::make_shared<SceneGraphAnimationChannel>(dstSampler, dstNode, attribute);
-
-				dstAnim->AddChannel(dstTrack);
-			}
-
-			if (dstAnim->IsVald())
-			{
-				auto animationNode = std::make_shared<SceneGraphNode>();
-				animationNode->SetName(dstAnim->GetName());
-				graph->Attach(animationContainer, animationNode);
-				animationNode->SetLeaf(dstAnim);
-				if (srcAnim->name)
-					animationNode->SetName(srcAnim->name);
-			}
-		}
-
-		if (c_ForceRebuildTangents)
-		{
-			for (size_t buffer_idx = 0; buffer_idx < objects->buffers_count; buffer_idx++)
-			{
-				std::filesystem::path outputFileName = fileName.parent_path() / fileName.stem();
-				outputFileName += ".buffer" + std::to_string(buffer_idx) + ".bin";
-
-				m_fs->writeFile(outputFileName, objects->buffers[buffer_idx].data, objects->buffers[buffer_idx].size);
-			}
-		}
-
-		cgltf_free(objects);
 
 		return true;
-
-
 	}
 
 }

@@ -167,6 +167,7 @@
     <ClInclude Include="..\..\Source\Engine\Render\Module\Camera-FirstPerson.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\Camera-ThirdPerson.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\Camera.h" />
+    <ClInclude Include="..\..\Source\Engine\Render\Module\DDSFile.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\DrawStrategy.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\GLTFImporter.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\MaterialBindingCache.h" />

@@ -129,8 +129,6 @@ namespace Parting {
 			this->m_SceneTypeFactory = MakeShared<SceneTypeFactory<APITag>>();
 
 		this->m_GLTFImporter = MakeShared<GLTFImporter<APITag>>(this->m_FS, this->m_SceneTypeFactory);
-
-
 	}
 
 	template<RHI::APITagConcept APITag>
@@ -156,7 +154,11 @@ namespace Parting {
 			this->LoadModelAsync(0, sceneFileName, executor);
 			if (nullptr != executor)
 				executor->wait_for_all();
-			//auto 
+			
+			if(nullptr==this->m_Models[0].RootNode)
+				return false;
+
+			this->m_SceneGraph->Set_RootNode(this->m_Models[0].RootNode);
 
 			return true;
 
@@ -174,14 +176,14 @@ namespace Parting {
 		if (nullptr != excutor)
 			excutor->async(
 				[this, Index, excutor, FileName](void) {
-					SceneImportResult<APITag> Re{};
+					SceneImportResult<APITag> Re;
 					this->m_GLTFImporter->Load(FileName, *this->m_TextureCache, g_LoadingStats, excutor, Re);
 					++g_LoadingStats.ObjectsLoaded;
 					this->m_Models[Index] = Re;
 				}
 			);
 		else {
-			SceneImportResult<APITag> Re{};
+			SceneImportResult<APITag> Re;
 			this->m_GLTFImporter->Load(FileName, *this->m_TextureCache, g_LoadingStats, nullptr, Re);
 			++g_LoadingStats.ObjectsLoaded;
 			this->m_Models[Index] = Re;

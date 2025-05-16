@@ -101,7 +101,7 @@ namespace Parting {
 		STDNODISCARD SceneGraphNode<APITag>* Get_Node(void) const { return this->m_Node.lock().get(); }
 		STDNODISCARD SharedPtr<SceneGraphNode<APITag>> Get_NodeSharedPtr(void) const { return this->m_Node.lock(); }
 		/*STDNODISCARD dm::box3 GetLocalBoundingBox() { return dm::box3::empty(); }*/
-		STDNODISCARD SharedPtr<SceneGraphLeaf<APITag>> Clone(void) = 0;
+		STDNODISCARD virtual SharedPtr<SceneGraphLeaf<APITag>> Clone(void) = 0;
 		/*STDNODISCARD SceneContentFlags GetContentFlags() const { return SceneContentFlags::None; }*/
 		STDNODISCARD const String& Get_Name(void) const;
 		void Set_Name(const String& name) const;
@@ -237,13 +237,13 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline Int32 SceneGraphIterator<APITag>::Next(bool allowChildren) {
-		if (nullptr == m_Current)
+		if (nullptr == this->m_Current)
 			return 0;
 
 		// Try to move down to the children of the current node
-		if (allowChildren && m_Current->Get_NumChildren() > 0) {
-			this->m_ChildIndices.push(0);
-			m_Current = m_Current->GetChild(0);
+		if (allowChildren && this->m_Current->Get_NumChildren() > 0) {
+			this->m_ChildIndices.push_back(0);
+			this->m_Current = this->m_Current->Get_Child(0);
 			return 1;
 		}
 
@@ -260,7 +260,7 @@ namespace Parting {
 				Uint64& siblingIndex{ this->m_ChildIndices.back() };
 				++siblingIndex;
 
-				SceneGraphNode* parent{ this->m_Current->Get_Parent() };
+				SceneGraphNode<APITag>* parent{ this->m_Current->Get_Parent() };
 				if (siblingIndex < parent->Get_NumChildren()) {
 					this->m_Current = parent->Get_Child(siblingIndex);
 					return depth;
@@ -307,7 +307,7 @@ namespace Parting {
 		if (nullptr != this->m_Root)
 			this->Detach(this->m_Root);
 
-
+		return OldRoot;
 	}
 
 	template<RHI::APITagConcept APITag>
@@ -470,7 +470,7 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline SharedPtr<SceneGraphNode<APITag>> SceneGraph<APITag>::Detach(const SharedPtr<SceneGraphNode<APITag>>& node, bool preserveOrder) {
-		SharedPtr<SceneGraph<APITag>> NodeGraph{ node->m_Graph.Lock() };
+		SharedPtr<SceneGraph<APITag>> NodeGraph{ node->m_Graph.lock() };
 
 		if (nullptr != NodeGraph) {
 			ASSERT(NodeGraph.get() != this);

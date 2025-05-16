@@ -45,7 +45,6 @@ PARTING_SUBMODULE(Parting, SSAOPass)
 
 namespace Parting {
 
-
 	enum class TextureAlphaMode :Uint8 {
 		UNKNOWN = 0,
 		STRAIGHT = 1,
@@ -66,7 +65,7 @@ namespace Parting {
 	};
 
 	template<RHI::APITagConcept APITag>
-	struct LoadedTexture final {
+	struct LoadedTexture {
 		using Imp_Texture = typename RHI::RHITypeTraits<APITag>::Imp_Texture;
 
 		RHI::RefCountPtr<typename RHI::RHITypeTraits<APITag>::Imp_Texture> Texture;//TODO Fix
@@ -95,7 +94,7 @@ namespace Parting {
 		RHI::RefCountPtr<Imp_Buffer> MaterialConstants;
 		Math::VecF3 BaseOrDiffuseColor{ 1.f }; // metal-rough: base color, spec-gloss: diffuse color (if no texture present)
 		Math::VecF3 SpecularColor{ 0.f }; // spec-gloss: specular color
-		Math::VecF3 EmissiveColor{ 0.f };
+		Math::VecF3 EmissiveColor{ 0.f };//TODO :maybe define a default value is 1.f
 		float EmissiveIntensity{ 1.f }; // additional multiplier for emissiveColor
 		float Metalness{ 0.f }; // metal-rough only
 		float Roughness{ 0.f }; // both metal-rough and spec-gloss
@@ -151,6 +150,92 @@ namespace Parting {
 		bool Dirty{ true }; // set this to true to make Scene update the material data
 
 	};
+
+
+	template<RHI::APITagConcept APITag>
+	struct BufferGroup final {
+		using Imp_Buffer = typename RHI::RHITypeTraits<APITag>::Imp_Buffer;
+
+		RHI::RefCountPtr<Imp_Buffer> IndexBuffer;
+		RHI::RefCountPtr<Imp_Buffer> VertexBuffer;
+		RHI::RefCountPtr<Imp_Buffer> InstanceBuffer;
+		SharedPtr<DescriptorHandle<APITag>> IndexBufferDescriptor;
+		SharedPtr<DescriptorHandle<APITag>> VertexBufferDescriptor;
+		SharedPtr<DescriptorHandle<APITag>> InstnaceBufferDescriptor;
+		Array<RHI::RHIBufferRange, Tounderlying(RHI::RHIVertexAttribute::COUNT)> VertexBufferRanges;
+		Vector<RHI::RHIBufferRange> MorphTargetBufferRange;
+		Vector<Uint32> IndexData;
+		Vector<Math::VecF3> PositionData;
+		Vector<Math::VecF2> Texcoord1Data;
+		Vector<Math::VecF2> Texcoord2Data;
+		Vector<Uint32> NormalData;
+		Vector<Uint32> TangentData;
+		Vector<Math::Vec<Uint16, 4>> JointData;
+		Vector<Math::VecF4> WeightData;
+		Vector<float> RadiusData;
+		Vector<Math::VecF4> MorphTargetData;
+
+		STDNODISCARD bool HasAttribute(RHI::RHIVertexAttribute attr) const { return this->VertexBufferRanges[Tounderlying(attr)].ByteSize != 0; }
+		RHI::RHIBufferRange& Get_VertexBufferRange(RHI::RHIVertexAttribute attr) { return this->VertexBufferRanges[Tounderlying(attr)]; }
+		STDNODISCARD const RHI::RHIBufferRange& Get_VertexBufferRange(RHI::RHIVertexAttribute attr) const { return this->VertexBufferRanges[Tounderlying(attr)]; }
+	};
+
+
+	enum class MeshGeometryPrimitiveType : Uint8 {
+		Triangles,
+		Lines,
+		LineStrip,
+
+		COUNT
+	};
+
+	template<RHI::APITagConcept APITag>
+	struct MeshGeometry final {
+		SharedPtr<Material<APITag>> Material;
+		Math::BoxF3 ObjectSpaceBounds;
+		Uint32 IndexOffsetInMesh{ 0 };
+		Uint32 VertexOffsetInMesh{ 0 };
+		Uint32 NumIndices{ 0 };
+		Uint32 NumVertices{ 0 };
+		Int32 GlobalGeometryIndex{ 0 };
+
+		MeshGeometryPrimitiveType Type{ MeshGeometryPrimitiveType::Triangles };
+	};
+
+	enum class MeshType : Uint8 {
+		Triangles,
+		CurvePolytubes,
+		CurveDisjointOrthogonalTriangleStrips,
+		CurveLinearSweptSpheres,
+
+		COUNT
+	};
+
+	template<RHI::APITagConcept APITag>
+	struct MeshInfo final {
+		String Name;
+		MeshType Type{ MeshType::Triangles };
+		SharedPtr<BufferGroup<APITag>> Buffers;
+		SharedPtr<MeshInfo<APITag>> SkinPrototype;
+		Vector<SharedPtr<MeshGeometry<APITag>>> Geometries;
+		Math::BoxF3 ObjectSpaceBounds;
+		Uint32 IndexOffset{ 0 };
+		Uint32 VertexOffset{ 0 };
+		Uint32 TotalIndices{ 0 };
+		Uint32 TotalVertices{ 0 };
+		Int32 GlobalMeshIndex{ 0 };
+		bool IsMorphTargetAnimationMesh{ false };
+		bool IsSkinPrototype{ false };
+
+		bool Is_Curve(void) const {
+			return
+				(this->Type == MeshType::CurvePolytubes) ||
+				(this->Type == MeshType::CurveDisjointOrthogonalTriangleStrips) ||
+				(this->Type == MeshType::CurveLinearSweptSpheres);
+		}
+	};
+
+
 
 
 

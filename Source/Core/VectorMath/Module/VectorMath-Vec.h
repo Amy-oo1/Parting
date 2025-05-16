@@ -573,7 +573,28 @@ namespace Math {
 
 
 
-
+	template<Uint32 N> Uint32 VecFToSnorm8(const Vec<float, N>& v) { ASSERT(false); return 0; }
+	template<> Uint32 VecFToSnorm8<2>(const Vec<float, 2>& v) {
+		float scale{ 127.0f / Math::Sqrt(v.X * v.X + v.Y * v.Y) };
+		Int32 x{ static_cast<Int32>(v.X * scale) };
+		Int32 y{ static_cast<Int32>(v.Y * scale) };
+		return static_cast<Uint32>((x & 0xff) | ((y & 0xff) << 8));
+	}
+	template<> Uint32 VecFToSnorm8<3>(const Vec<float, 3>& v) {
+		float scale{ 127.0f / Math::Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z) };
+		Int32 x{ static_cast<Int32>(v.X * scale) };
+		Int32 y{ static_cast<Int32>(v.Y * scale) };
+		Int32 z{ static_cast<Int32>(v.Z * scale) };
+		return  static_cast<Uint32>((x & 0xff) | ((y & 0xff) << 8) | ((z & 0xff) << 16));
+	}
+	template<> Uint32 VecFToSnorm8<4>(const Vec<float, 4>& v) {
+		float scale{ 127.0f / Math::Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z /*+ v.W * v.W*/) };
+		Int32 x{ static_cast<Int32>(v.X * scale) };
+		Int32 y{ static_cast<Int32>(v.Y * scale) };
+		Int32 z{ static_cast<Int32>(v.Z * scale) };
+		Int32 w{ static_cast<Int32>(v.W * scale) };
+		return  static_cast<Uint32>((x & 0xffu) | ((y & 0xffu) << 8) | ((z & 0xffu) << 16) | ((w & 0xffu) << 24));
+	}
 
 
 

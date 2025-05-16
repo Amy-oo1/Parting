@@ -143,14 +143,14 @@ namespace Math {
 		static constexpr Affine Identity(void) { return Affine{ Mat<Type, 3, 3>::Identity(), Vec<Type, 3>::Zero() }; }
 	};
 
-	/*template <typename type, uint32 n>
+	/*template <typename type, uint32 N>
 	struct affine;*/
 
 	/*	template<typename Type,int ize,int a>
 	struct Mat;*/
 
 	/*template<typename Type, int size>
-	struct vector;*/
+	struct Vec;*/
 
 	template <typename Type, Uint32 N>bool operator == (const Affine<Type, N>& a, const Affine<Type, N>& b) { return All(a.m_Linear == b.m_Linear) && All(a.m_Translation == b.m_Translation); }
 

@@ -131,6 +131,9 @@
     <ClInclude Include="..\..\Source\Core\Concurrent\Module\Concurrent-Thread.h">
       <Filter>Concurrent\Module</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Box.h">
+      <Filter>VectorMath\Module</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Platform">

@@ -211,7 +211,7 @@ namespace RHI {
 
 		void QueueWaitForCommandList(RHICommandQueue WaitQueue, RHICommandQueue executeQueue, Uint64 instance) { this->Get_Derived()->Imp_QueueWaitForCommandList(WaitQueue, executeQueue, instance); }
 
-		STDNODISCARD bool WaitForIdle(void) { return this->Get_Derived()->Imp_WaitForIdle(); }
+		/*STDNODISCARD*/ bool WaitForIdle(void) { return this->Get_Derived()->Imp_WaitForIdle(); }
 
 		void RunGarbageCollection(void) { this->Get_Derived()->Imp_RunGarbageCollection(); }
 

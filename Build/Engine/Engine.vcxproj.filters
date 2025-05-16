@@ -141,6 +141,9 @@
     <ClInclude Include="..\..\Source\Engine\Render\Module\GLTFImporter.h">
       <Filter>Render\Module</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\DDSFile.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\Engine\EnghineSrcEmpty.cpp" />
