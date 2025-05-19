@@ -39,7 +39,9 @@ PARTING_SUBMODULE(Parting, SSAOPass)
 
 #include "Engine/Engine/Module/DescriptorTableManager.h"
 
+#include "Shader/material_cb.h"
 #include "Shader/bindless.h"
+#include "Shader/light_cb.h"
 
 #endif // PARTING_MODULE_BUILD
 
@@ -80,6 +82,7 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	struct Material final {
 		using Imp_Buffer = typename RHI::RHITypeTraits<APITag>::Imp_Buffer;
+
 		String Name;
 		String ModelFileName;		// where this material originated from, e.g. GLTF file name
 		Int32 MaterialIndexInModel{ -1 };  // index of the material in the model file
@@ -149,6 +152,8 @@ namespace Parting {
 		int MaterialID{ 0 };
 		bool Dirty{ true }; // set this to true to make Scene update the material data
 
+
+		void FillConstantBuffer(typename ::MaterialConstants& constants) const;
 	};
 
 
@@ -176,7 +181,7 @@ namespace Parting {
 		Vector<Math::VecF4> MorphTargetData;
 
 		STDNODISCARD bool HasAttribute(RHI::RHIVertexAttribute attr) const { return this->VertexBufferRanges[Tounderlying(attr)].ByteSize != 0; }
-		RHI::RHIBufferRange& Get_VertexBufferRange(RHI::RHIVertexAttribute attr) { return this->VertexBufferRanges[Tounderlying(attr)]; }
+		RHI::RHIBufferRange& Get_VertexBufferRange(RHI::RHIVertexAttribute attr) { return this->VertexBufferRanges[Tounderlying(attr)]; }//NOTE :return no const to w range
 		STDNODISCARD const RHI::RHIBufferRange& Get_VertexBufferRange(RHI::RHIVertexAttribute attr) const { return this->VertexBufferRanges[Tounderlying(attr)]; }
 	};
 
@@ -235,6 +240,25 @@ namespace Parting {
 		}
 	};
 
+	template<RHI::APITagConcept APITag>
+	struct LightProbe final {
+		using Imp_Texture = typename RHI::RHITypeTraits<APITag>::Imp_Texture;
+
+		String Name;
+		RHI::RefCountPtr<Imp_Texture> DiffuseMap;
+		RHI::RefCountPtr<Imp_Texture> SpecularMap;
+		RHI::RefCountPtr<Imp_Texture> EnvironmentBRDF;
+		Uint32 DiffuseArrayIndex{ 0 };
+		Uint32 SpecularArrayIndex{ 0 };
+		float DiffuseScale{ 1.f };
+		float SpecularScale{ 1.f };
+		bool Enabled{ true };
+		Math::Frustum Bounds{ Math::Frustum::Infinite() };
+
+		STDNODISCARD bool Is_Active(void) const;
+		void FillLightProbeConstants(::LightProbeConstants& lightProbeConstants) const;
+	};
+
 
 
 
@@ -247,7 +271,10 @@ namespace Parting {
 	HEADER_INLINE SceneLoadingStats g_LoadingStats;
 
 
-
+	template<RHI::APITagConcept APITag>
+	Int32 Get_BindlessTextureIndex(const SharedPtr<LoadedTexture<APITag>>& texture) {
+		return nullptr != texture ? texture->BindlessDescriptor.Get() : -1;
+	}
 
 
 
@@ -289,6 +316,120 @@ namespace Parting {
 		}
 
 		return builder.Build();
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline void Material<APITag>::FillConstantBuffer(typename ::MaterialConstants& constants) const {
+		constants.Flags = 0;
+
+		if (this->UseSpecularGlossModel)
+			constants.Flags |= MaterialFlags_UseSpecularGlossModel;
+
+		if (nullptr != this->BaseOrDiffuseTexture && this->EnableBaseOrDiffuseTexture)
+			constants.Flags |= MaterialFlags_UseBaseOrDiffuseTexture;
+
+		if (nullptr != this->MetalRoughOrSpecularTexture && this->EnableMetalRoughOrSpecularTexture)
+			constants.Flags |= MaterialFlags_UseMetalRoughOrSpecularTexture;
+
+		if (nullptr != EmissiveTexture && this->EnableEmissiveTexture)
+			constants.Flags |= MaterialFlags_UseEmissiveTexture;
+
+		if (nullptr != this->NormalTexture && this->EnableNormalTexture)
+			constants.Flags |= MaterialFlags_UseNormalTexture;
+
+		if (nullptr != this->OcclusionTexture && this->EnableOcclusionTexture)
+			constants.Flags |= MaterialFlags_UseOcclusionTexture;
+
+		if (nullptr != this->TransmissionTexture && this->EnableTransmissionTexture)
+			constants.Flags |= MaterialFlags_UseTransmissionTexture;
+
+		if (nullptr != this->OpacityTexture && this->EnableOpacityTexture)
+			constants.Flags |= MaterialFlags_UseOpacityTexture;
+
+		if (this->DoubleSided)
+			constants.Flags |= MaterialFlags_DoubleSided;
+
+		if (this->MetalnessInRedChannel)
+			constants.Flags |= MaterialFlags_MetalnessInRedChannel;
+
+		// free parameters
+
+		constants.Domain = static_cast<Int32>(this->Domain);
+		constants.BaseOrDiffuseColor = this->BaseOrDiffuseColor;
+		constants.SpecularColor = this->SpecularColor;
+		constants.EmissiveColor = this->EmissiveColor * this->EmissiveIntensity;
+		constants.Roughness = this->Roughness;
+		constants.Metalness = this->Metalness;
+		constants.NormalTextureScale = this->NormalTextureScale;
+		constants.MaterialID = this->MaterialID;
+		constants.OcclusionStrength = this->OcclusionStrength;
+		constants.TransmissionFactor = this->TransmissionFactor;
+		constants.NormalTextureTransformScale = this->NormalTextureTransformScale;
+
+		switch (this->Domain) {
+			using enum MaterialDomain;
+		case AlphaBlended:case TransmissiveAlphaBlended:
+			constants.Opacity = this->Opacity;
+			break;
+
+		case Opaque:case AlphaTested:case Transmissive:case TransmissiveAlphaTested:
+			constants.Opacity = 1.f;
+			break;
+
+		default:break;
+		}
+
+		switch (this->Domain) {
+			using enum MaterialDomain;
+		case AlphaTested:case TransmissiveAlphaTested:
+			constants.AlphaCutoff = this->AlphaCutoff;
+			break;
+
+		case AlphaBlended:case TransmissiveAlphaBlended:
+			constants.AlphaCutoff = 0.f; // discard only if opacity == 0
+			break;
+
+		case Opaque:case Transmissive:
+			constants.AlphaCutoff = -1.f; // never discard
+			break;
+
+		default:break;
+		}
+
+		if (this->EnableSubsurfaceScattering) {
+			constants.Flags |= MaterialFlags_SubsurfaceScattering;
+
+			constants.SSSTransmissionColor = this->Subsurface.TransmissionColor;
+			constants.SSSScatteringColor = this->Subsurface.ScatteringColor;
+			constants.SSSScale = this->Subsurface.Scale;
+			constants.SSSAnisotropy = this->Subsurface.Anisotropy;
+		}
+
+		if (this->EnableHair) {
+			constants.Flags |= MaterialFlags_Hair;
+
+			constants.HairBaseColor = this->Hair.BaseColor;
+			constants.HairMelanin = this->Hair.Melanin;
+			constants.HairMelaninRedness = this->Hair.MelaninRedness;
+			constants.HairLongitudinalRoughness = this->Hair.LongitudinalRoughness;
+			constants.HairAzimuthalRoughness = this->Hair.AzimuthalRoughness;
+			constants.HairIOR = this->Hair.IOR;
+			constants.HairCuticleAngle = this->Hair.CuticleAngle;
+			constants.HairDiffuseReflectionWeight = this->Hair.DiffuseReflectionWeight;
+			constants.HairDiffuseReflectionTint = this->Hair.DiffuseReflectionTint;
+		}
+
+		// bindless textures//TODO Set a no bindingless optional
+
+		constants.BaseOrDiffuseTextureIndex = Parting::Get_BindlessTextureIndex(this->BaseOrDiffuseTexture);
+		constants.MetalRoughOrSpecularTextureIndex = Parting::Get_BindlessTextureIndex(this->MetalRoughOrSpecularTexture);
+		constants.NormalTextureIndex = Parting::Get_BindlessTextureIndex(this->NormalTexture);
+		constants.EmissiveTextureIndex = Parting::Get_BindlessTextureIndex(this->EmissiveTexture);
+		constants.OcclusionTextureIndex = Parting::Get_BindlessTextureIndex(this->OcclusionTexture);
+		constants.TransmissionTextureIndex = Parting::Get_BindlessTextureIndex(this->TransmissionTexture);
+		constants.OpacityTextureIndex = Parting::Get_BindlessTextureIndex(this->OpacityTexture);
+
+		constants.Padding1 = Math::VecU3{ 0u };
 	}
 
 }

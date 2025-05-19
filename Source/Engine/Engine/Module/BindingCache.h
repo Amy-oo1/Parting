@@ -31,38 +31,10 @@ PARTING_IMPORT Utility;
 
 namespace Parting {
 
-
-	template<RHI::APITagConcept APITag>
-	struct HashBindingSetItem final {
-		Uint64 operator()(const RHI::RHIBindingSetItem<APITag>& item)const noexcept {
-			Uint64 hash{ 0 };
-			hash = HashCombine(hash, HashVoidPtr{}(item.ResourcePtr));
-			hash = HashCombine(hash, item.Slot);
-			hash = HashCombine(hash, Tounderlying(item.Type));
-			hash = HashCombine(hash, Tounderlying(item.Dimension));
-			hash = HashCombine(hash, Tounderlying(item.Format));
-			hash = HashCombine(hash, item.RawData[0]);
-			hash = HashCombine(hash, item.RawData[1]);
-			return hash;
-		}
-	};
-
-	template<RHI::APITagConcept APITag>
-	struct HashBindingSet final {
-		Uint64 operator()(const RHI::RHIBindingSetDesc<APITag>& desc)const noexcept {
-			Uint64 hash{ 0 };
-			for (Uint32 Index = 0; Index < desc.BindingCount; ++Index)
-				hash = HashCombine(hash, HashBindingSetItem<APITag>{}(desc.Bindings[Index]));
-			return hash;
-		}
-	};
-
-
-
-
 	template<RHI::APITagConcept APITag>
 	class BindingCache final {
 		using Imp_Device = typename RHI::RHITypeTraits<APITag>::Imp_Device;
+		using Imp_BindingLayout = typename RHI::RHITypeTraits<APITag>::Imp_BindingLayout;
 		using Imp_BindingSet = typename RHI::RHITypeTraits<APITag>::Imp_BindingSet;
 	public:
 		BindingCache(Imp_Device* device)
@@ -70,15 +42,15 @@ namespace Parting {
 		{
 		}
 
-		RHI::RefCountPtr<Imp_BindingSet> GetCachedBindingSet(const RHI::RHIBindingSetDesc<APITag>& desc, Imp_BindingSet* layout) {
-			Uint64 Hash = 0;
-			HashCombine(Hash, HashBindingSet<APITag>{}(desc));
-			HashCombine(Hash, HashVoidPtr{}(layout));
+		RHI::RefCountPtr<Imp_BindingSet> GetCachedBindingSet(const RHI::RHIBindingSetDesc<APITag>& desc, Imp_BindingLayout* layout) {
+			Uint64 hash = 0;
+			hash = HashCombine(hash, RHI::RHIBindingSetDesc<APITag>::BindingSetHash::operator()(desc));
+			hash = HashCombine(hash, HashVoidPtr{}(layout));
 
 			this->m_Mutex.lock_shared();
 
 			RHI::RefCountPtr<Imp_BindingSet> Re{ nullptr };
-			if (auto It = this->m_BindingSets.find(Hash); It != this->m_BindingSets.end())
+			if (auto It{ this->m_BindingSets.find(hash) }; It != this->m_BindingSets.end())
 				Re = It->second;
 
 			this->m_Mutex.unlock_shared();
@@ -90,15 +62,15 @@ namespace Parting {
 
 		}
 
-		RHI::RefCountPtr<Imp_BindingSet> GetOrCreateBindingSet(const RHI::RHIBindingSetDesc<APITag>& desc, Imp_BindingSet* layout) {
-			Uint64 Hash = 0;
-			HashCombine(Hash, HashBindingSet<APITag>{}(desc));
-			HashCombine(Hash, HashVoidPtr{}(layout));
+		RHI::RefCountPtr<Imp_BindingSet> GetOrCreateBindingSet(const RHI::RHIBindingSetDesc<APITag>& desc, Imp_BindingLayout* layout) {
+			Uint64 hash = 0;
+			hash = HashCombine(hash, typename RHI::RHIBindingSetDesc<APITag>::BindingSetHash{}(desc));
+			hash = HashCombine(hash, HashVoidPtr{}(layout));
 
 			this->m_Mutex.lock_shared();
 
 			RHI::RefCountPtr<Imp_BindingSet> Re{ nullptr };
-			if (auto It = this->m_BindingSets.find(Hash); It != this->m_BindingSets.end())
+			if (auto It{ this->m_BindingSets.find(hash) }; It != this->m_BindingSets.end())
 				Re = It->second;
 
 			this->m_Mutex.unlock_shared();
@@ -106,7 +78,7 @@ namespace Parting {
 			if (nullptr == Re) {
 				m_Mutex.lock();
 
-				RHI::RefCountPtr<Imp_BindingSet>& entry{ this->m_BindingSets[Hash] };
+				RHI::RefCountPtr<Imp_BindingSet>& entry{ this->m_BindingSets[hash] };
 				if (nullptr == entry) {
 					Re = this->m_Device->CreateBindingSet(desc, layout);
 					entry = Re;
@@ -118,11 +90,11 @@ namespace Parting {
 			}
 
 			ASSERT(nullptr != Re);
-			ASSERT(desc == Re->Get_Desc());
+			ASSERT(desc == *Re->Get_Desc());
 
 			return Re;
 		}
-		
+
 		void Clear(void) {
 			this->m_Mutex.lock();
 			this->m_BindingSets.clear();

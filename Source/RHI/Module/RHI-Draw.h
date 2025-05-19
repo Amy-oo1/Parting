@@ -74,57 +74,52 @@ PARTING_SUBMODE_IMPORT(Pipeline)
 namespace RHI {
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	struct RHIVertexBufferBinding final {
+		struct RHIVertexBufferBinding final {
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
-		
+
 		Imp_Buffer* Buffer{ nullptr };
 		Uint32 Slot{ 0 };
 		Uint64 Offset{ 0 };
-		
+
 		STDNODISCARD constexpr bool operator==(const RHIVertexBufferBinding& other) const noexcept {
-			return 
-				this->Buffer == other.Buffer && 
-				this->Slot == other.Slot && 
+			return
+				this->Buffer == other.Buffer &&
+				this->Slot == other.Slot &&
 				this->Offset == other.Offset;
 		};
 		STDNODISCARD constexpr bool operator!=(const RHIVertexBufferBinding& other) const noexcept { return !(*this == other); }
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	struct RHIIndexBufferBinding final {
+		struct RHIIndexBufferBinding final {
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
 
 		Imp_Buffer* Buffer{ nullptr };
 		RHIFormat Format{ RHIFormat::UNKNOWN };
 		Uint32 Offset{ 0 };
-		
-		STDNODISCARD constexpr bool operator==(const RHIIndexBufferBinding& other) const noexcept {
-			return
-				this->Buffer == other.Buffer &&
-				this->Format == other.Format &&
-				this->Offset == other.Offset;
-		};
-		STDNODISCARD constexpr bool operator!=(const RHIIndexBufferBinding& other) const noexcept { return !(*this == other); }
+
+		STDNODISCARD constexpr bool operator==(const RHIIndexBufferBinding&) const noexcept = default;
+		STDNODISCARD constexpr bool operator!=(const RHIIndexBufferBinding&) const noexcept = default;
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	struct RHIGraphicsState final {
+		struct RHIGraphicsState final {
 		using Imp_GraphicsPipeline = typename RHITypeTraits<APITag>::Imp_GraphicsPipeline;
 		using Imp_FrameBuffer = typename RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
 
 		Imp_GraphicsPipeline* Pipeline{ nullptr };
-		Imp_FrameBuffer* Framebuffer{ nullptr };
+		Imp_FrameBuffer* FrameBuffer{ nullptr };
 		RHIViewportState Viewport;
 		RHIVariableRateShadingState ShadingRateState;
-		Color BlendConstantColor{};
+		Color BlendConstantColor;
 		Uint8 DynamicStencilRefValue{ 0 };
 
-		Array<Imp_BindingSet*, g_MaxBindingLayoutCount> BindingSets;
+		Array<Imp_BindingSet*, g_MaxBindingLayoutCount> BindingSets{};
 		RemoveCV<decltype(g_MaxBindingLayoutCount)>::type BindingSetCount{ 0 };
 
-		Array<RHIVertexBufferBinding<APITag>, g_MaxVertexAttributeCount> VertexBuffers;
+		Array<RHIVertexBufferBinding<APITag>, g_MaxVertexAttributeCount> VertexBuffers{};
 		RemoveCV<decltype(g_MaxVertexAttributeCount)>::type VertexBufferCount{ 0 };
 
 		RHIIndexBufferBinding<APITag> IndexBuffer{};
@@ -133,29 +128,38 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	class RHIGraphicsStateBuilder final {
+		class RHIGraphicsStateBuilder final {
 		using Imp_GraphicsPipeline = typename RHITypeTraits<APITag>::Imp_GraphicsPipeline;
 		using Imp_FrameBuffer = typename RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
-	public:
-		STDNODISCARD constexpr RHIGraphicsStateBuilder& Reset(void) { this->m_State = RHIGraphicsState<APITag>{}; return *this; }
-		
-		STDNODISCARD constexpr RHIGraphicsStateBuilder& Set_Pipeline(Imp_GraphicsPipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
-		STDNODISCARD constexpr RHIGraphicsStateBuilder& Set_FrameBuffer(Imp_FrameBuffer* framebuffer) { this->m_State.Framebuffer = framebuffer; return *this; }
-		STDNODISCARD constexpr RHIGraphicsStateBuilder& Set_Viewport(const RHIViewportState& viewport) { this->m_State.Viewport = viewport; return *this; }
-		STDNODISCARD constexpr RHIGraphicsStateBuilder& Set_ShadingRateState(const RHIVariableRateShadingState& shadingRateState) { this->m_State.ShadingRateState = shadingRateState; return *this; }
-		STDNODISCARD constexpr RHIGraphicsStateBuilder& Set_BlendConstantColor(const Color& color) { this->m_State.BlendConstantColor = color; return *this; }
-		STDNODISCARD constexpr RHIGraphicsStateBuilder& Set_DynamicStencilRefValue(Uint8 stencilRefValue) { this->m_State.DynamicStencilRefValue = stencilRefValue; return *this; }
-		STDNODISCARD constexpr RHIGraphicsStateBuilder& Set_IndexBuffer(const RHIIndexBufferBinding<APITag>& indexBuffer) { this->m_State.IndexBuffer = indexBuffer; return *this; }
-		STDNODISCARD constexpr RHIGraphicsStateBuilder& Set_IndirectParams(Imp_Buffer* indirectParams) { this->m_State.IndirectParams = indirectParams; return *this; }
-		
-		STDNODISCARD constexpr RHIGraphicsStateBuilder& AddBindingSet(Imp_BindingSet* bindingSet) { this->m_State.BindingSets[this->m_State.BindingSetCount++] = bindingSet; return *this; }
-		STDNODISCARD constexpr RHIGraphicsStateBuilder& AddVertexBuffer(const RHIVertexBufferBinding<APITag>& vertexBuffer) { this->m_State.VertexBuffers[this->m_State.VertexBufferCount++] = vertexBuffer; return *this; }
-		
-		STDNODISCARD constexpr const RHIGraphicsState<APITag>& Build(void) { return this->m_State; }
-	private:
-		RHIGraphicsState<APITag> m_State{};
+		public:
+			constexpr RHIGraphicsStateBuilder& Reset(void) { this->m_State = RHIGraphicsState<APITag>{}; return *this; }
+
+			constexpr RHIGraphicsStateBuilder& Set_Pipeline(Imp_GraphicsPipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
+			constexpr RHIGraphicsStateBuilder& Set_FrameBuffer(Imp_FrameBuffer* framebuffer) { this->m_State.FrameBuffer = framebuffer; return *this; }
+			constexpr RHIGraphicsStateBuilder& Set_Viewport(const RHIViewportState& viewport) { this->m_State.Viewport = viewport; return *this; }
+			constexpr RHIGraphicsStateBuilder& Set_ShadingRateState(const RHIVariableRateShadingState& shadingRateState) { this->m_State.ShadingRateState = shadingRateState; return *this; }
+			constexpr RHIGraphicsStateBuilder& Set_BlendConstantColor(const Color& color) { this->m_State.BlendConstantColor = color; return *this; }
+			constexpr RHIGraphicsStateBuilder& Set_DynamicStencilRefValue(Uint8 stencilRefValue) { this->m_State.DynamicStencilRefValue = stencilRefValue; return *this; }
+			constexpr RHIGraphicsStateBuilder& Set_IndexBuffer(const RHIIndexBufferBinding<APITag>& indexBuffer) { this->m_State.IndexBuffer = indexBuffer; return *this; }
+			constexpr RHIGraphicsStateBuilder& Set_IndirectParams(Imp_Buffer* indirectParams) { this->m_State.IndirectParams = indirectParams; return *this; }
+
+			constexpr RHIGraphicsStateBuilder& AddViewport(const RHIViewport& viewport) { this->m_State.Viewport.Viewports[this->m_State.Viewport.ViewportCount++] = viewport; return *this; }
+			constexpr RHIGraphicsStateBuilder& AddScissorRect(const RHIRect2D& scissor) { this->m_State.Viewport.ScissorRects[this->m_State.Viewport.ScissorCount++] = scissor; return *this; }
+
+			constexpr RHIGraphicsStateBuilder& SubScissorRect(void) { --this->m_State.BindingSetCount; return *this; }
+			constexpr RHIGraphicsStateBuilder& SubViewport(void) { --this->m_State.Viewport.ViewportCount; return *this; }
+
+			constexpr RHIGraphicsStateBuilder& AddBindingSet(Imp_BindingSet* bindingSet) { this->m_State.BindingSets[this->m_State.BindingSetCount++] = bindingSet; return *this; }
+			constexpr RHIGraphicsStateBuilder& SubBindingSet(void) { --this->m_State.BindingSetCount; return *this; }
+
+			constexpr RHIGraphicsStateBuilder& AddVertexBuffer(const RHIVertexBufferBinding<APITag>& vertexBuffer) { this->m_State.VertexBuffers[this->m_State.VertexBufferCount++] = vertexBuffer; return *this; }
+			constexpr RHIGraphicsStateBuilder& SubVertexBuffer(void) { --this->m_State.VertexBufferCount; return *this; }
+
+			STDNODISCARD constexpr const RHIGraphicsState<APITag>& Build(void) { return this->m_State; }
+		private:
+			RHIGraphicsState<APITag> m_State{};
 	};
 
 	PARTING_EXPORT struct RHIDrawArguments final {
@@ -165,15 +169,8 @@ namespace RHI {
 		Uint32 StartVertexLocation{ 0 };
 		Uint32 StartInstanceLocation{ 0 };
 
-		STDNODISCARD constexpr bool operator==(const RHIDrawArguments& other) const noexcept {
-			return
-				this->VertexCount == other.VertexCount &&
-				this->InstanceCount == other.InstanceCount &&
-				this->StartIndexLocation == other.StartIndexLocation &&
-				this->StartVertexLocation == other.StartVertexLocation &&
-				this->StartInstanceLocation == other.StartInstanceLocation;
-		};
-		STDNODISCARD constexpr bool operator!=(const RHIDrawArguments& other) const noexcept { return !(*this == other); }
+		STDNODISCARD constexpr bool operator==(const RHIDrawArguments&) const noexcept = default;
+		STDNODISCARD constexpr bool operator!=(const RHIDrawArguments&) const noexcept = default;
 	};
 
 	PARTING_EXPORT class RHIDrawArgumentsBuilder final {
@@ -185,7 +182,7 @@ namespace RHI {
 		STDNODISCARD constexpr RHIDrawArgumentsBuilder& Set_StartIndexLocation(Uint32 startIndexLocation) { this->m_Desc.StartIndexLocation = startIndexLocation; return *this; }
 		STDNODISCARD constexpr RHIDrawArgumentsBuilder& Set_StartVertexLocation(Uint32 startVertexLocation) { this->m_Desc.StartVertexLocation = startVertexLocation; return *this; }
 		STDNODISCARD constexpr RHIDrawArgumentsBuilder& Set_StartInstanceLocation(Uint32 startInstanceLocation) { this->m_Desc.StartInstanceLocation = startInstanceLocation; return *this; }
-		
+
 		STDNODISCARD constexpr const RHIDrawArguments& Build(void) { return this->m_Desc; }
 	private:
 		RHIDrawArguments m_Desc{};
@@ -211,12 +208,12 @@ namespace RHI {
 	PARTING_EXPORT class RHIDrawIndirectArgumentsBuilder final {
 	public:
 		STDNODISCARD constexpr RHIDrawIndirectArgumentsBuilder& Reset(void) { this->m_Desc = RHIDrawIndirectArguments{}; return *this; }
-		
+
 		STDNODISCARD constexpr RHIDrawIndirectArgumentsBuilder& Set_VertexCount(Uint32 vertexCount) { this->m_Desc.VertexCount = vertexCount; return *this; }
 		STDNODISCARD constexpr RHIDrawIndirectArgumentsBuilder& Set_InstanceCount(Uint32 instanceCount) { this->m_Desc.InstanceCount = instanceCount; return *this; }
 		STDNODISCARD constexpr RHIDrawIndirectArgumentsBuilder& Set_StartVertexLocation(Uint32 startVertexLocation) { this->m_Desc.StartVertexLocation = startVertexLocation; return *this; }
 		STDNODISCARD constexpr RHIDrawIndirectArgumentsBuilder& Set_StartInstanceLocation(Uint32 startInstanceLocation) { this->m_Desc.StartInstanceLocation = startInstanceLocation; return *this; }
-		
+
 		STDNODISCARD constexpr const RHIDrawIndirectArguments& Build(void) { return this->m_Desc; }
 	private:
 		RHIDrawIndirectArguments m_Desc{};
@@ -249,7 +246,7 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	struct RHIComputeState final {
+		struct RHIComputeState final {
 		using Imp_ComputePipeline = typename RHITypeTraits<APITag>::Imp_ComputePipeline;
 		using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
@@ -266,21 +263,21 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	class RHIComputeStateBuilder final {
+		class RHIComputeStateBuilder final {
 		using Imp_ComputePipeline = typename RHITypeTraits<APITag>::Imp_ComputePipeline;
 		using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
-	public:
-		STDNODISCARD constexpr RHIComputeStateBuilder& Reset(void) { this->m_State = RHIComputeState<APITag>{}; return *this; }
+		public:
+			STDNODISCARD constexpr RHIComputeStateBuilder& Reset(void) { this->m_State = RHIComputeState<APITag>{}; return *this; }
 
-		STDNODISCARD constexpr RHIComputeStateBuilder& Set_Pipeline(Imp_ComputePipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
-		STDNODISCARD constexpr RHIComputeStateBuilder& Set_IndirectParams(Imp_Buffer* indirectParams) { this->m_State.IndirectParams = indirectParams; return *this; }
+			STDNODISCARD constexpr RHIComputeStateBuilder& Set_Pipeline(Imp_ComputePipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
+			STDNODISCARD constexpr RHIComputeStateBuilder& Set_IndirectParams(Imp_Buffer* indirectParams) { this->m_State.IndirectParams = indirectParams; return *this; }
 
-		STDNODISCARD constexpr RHIComputeStateBuilder& AddBindingSet(Imp_BindingSet* bindingSet) { this->m_State.BindingSets[this->m_State.BindingSetCount++] = bindingSet; return *this; }
-		
-		STDNODISCARD constexpr const RHIComputeState<APITag>& Build(void) { return this->m_State; }
-	private:
-		RHIComputeState<APITag> m_State{};
+			STDNODISCARD constexpr RHIComputeStateBuilder& AddBindingSet(Imp_BindingSet* bindingSet) { this->m_State.BindingSets[this->m_State.BindingSetCount++] = bindingSet; return *this; }
+
+			STDNODISCARD constexpr const RHIComputeState<APITag>& Build(void) { return this->m_State; }
+		private:
+			RHIComputeState<APITag> m_State{};
 	};
 
 	PARTING_EXPORT struct RHIDispatchIndirectArguments final {
@@ -295,28 +292,28 @@ namespace RHI {
 	PARTING_EXPORT class RHIDispatchIndirectArgumentsBuilder final {
 	public:
 		STDNODISCARD constexpr RHIDispatchIndirectArgumentsBuilder& Reset(void) { this->m_Desc = RHIDispatchIndirectArguments{}; return *this; }
-		
+
 		STDNODISCARD constexpr RHIDispatchIndirectArgumentsBuilder& Set_GroupsX(Uint32 groupsX) { this->m_Desc.GroupsX = groupsX; return *this; }
 		STDNODISCARD constexpr RHIDispatchIndirectArgumentsBuilder& Set_GroupsY(Uint32 groupsY) { this->m_Desc.GroupsY = groupsY; return *this; }
 		STDNODISCARD constexpr RHIDispatchIndirectArgumentsBuilder& Set_GroupsZ(Uint32 groupsZ) { this->m_Desc.GroupsZ = groupsZ; return *this; }
 
 		STDNODISCARD constexpr RHIDispatchIndirectArgumentsBuilder& Set_Groups2D(Uint32 groupsX, Uint32 groupsY) { this->m_Desc.GroupsX = groupsX; this->m_Desc.GroupsY = groupsY; return *this; }
 		STDNODISCARD constexpr RHIDispatchIndirectArgumentsBuilder& Set_Groups3D(Uint32 groupsX, Uint32 groupsY, Uint32 groupsZ) { this->m_Desc.GroupsX = groupsX; this->m_Desc.GroupsY = groupsY; this->m_Desc.GroupsZ = groupsZ; return *this; }
-		
+
 		STDNODISCARD constexpr const RHIDispatchIndirectArguments& Build(void) { return this->m_Desc; }
 	private:
 		RHIDispatchIndirectArguments m_Desc{};
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	struct RHIMeshletState final {
+		struct RHIMeshletState final {
 		using Imp_MeshletPipeline = typename RHITypeTraits<APITag>::Imp_MeshletPipeline;
 		using Imp_FrameBuffer = typename RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
 
 		Imp_MeshletPipeline* Pipeline{ nullptr };
-		Imp_FrameBuffer* Framebuffer{ nullptr };
+		Imp_FrameBuffer* FrameBuffer{ nullptr };
 		RHIViewportState Viewport;
 		Color BlendConstantColor{};
 		Uint8 DynamicStencilRefValue{ 0 };
@@ -331,26 +328,26 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	class RHIMeshletStateBuilder final {
+		class RHIMeshletStateBuilder final {
 		using Imp_MeshletPipeline = typename RHITypeTraits<APITag>::Imp_MeshletPipeline;
 		using Imp_FrameBuffer = typename RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
-	public:
-		STDNODISCARD constexpr RHIMeshletStateBuilder& Reset(void) { this->m_State = RHIMeshletState<APITag>{}; return *this; }
+		public:
+			STDNODISCARD constexpr RHIMeshletStateBuilder& Reset(void) { this->m_State = RHIMeshletState<APITag>{}; return *this; }
 
-		STDNODISCARD constexpr RHIMeshletStateBuilder& Set_Pipeline(Imp_MeshletPipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
-		STDNODISCARD constexpr RHIMeshletStateBuilder& Set_FrameBuffer(Imp_FrameBuffer* framebuffer) { this->m_State.Framebuffer = framebuffer; return *this; }
-		STDNODISCARD constexpr RHIMeshletStateBuilder& Set_Viewport(const RHIViewportState& viewport) { this->m_State.Viewport = viewport; return *this; }
-		STDNODISCARD constexpr RHIMeshletStateBuilder& Set_BlendConstantColor(const Color& color) { this->m_State.BlendConstantColor = color; return *this; }
-		STDNODISCARD constexpr RHIMeshletStateBuilder& Set_DynamicStencilRefValue(Uint8 stencilRefValue) { this->m_State.DynamicStencilRefValue = stencilRefValue; return *this; }
-		STDNODISCARD constexpr RHIMeshletStateBuilder& Set_IndirectParams(Imp_Buffer* indirectParams) { this->m_State.IndirectParams = indirectParams; return *this; }
-		
-		STDNODISCARD constexpr RHIMeshletStateBuilder& AddBindingSet(Imp_BindingSet* bindingSet) { this->m_State.BindingSets[this->m_State.BindingSetCount++] = bindingSet; return *this; }
-		
-		STDNODISCARD constexpr const RHIMeshletState<APITag>& Build(void) { return this->m_State; }
-	private:
-		RHIMeshletState<APITag> m_State{};
+			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_Pipeline(Imp_MeshletPipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
+			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_FrameBuffer(Imp_FrameBuffer* framebuffer) { this->m_State.FrameBuffer = framebuffer; return *this; }
+			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_Viewport(const RHIViewportState& viewport) { this->m_State.Viewport = viewport; return *this; }
+			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_BlendConstantColor(const Color& color) { this->m_State.BlendConstantColor = color; return *this; }
+			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_DynamicStencilRefValue(Uint8 stencilRefValue) { this->m_State.DynamicStencilRefValue = stencilRefValue; return *this; }
+			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_IndirectParams(Imp_Buffer* indirectParams) { this->m_State.IndirectParams = indirectParams; return *this; }
+
+			STDNODISCARD constexpr RHIMeshletStateBuilder& AddBindingSet(Imp_BindingSet* bindingSet) { this->m_State.BindingSets[this->m_State.BindingSetCount++] = bindingSet; return *this; }
+
+			STDNODISCARD constexpr const RHIMeshletState<APITag>& Build(void) { return this->m_State; }
+		private:
+			RHIMeshletState<APITag> m_State{};
 	};
 
 }

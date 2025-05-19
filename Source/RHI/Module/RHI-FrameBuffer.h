@@ -49,7 +49,7 @@ PARTING_SUBMODE_IMPORT(Texture)
 namespace RHI {
 	//NOTE :this struct byte lessest more than 32 byte no copy
 	PARTING_EXPORT template<APITagConcept APITag>
-	struct RHIFrameBufferAttachment final {
+		struct RHIFrameBufferAttachment final {
 		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
 
 		Imp_Texture* Texture{ nullptr };
@@ -66,7 +66,7 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	struct RHIFrameBufferDesc final {
+		struct RHIFrameBufferDesc final {
 		RHIFrameBufferAttachment<APITag> ColorAttachments[g_MaxRenderTargetCount];
 		Uint32 ColorAttachmentCount{ 0 };
 
@@ -75,7 +75,7 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	class RHIFrameBufferDescBuilder final {
+		class RHIFrameBufferDescBuilder final {
 		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
 		public:
 			STDNODISCARD constexpr RHIFrameBufferDescBuilder& Reset(void) { this->m_Desc = RHIFrameBufferDesc<APITag>{}; return *this; }
@@ -101,7 +101,7 @@ namespace RHI {
 	// must match between the framebuffer and the pipeline for them to be compatible.
 	PARTING_EXPORT template<APITagConcept APITag>
 		struct RHIFrameBufferInfo final {
-		Array<RHIFormat, g_MaxRenderTargetCount> ColorFormats;
+		Array<RHIFormat, g_MaxRenderTargetCount> ColorFormats{};
 		Uint32 ColorFormatCount{ 0 };
 
 		RHIFormat DepthFormat{ RHIFormat::UNKNOWN };
@@ -126,6 +126,8 @@ namespace RHI {
 				this->DepthFormat == other.DepthFormat &&
 				this->SampleCount == other.SampleCount &&
 				this->SampleQuality == other.SampleQuality;
+			//&&this->Width == other.Width &&
+			//this->Height == other.Height;
 		}
 		STDNODISCARD constexpr bool operator!=(const RHIFrameBufferInfo<APITag>& other) const { return !(*this == other); }
 
@@ -163,17 +165,32 @@ namespace RHI {
 			return Re;
 		}
 
-		STDNODISCARD static constexpr bool Is_FormatsEqual(Uint32 Count, const Array<RHIFormat, g_MaxRenderTargetCount>& Lhs, const Array<RHIFormat, g_MaxRenderTargetCount>& Rhs) {
+		STDNODISCARD static constexpr bool Is_FormatsEqual(Uint32 Count, const Array<RHIFormat, g_MaxRenderTargetCount>& Lhs, const Array<RHIFormat, g_MaxRenderTargetCount>& Rhs) {//TODOsapan
 			for (Uint32 Index = 0; Index < Count; ++Index)
 				if (Lhs[Index] != Rhs[Index])
 					return false;
 
 			return true;
 		}
+
+		struct RHIFrameBufferInfoHash final {
+			Uint64 operator()(const RHIFrameBufferInfo<APITag>& s) const {
+				Uint64 hash{ 0 };
+				for (Uint32 Index = 0; Index < s.ColorFormatCount; ++Index)
+					hash = HashCombine(hash, Hash<RHIFormat>{}(s.ColorFormats[Index]));
+				hash = HashCombine(hash, Hash<RHIFormat>{}(s.DepthFormat));
+				hash = HashCombine(hash, HashUint32{}(s.SampleCount));
+				hash = HashCombine(hash, HashUint32{}(s.SampleQuality));
+				/*HashCombine(hash, HashUint32{}(s.Width));
+				HashCombine(hash, HashUint32{}(s.Height));*/
+
+				return hash;
+			}
+		};
 	};
 
 	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
-	class RHIFrameBuffer :public RHIResource<Derived> {
+		class RHIFrameBuffer :public RHIResource<Derived> {
 		friend class RHIResource<Derived>;
 		protected:
 			RHIFrameBuffer(void) = default;

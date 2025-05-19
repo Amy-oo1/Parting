@@ -207,6 +207,10 @@ namespace Parting {
 
 		void Shutdown(void);
 
+	public:
+		STDNODISCARD Uint32 Get_FrameIndex(void) const { return this->m_FrameIndex; }
+
+
 	private:
 		void Animate(double elapsedTime);
 
@@ -340,6 +344,9 @@ namespace Parting {
 	protected:
 		IRenderPass(DeviceManager* devicemamage) : m_DeviceManager{ devicemamage } {}
 		virtual ~IRenderPass(void) = default;
+
+	public:
+		STDNODISCARD Uint32 Get_FrameIndex(void) const { return this->m_DeviceManager->Get_FrameIndex(); }
 
 
 	public:

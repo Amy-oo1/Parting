@@ -73,28 +73,28 @@ STDNODISCARD inline SharedPtr<Type> AllocateShared(const Alloc& alloc, const siz
 
 //NOTE : Pointer_Cast
 PARTING_EXPORT template<typename DstType, typename SrcType>
-STDNODISCARD inline SharedPtr<DstType> StaticPointerCast(const SharedPtr<SrcType>& ptr) { return std::static_pointer_cast<SrcType>(ptr); }
+STDNODISCARD inline SharedPtr<DstType> StaticPointerCast(const SharedPtr<SrcType>& ptr) { return std::static_pointer_cast<DstType>(ptr); }
 
 PARTING_EXPORT template<typename DstType, typename SrcType>
-STDNODISCARD inline SharedPtr<DstType> StaticPointerCast(SharedPtr<SrcType>&& ptr) { return std::static_pointer_cast<SrcType>(std::move(ptr)); }
+STDNODISCARD inline SharedPtr<DstType> StaticPointerCast(SharedPtr<SrcType>&& ptr) { return std::static_pointer_cast<DstType>(std::move(ptr)); }
 
 PARTING_EXPORT template<typename DstType, typename SrcType>
-STDNODISCARD inline SharedPtr<DstType> DynamicPointetCast(const SharedPtr<SrcType>& ptr) { return std::dynamic_pointer_cast<SrcType>(ptr); }
+STDNODISCARD inline SharedPtr<DstType> DynamicPointerCast(const SharedPtr<SrcType>& ptr) { return std::dynamic_pointer_cast<DstType>(ptr); }
 
 PARTING_EXPORT template<typename DstType, typename SrcType>
-STDNODISCARD inline SharedPtr<DstType> DynamicPointetCast(SharedPtr<SrcType>&& ptr) { return std::dynamic_pointer_cast<SrcType>(std::move(ptr)); }
+STDNODISCARD inline SharedPtr<DstType> DynamicPointerCast(SharedPtr<SrcType>&& ptr) { return std::dynamic_pointer_cast<DstType>(std::move(ptr)); }
 
 PARTING_EXPORT template<typename DstType, typename SrcType>
-STDNODISCARD inline SharedPtr<DstType> ConstPointerCast(const SharedPtr<SrcType>& ptr) { return std::const_pointer_cast<SrcType>(ptr); }
+STDNODISCARD inline SharedPtr<DstType> ConstPointerCast(const SharedPtr<SrcType>& ptr) { return std::const_pointer_cast<DstType>(ptr); }
 
 PARTING_EXPORT template<typename DstType, typename SrcType>
-STDNODISCARD inline SharedPtr<DstType> ConstPointerCast(SharedPtr<SrcType>&& ptr) { return std::const_pointer_cast<SrcType>(std::move(ptr)); }
+STDNODISCARD inline SharedPtr<DstType> ConstPointerCast(SharedPtr<SrcType>&& ptr) { return std::const_pointer_cast<DstType>(std::move(ptr)); }
 
 PARTING_EXPORT template<typename DstType, typename SrcType>
-STDNODISCARD inline SharedPtr<DstType> ReinterpretPointerCast(const SharedPtr<SrcType>& ptr) { return std::reinterpret_pointer_cast<SrcType>(ptr); }
+STDNODISCARD inline SharedPtr<DstType> ReinterpretPointerCast(const SharedPtr<SrcType>& ptr) { return std::reinterpret_pointer_cast<DstType>(ptr); }
 
 PARTING_EXPORT template<typename DstType, typename SrcType>
-STDNODISCARD inline SharedPtr<DstType> ReinterpretPointerCast(SharedPtr<SrcType>&& ptr) { return std::reinterpret_pointer_cast<SrcType>(std::move(ptr)); }
+STDNODISCARD inline SharedPtr<DstType> ReinterpretPointerCast(SharedPtr<SrcType>&& ptr) { return std::reinterpret_pointer_cast<DstType>(std::move(ptr)); }
 
 //NOTE: SharedPtr Must Have a delete in constructor
 PARTING_EXPORT template<typename Deleter, typename Type>

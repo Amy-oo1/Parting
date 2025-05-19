@@ -106,10 +106,9 @@ namespace RHI::D3D12 {
 
 		RefCountPtr<D3D12RootSignature> BuildRootSignature(const Span<const RefCountPtr<BindingLayout>>& pipelineLayouts, bool allowInputLayout, bool isLocal, const D3D12_ROOT_PARAMETER1* pCustomParameters = nullptr, Uint32 numCustomParameters = 0);
 
-		RefCountPtr<ID3D12PipelineState> CreateHandleForNativeGraphicsPipeline(D3D12RootSignature* rootSignature, ID3D12PipelineState* pipelineState, const RHIGraphicsPipelineDesc<D3D12Tag>& desc, const RHIFrameBufferInfo<D3D12Tag>& framebufferInfo) {
-			return nullptr;
-		}
-		RefCountPtr<ID3D12PipelineState> CreateHandleForNativeMeshletPipeline(D3D12RootSignature* rootSignature, ID3D12PipelineState* pipelineState, const RHIMeshletPipelineDesc<D3D12Tag>& desc, const RHIFrameBufferInfo<D3D12Tag>& framebufferInfo) {
+		RefCountPtr<GraphicsPipeline> CreateHandleForNativeGraphicsPipeline(D3D12RootSignature* rootSignature, ID3D12PipelineState* pipelineState, const RHIGraphicsPipelineDesc<D3D12Tag>& desc, const RHIFrameBufferInfo<D3D12Tag>& framebufferInfo);
+
+		RefCountPtr<MeshletPipeline> CreateHandleForNativeMeshletPipeline(D3D12RootSignature* rootSignature, ID3D12PipelineState* pipelineState, const RHIMeshletPipelineDesc<D3D12Tag>& desc, const RHIFrameBufferInfo<D3D12Tag>& framebufferInfo) {
 			return nullptr;
 		}
 		D3D12StaticDescriptorHeap* Get_DescriptorHeap(DescriptorHeapType heapType) {
@@ -121,13 +120,8 @@ namespace RHI::D3D12 {
 		RefCountPtr<D3D12RootSignature> Get_RootSignature(const Span<const RefCountPtr<BindingLayout>>& pipelineLayouts, bool allowInputLayout);
 
 
-		RefCountPtr<ID3D12PipelineState> CreatePipelineState(const RHIGraphicsPipelineDesc<D3D12Tag>& desc, D3D12RootSignature* pRS, const RHIFrameBufferInfo<D3D12Tag>& fbinfo) const {
-			return nullptr;
-		}
-
 		RefCountPtr<ID3D12PipelineState> CreatePipelineState(const RHIComputePipelineDesc<D3D12Tag>& desc, D3D12RootSignature* pRS) const;
-
-
+		RefCountPtr<ID3D12PipelineState> CreatePipelineState(const RHIGraphicsPipelineDesc<D3D12Tag>& desc, D3D12RootSignature* pRS, const RHIFrameBufferInfo<D3D12Tag>& fbinfo) const;
 		RefCountPtr<ID3D12PipelineState> CreatePipelineState(const RHIMeshletPipelineDesc<D3D12Tag>& desc, D3D12RootSignature* pRS, const RHIFrameBufferInfo<D3D12Tag>& fbinfo) const {
 			return nullptr;
 		}
@@ -199,7 +193,7 @@ namespace RHI::D3D12 {
 		float Imp_Get_TimerQueryTime(TimerQuery* query);
 		void Imp_ResetTimerQuery(TimerQuery* query);
 		RefCountPtr<FrameBuffer> Imp_CreateFrameBuffer(const RHIFrameBufferDesc<D3D12Tag>& desc);
-		RefCountPtr<GraphicsPipeline> CreateGraphicsPipeline(const RHIGraphicsPipelineDesc<D3D12Tag>& desc, FrameBuffer* framebuffer);
+		RefCountPtr<GraphicsPipeline> Imp_CreateGraphicsPipeline(const RHIGraphicsPipelineDesc<D3D12Tag>& desc, FrameBuffer* framebuffer);
 		RefCountPtr<ComputePipeline> Imp_CreateComputePipeline(const RHIComputePipelineDesc<D3D12Tag>& desc);
 
 
@@ -395,7 +389,67 @@ namespace RHI::D3D12 {
 		return Re;
 	}
 
+	RefCountPtr<ID3D12PipelineState> Device::CreatePipelineState(const RHIGraphicsPipelineDesc<D3D12Tag>& state, D3D12RootSignature* pRS, const RHIFrameBufferInfo<D3D12Tag>& fbinfo) const {
+		if (state.RenderState.SinglePassStereo.Enabled && !this->m_SinglePassStereoSupported) {
+			LOG_ERROR("Single pass stereo is not supported on this device");
+			return nullptr;
+		}
 
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{
+			.pRootSignature{ pRS->m_RootSignature },
+			.BlendState{ TranslateBlendState(state.RenderState.BlendState) },
+			.SampleMask{ ~0u },
+			.RasterizerState{ TranslateRasterizerState(state.RenderState.RasterState) },
+			.DepthStencilState{ TranslateDepthStencilState(state.RenderState.DepthStencilState) },
+			.PrimitiveTopologyType { ConvertPrimitiveType(state.PrimType) },
+			.NumRenderTargets{ static_cast<Uint32>(fbinfo.ColorFormatCount) },
+			.DSVFormat { Get_DXGIFormatMapping(fbinfo.DepthFormat).RTVFormat },
+			.SampleDesc{.Count{ fbinfo.SampleCount }, .Quality{ fbinfo.SampleQuality } },
+			.NodeMask{ 1 },
+			.Flags{ D3D12_PIPELINE_STATE_FLAG_NONE }
+		};
+
+		ASSERT(((desc.DepthStencilState.DepthEnable || desc.DepthStencilState.StencilEnable) && fbinfo.DepthFormat != RHIFormat::UNKNOWN) || (!desc.DepthStencilState.DepthEnable && !desc.DepthStencilState.StencilEnable));
+
+		if (nullptr != state.VS.Get())
+			desc.VS = { state.VS->m_Bytecode.data(), state.VS->m_Bytecode.size() };
+		if (nullptr != state.PS.Get())
+			desc.PS = { state.PS->m_Bytecode.data(), state.PS->m_Bytecode.size() };
+		if (nullptr != state.DS.Get())
+			desc.DS = { state.DS->m_Bytecode.data(), state.DS->m_Bytecode.size() };
+		if (nullptr != state.HS.Get())
+			desc.HS = { state.HS->m_Bytecode.data(), state.HS->m_Bytecode.size() };
+		if (nullptr != state.GS.Get())
+			desc.GS = { state.GS->m_Bytecode.data(), state.GS->m_Bytecode.size() };
+
+		for (Uint32 Index = 0; Index < fbinfo.ColorFormatCount; ++Index)
+			desc.RTVFormats[Index] = Get_DXGIFormatMapping(fbinfo.ColorFormats[Index]).RTVFormat;
+
+		if (auto inputLayout = state.InputLayout.Get(); nullptr != inputLayout && !inputLayout->m_InputElements.empty()) {
+			desc.InputLayout.NumElements = static_cast<Uint32>(inputLayout->m_InputElements.size());
+			desc.InputLayout.pInputElementDescs = inputLayout->m_InputElements.data();
+		}
+
+		RefCountPtr<ID3D12PipelineState> pipelineState;
+		D3D12_CHECK(this->m_Context.Device->CreateGraphicsPipelineState(&desc, PARTING_IID_PPV_ARGS(&pipelineState)));
+		return pipelineState;
+	}
+
+	RefCountPtr<GraphicsPipeline> Device::CreateHandleForNativeGraphicsPipeline(D3D12RootSignature* rootSignature, ID3D12PipelineState* pipelineState, const RHIGraphicsPipelineDesc<D3D12Tag>& desc, const RHIFrameBufferInfo<D3D12Tag>& framebufferInfo) {
+		if (nullptr == rootSignature)
+			return nullptr;
+		if (nullptr == pipelineState)
+			return nullptr;
+
+		GraphicsPipeline* pso = new GraphicsPipeline();
+		pso->m_Desc = desc;
+		pso->m_FrameBufferInfo = framebufferInfo;
+		pso->m_RootSignature = rootSignature;
+		pso->m_PipelineState = pipelineState;
+		pso->m_RequiresBlendFactor = desc.RenderState.BlendState.Is_UsesConstantColor(pso->m_FrameBufferInfo.ColorFormatCount);
+
+		return RefCountPtr<GraphicsPipeline>::Create(pso);
+	}
 
 	//Imp
 
@@ -804,7 +858,7 @@ namespace RHI::D3D12 {
 		D3D12_HEAP_FLAGS heapFlags = D3D12_HEAP_FLAG_NONE;
 		D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON;
 
-		bool isShared = false;
+		bool isShared{ false };
 		if (RHISharedResourceFlag::None != (d.sharedResourceFlags & RHISharedResourceFlag::Shared)) {
 			heapFlags |= D3D12_HEAP_FLAG_SHARED;
 			isShared = true;
@@ -1180,13 +1234,11 @@ namespace RHI::D3D12 {
 		return RefCountPtr<FrameBuffer>::Create(fb);
 	}
 
-	RefCountPtr<GraphicsPipeline> Device::CreateGraphicsPipeline(const RHIGraphicsPipelineDesc<D3D12Tag>& desc, FrameBuffer* framebuffer) {
-		/*RefCountPtr<D3D12RootSignature> pRS{ this->Get_RootSignature(desc.BindingLayouts, desc.BindingLayoutCount, (nullptr != desc.InputLayout)) };
+	RefCountPtr<GraphicsPipeline> Device::Imp_CreateGraphicsPipeline(const RHIGraphicsPipelineDesc<D3D12Tag>& desc, FrameBuffer* framebuffer) {
+		RefCountPtr<D3D12RootSignature> pRS{ this->Get_RootSignature(Span<const RefCountPtr<BindingLayout>>{ desc.BindingLayouts.data(), desc.BindingLayoutCount }, (nullptr != desc.InputLayout)) };
+		RefCountPtr<ID3D12PipelineState> pPSO{ this->CreatePipelineState(desc, pRS, framebuffer->Get_Info()) };
 
-		RefCountPtr<ID3D12PipelineState> pPSO{ CreatePipelineState(desc, pRS, framebuffer->Get_Info()) };
-
-		return CreateHandleForNativeGraphicsPipeline(pRS, pPSO, desc, fb->getFramebufferInfo());*/
-		return nullptr;
+		return this->CreateHandleForNativeGraphicsPipeline(pRS, pPSO, desc, framebuffer->Get_Info());
 	}
 
 	RefCountPtr<ComputePipeline> Device::Imp_CreateComputePipeline(const RHIComputePipelineDesc<D3D12Tag>& desc) {

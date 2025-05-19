@@ -1,7 +1,7 @@
 #ifndef BLIT_CB_H
 #define BLIT_CB_H
 
-struct BlitConstants final{
+struct BLITConstants final{
 	Math::VecF2 SourceOrigin;
 	Math::VecF2 SourceSize;
 

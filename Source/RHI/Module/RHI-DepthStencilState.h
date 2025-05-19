@@ -76,8 +76,8 @@ namespace RHI {
 			RHIComparisonFunc StencilFunc{ RHIComparisonFunc::Always };
 		};
 
-		bool				DepthTestEnable{ true };
-		bool				DepthWriteEnable{ true };
+		bool				DepthTestEnable{ true };//NOTE :Default value not same with gapi 
+		bool				DepthWriteEnable{ true };//NOTE :Default value not same with gapi 
 		RHIComparisonFunc	DepthFunc{ RHIComparisonFunc::Less };
 		bool				StencilEnable{ false };
 		Uint8				StencilReadMask{ 0xff };

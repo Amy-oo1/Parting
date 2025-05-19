@@ -188,7 +188,6 @@ namespace RHI::D3D12 {
 		bool m_CurrentGraphicsStateValid{ false };
 		bool m_CurrentComputeStateValid{ false };
 		bool m_CurrentMeshletStateValid{ false };
-		bool m_CurrentRayTracingStateValid{ false };
 
 		ID3D12DescriptorHeap* m_CurrentHeapSRVetc{ nullptr };
 		ID3D12DescriptorHeap* m_CurrentHeapSamplers{ nullptr };
@@ -328,7 +327,6 @@ namespace RHI::D3D12 {
 		this->m_CurrentGraphicsStateValid = false;
 		this->m_CurrentComputeStateValid = false;
 		this->m_CurrentMeshletStateValid = false;
-		this->m_CurrentRayTracingStateValid = false;
 		this->m_CurrentHeapSRVetc = nullptr;
 		this->m_CurrentHeapSamplers = nullptr;
 		this->m_CurrentGraphicsVolatileCBCount = 0;
@@ -389,17 +387,18 @@ namespace RHI::D3D12 {
 		if (this->m_EnableAutomaticBarriers)
 			this->SetResourceStatesForFramebuffer(fb);
 
-		Array<D3D12_CPU_DESCRIPTOR_HANDLE, 16> RTVs;
-		for (Uint32 rtIndex = 0; rtIndex < fb->m_RTVs.size(); ++rtIndex)
+		Array<D3D12_CPU_DESCRIPTOR_HANDLE, g_MaxRenderTargetCount> RTVs{};
+		for (Uint32 rtIndex = 0; rtIndex < fb->m_RTVCount; ++rtIndex)
 			RTVs[rtIndex] = this->m_DeviceResourcesRef.RenderTargetViewHeap.Get_CPUHandle(fb->m_RTVs[rtIndex]);
 
-		D3D12_CPU_DESCRIPTOR_HANDLE DSV = {};
+		D3D12_CPU_DESCRIPTOR_HANDLE DSV{};
 		if (fb->m_Desc.DepthStencilAttachment.Is_Valid())
 			DSV = this->m_DeviceResourcesRef.DepthStencilViewHeap.Get_CPUHandle(fb->DSV);
 
-		m_ActiveCommandList->CommandList->OMSetRenderTargets(static_cast<Uint32>(fb->m_RTVs.size()), RTVs.data(), false, fb->m_Desc.DepthStencilAttachment.Is_Valid() ? &DSV : nullptr);
+		m_ActiveCommandList->CommandList->OMSetRenderTargets(fb->m_RTVCount, RTVs.data(), false, fb->m_Desc.DepthStencilAttachment.Is_Valid() ? &DSV : nullptr);
 	}
 
+	//TODO :Use Span
 	void CommandList::SetGraphicsBindings(const Array<BindingSet*, g_MaxBindingLayoutCount> bindings, Uint32 BindingSetCount, Uint32 bindingUpdateMask, Buffer* indirectParams, bool updateIndirectParams, const D3D12RootSignature* rootSignature) {
 		if (bindingUpdateMask) {
 			Array<VolatileConstantBufferBinding, g_MaxVolatileConstantBuffers> newVolatileCBs{};
@@ -413,7 +412,7 @@ namespace RHI::D3D12 {
 
 				const bool updateThisSet{ (bindingUpdateMask & (1 << bindingSetIndex)) != 0 };
 
-				auto& [Layout, rootParameterOffset] = rootSignature->m_BindLayouts[bindingSetIndex];
+				auto& [Layout, rootParameterOffset] { rootSignature->m_BindLayouts[bindingSetIndex] };
 				if (nullptr == GetIf<RefCountPtr<BindingLayout>>(&Layout))
 					ASSERT(false);
 				auto bindinglayout{ Get<RefCountPtr<BindingLayout>>(Layout).Get() };
@@ -431,14 +430,14 @@ namespace RHI::D3D12 {
 							if (buffer->m_Desc.IsVolatile) {
 								const D3D12_GPU_VIRTUAL_ADDRESS volatileData{ this->m_VolatileConstantBufferAddresses[buffer] };
 
-								if (!volatileData) {
+								if (0 != volatileData) {
 									LOG_ERROR("Volatile buffer address is null");
 
 									continue;
 								}
 
 								if (updateThisSet || volatileData != m_CurrentGraphicsVolatileCBs[newVolatileCBCount].Address)
-									m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, volatileData);
+									this->m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, volatileData);
 
 								newVolatileCBs[newVolatileCBCount++] = VolatileConstantBufferBinding{
 									.BindingPoint { rootParameterIndex },
@@ -453,28 +452,28 @@ namespace RHI::D3D12 {
 							}
 						}
 						else if (updateThisSet)
-							m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, 0);
+							this->m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, 0);
 						// This can only happen as a result of an improperly built binding set. 
 							// Such binding set should fail to create.
 					}
 
 					if (updateThisSet) {
 						if (bindingSet->m_DescriptorTableValidSamplers)
-							m_ActiveCommandList->CommandList->SetGraphicsRootDescriptorTable(
+							this->m_ActiveCommandList->CommandList->SetGraphicsRootDescriptorTable(
 								rootParameterOffset + bindingSet->m_RootParameterIndexSamplers,
 								this->m_DeviceResourcesRef.SamplerHeap.Get_GPUHandle(bindingSet->m_DescriptorTableSamplers)
 							);
 						if (bindingSet->m_DescriptorTableValidSRVetc)
-							m_ActiveCommandList->CommandList->SetGraphicsRootDescriptorTable(
-								rootParameterOffset + bindingSet->m_RootParameterIndexSamplers,
+							this->m_ActiveCommandList->CommandList->SetGraphicsRootDescriptorTable(
+								rootParameterOffset + bindingSet->m_RootParameterIndexSRVetc,
 								this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_GPUHandle(bindingSet->m_DescriptorTableSRVetc)
 							);
 
 						if (bindingSet->m_Desc.TrackLiveness)
-							m_Instance->ReferencedResources.push_back(bindingSet);
+							this->m_Instance->ReferencedResources.push_back(bindingSet);
 					}
 
-					if (m_EnableAutomaticBarriers && (updateThisSet || bindingSet->m_HasUAVBindings)) // UAV bindings may place UAV barriers on the same binding set
+					if (this->m_EnableAutomaticBarriers && (updateThisSet || bindingSet->m_HasUAVBindings)) // UAV bindings may place UAV barriers on the same binding set
 						this->SetResourceStatesForBindingSet(bindingSet);
 				}
 				/*else if (updateThisSet)
@@ -485,7 +484,8 @@ namespace RHI::D3D12 {
 				}*/
 			}
 
-			this->m_CurrentGraphicsVolatileCBs = newVolatileCBs;
+			for (Uint32 Index = 0; Index < newVolatileCBCount; ++Index)
+				this->m_CurrentGraphicsVolatileCBs[Index] = newVolatileCBs[Index];
 		}
 
 		if (indirectParams && updateIndirectParams) {
@@ -500,6 +500,7 @@ namespace RHI::D3D12 {
 		// Only reset this flag when this function has gone over all the binging sets
 	}
 
+	//TODO :Use Span
 	void CommandList::SetComputeBindings(const Array<BindingSet*, g_MaxBindingLayoutCount> bindings, Uint32 BindingSetCount, Uint32 bindingUpdateMask, Buffer* indirectParams, bool updateIndirectParams, const D3D12RootSignature* rootSignature) {
 		if (bindingUpdateMask) {
 			Array<VolatileConstantBufferBinding, g_MaxVolatileConstantBuffers> newVolatileCBs{};
@@ -604,7 +605,7 @@ namespace RHI::D3D12 {
 			this->m_ActiveCommandList->CommandList6->RSSetShadingRateImage(nullptr);
 			this->m_ActiveCommandList->CommandList6->RSSetShadingRate(D3D12_SHADING_RATE_1X1, nullptr);
 			this->m_CurrentGraphicsState.ShadingRateState.Enabled = false;
-			this->m_CurrentGraphicsState.Framebuffer = nullptr;
+			this->m_CurrentGraphicsState.FrameBuffer = nullptr;
 		}
 	}
 
@@ -680,8 +681,8 @@ namespace RHI::D3D12 {
 	}
 
 	inline void CommandList::Imp_Close(void) {
-		m_StateTracker.KeepBufferInitialStates();
-		m_StateTracker.KeepTextureInitialStates();
+		this->m_StateTracker.KeepBufferInitialStates();
+		this->m_StateTracker.KeepTextureInitialStates();
 
 		this->CommitBarriers();
 
@@ -983,8 +984,8 @@ namespace RHI::D3D12 {
 
 		void* cpuVA;
 		ID3D12Resource* uploadBuffer;
-		size_t offsetInUploadBuffer;
-		if (!this->m_UploadManager.SuballocateBuffer(totalBytes, nullptr, &uploadBuffer, &offsetInUploadBuffer, &cpuVA, nullptr, m_RecordingVersion, g_D3D12TextureDataPlacementAlignment)) {
+		Uint64 offsetInUploadBuffer;
+		if (!this->m_UploadManager.SuballocateBuffer(totalBytes, nullptr, &uploadBuffer, &offsetInUploadBuffer, &cpuVA, nullptr, this->m_RecordingVersion, g_D3D12TextureDataPlacementAlignment)) {
 			LOG_ERROR("Failed to allocate upload buffer for texture copy");
 
 			return;
@@ -1052,7 +1053,7 @@ namespace RHI::D3D12 {
 		D3D12_GPU_VIRTUAL_ADDRESS gpuVA;
 		ID3D12Resource* uploadBuffer;
 		Uint64 offsetInUploadBuffer;
-		if (!m_UploadManager.SuballocateBuffer(dataSize, nullptr, &uploadBuffer, &offsetInUploadBuffer, &cpuVA, &gpuVA, m_RecordingVersion, g_D3D12ConstantBufferDataPlacementAlignment)) {
+		if (!this->m_UploadManager.SuballocateBuffer(dataSize, nullptr, &uploadBuffer, &offsetInUploadBuffer, &cpuVA, &gpuVA, this->m_RecordingVersion, g_D3D12ConstantBufferDataPlacementAlignment)) {
 			LOG_ERROR("Failed to allocate upload buffer for buffer copy");
 
 			return;
@@ -1203,11 +1204,11 @@ namespace RHI::D3D12 {
 
 	void CommandList::Imp_SetGraphicsState(const RHIGraphicsState<D3D12Tag>& State) {
 		auto pso{ State.Pipeline };
-		auto framebuffer{ State.Framebuffer };
+		auto framebuffer{ State.FrameBuffer };
 
 		const bool updateFramebuffer{
 			!this->m_CurrentGraphicsStateValid ||
-			this->m_CurrentGraphicsState.Framebuffer != framebuffer
+			this->m_CurrentGraphicsState.FrameBuffer != framebuffer
 		};
 		const bool updateRootSignature{
 			!this->m_CurrentGraphicsStateValid ||
@@ -1219,6 +1220,7 @@ namespace RHI::D3D12 {
 			!this->m_CurrentGraphicsStateValid ||
 			this->m_CurrentGraphicsState.Pipeline != pso
 		};
+
 		const bool updateIndirectParams{
 			!this->m_CurrentGraphicsStateValid ||
 			this->m_CurrentGraphicsState.IndirectParams != State.IndirectParams
@@ -1263,7 +1265,7 @@ namespace RHI::D3D12 {
 			this->m_CurrentGraphicsState.ShadingRateState != State.ShadingRateState
 		};
 
-		Uint32 bindingUpdateMask = 0;
+		Uint32 bindingUpdateMask{ 0 };
 		if (!this->m_CurrentGraphicsStateValid || updateRootSignature)
 			bindingUpdateMask = ~0u;
 
@@ -1271,7 +1273,7 @@ namespace RHI::D3D12 {
 			bindingUpdateMask = ~0u;
 
 		if (0 == bindingUpdateMask)
-			bindingUpdateMask = ArrayEqual(this->m_CurrentGraphicsState.BindingSets, this->m_CurrentGraphicsState.BindingSetCount, State.BindingSets, State.BindingSetCount);
+			bindingUpdateMask = Array32DifferenceMask(this->m_CurrentGraphicsState.BindingSets, State.BindingSets);
 
 		if (updatePipeline) {
 			this->BindGraphicsPipeline(pso, updateRootSignature);
@@ -1291,7 +1293,7 @@ namespace RHI::D3D12 {
 		this->SetGraphicsBindings(State.BindingSets, State.BindingSetCount, bindingUpdateMask, State.IndirectParams, updateIndirectParams, pso->m_RootSignature);
 
 		if (updateIndexBuffer) {
-			D3D12_INDEX_BUFFER_VIEW IBV = {};
+			D3D12_INDEX_BUFFER_VIEW IBV{};
 
 			if (nullptr != State.IndexBuffer.Buffer) {
 				Buffer* buffer = State.IndexBuffer.Buffer;
@@ -1311,25 +1313,22 @@ namespace RHI::D3D12 {
 
 		if (updateVertexBuffers)
 		{
-			D3D12_VERTEX_BUFFER_VIEW VBVs[g_MaxVertexAttributeCount] = {};
-			Uint32 maxVbIndex = 0;
-			InputLayout* inputLayout = pso->m_Desc.InputLayout.Get();
+			D3D12_VERTEX_BUFFER_VIEW VBVs[g_MaxVertexAttributeCount]{};
+			Uint32 maxVbIndex{ 0 };
+			InputLayout* inputLayout{ pso->m_Desc.InputLayout.Get() };
 
 			for (Uint32 Index = 0; Index < State.VertexBufferCount; ++Index) {
 				const auto& binding{ State.VertexBuffers[Index] };
 
-				Buffer* buffer = binding.Buffer;
+				Buffer* buffer{ binding.Buffer };
 
 				if (this->m_EnableAutomaticBarriers)
 					this->m_StateTracker.RequireBufferState(&buffer->m_StateExtension, RHIResourceState::VertexBuffer);
 
-
-				// This is tested by the validation layer, skip invalid slots here if VL is not used.
-				if (binding.Slot >= g_MaxVertexAttributeCount)
-					continue;
+				ASSERT(binding.Slot < g_MaxVertexAttributeCount);
 
 				VBVs[binding.Slot].StrideInBytes = inputLayout->m_ElementStrides[binding.Slot];
-				VBVs[binding.Slot].SizeInBytes = static_cast<Uint32>(Math::Min(buffer->m_Desc.ByteSize - binding.Offset, static_cast<Uint64>(Max_Float)));
+				VBVs[binding.Slot].SizeInBytes = static_cast<Uint32>(Math::Min(buffer->m_Desc.ByteSize - binding.Offset, static_cast<Uint64>(Max_Uint32)));
 				VBVs[binding.Slot].BufferLocation = buffer->m_GPUVirtualAddress + binding.Offset;
 				maxVbIndex = Math::Max(maxVbIndex, binding.Slot);
 
@@ -1351,7 +1350,7 @@ namespace RHI::D3D12 {
 			bool shouldEnableVariableRateShading{ framebufferDesc.ShadingRateAttachment.Is_Valid() && State.ShadingRateState.Enabled };
 			bool variableRateShadingCurrentlyEnabled{
 				this->m_CurrentGraphicsStateValid &&
-				this->m_CurrentGraphicsState.Framebuffer->Get_Desc().ShadingRateAttachment.Is_Valid() &&
+				this->m_CurrentGraphicsState.FrameBuffer->Get_Desc().ShadingRateAttachment.Is_Valid() &&
 				this->m_CurrentGraphicsState.ShadingRateState.Enabled
 			};
 
@@ -1399,7 +1398,6 @@ namespace RHI::D3D12 {
 		this->m_CurrentGraphicsStateValid = true;
 		this->m_CurrentComputeStateValid = false;
 		this->m_CurrentMeshletStateValid = false;
-		this->m_CurrentRayTracingStateValid = false;
 		this->m_CurrentGraphicsState = State;
 		this->m_CurrentGraphicsState.DynamicStencilRefValue = effectiveStencilRefValue;
 	}
@@ -1479,7 +1477,6 @@ namespace RHI::D3D12 {
 		this->m_CurrentGraphicsStateValid = false;
 		this->m_CurrentComputeStateValid = true;
 		this->m_CurrentMeshletStateValid = false;
-		this->m_CurrentRayTracingStateValid = false;
 		this->m_CurrentComputeState = State;
 
 		this->CommitBarriers();
@@ -1499,13 +1496,13 @@ namespace RHI::D3D12 {
 
 	void CommandList::Imp_SetMeshletState(const RHIMeshletState<D3D12Tag>& State) {
 		auto pso{ State.Pipeline };
-		auto framebuffer{ State.Framebuffer };
+		auto framebuffer{ State.FrameBuffer };
 
 		this->UnbindShadingRateState();
 
 		const bool updateFramebuffer{
 			!this->m_CurrentMeshletStateValid ||
-			this->m_CurrentMeshletState.Framebuffer != framebuffer
+			this->m_CurrentMeshletState.FrameBuffer != framebuffer
 		};
 		const bool updateRootSignature{
 			!this->m_CurrentMeshletStateValid ||
@@ -1586,7 +1583,6 @@ namespace RHI::D3D12 {
 			this->m_CurrentGraphicsStateValid = false;
 			this->m_CurrentComputeStateValid = false;
 			this->m_CurrentMeshletStateValid = true;
-			this->m_CurrentRayTracingStateValid = false;
 			this->m_CurrentMeshletState = State;
 			this->m_CurrentMeshletState.DynamicStencilRefValue = effectiveStencilRefValue;
 		}

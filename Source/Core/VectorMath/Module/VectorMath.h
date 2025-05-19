@@ -13,6 +13,7 @@
 #include "Core/VectorMath/Module/VectorMath-Vec.h"
 #include "Core/VectorMath/Module/VectorMath-Mat.h"
 #include "Core/VectorMath/Module/VectorMath-Affine.h"
+#include "Core/VectorMath/Module/VectorMath-Quaternion.h"
 #include "Core/VectorMath/Module/VectorMath-Box.h"
 #include "Core/VectorMath/Module/VectorMath-Frustum.h"
 
@@ -20,6 +21,10 @@ namespace Math {
 	using VecF2 = Vec<float, 2>;
 	using VecF3 = Vec<float, 3>;
 	using VecF4 = Vec<float, 4>;
+
+	using VecD2 = Vec<double, 2>;
+	using VecD3 = Vec<double, 3>;
+	using VecD4 = Vec<double, 4>;
 
 	using VecI2 = Vec<Int32, 2>;
 	using VecI3 = Vec<Int32, 3>;
@@ -37,6 +42,14 @@ namespace Math {
 	using AffineF2 = Affine<float, 2>;
 	using AffineF3 = Affine<float, 3>;
 	using AffineF4 = Affine<float, 4>;
+
+	using AffineD2 = Affine<double, 2>;
+	using AffineD3 = Affine<double, 3>;
+	using AffineD4 = Affine<double, 4>;
+
+	using QuatF = Quaternion<float>;
+	using QuatD = Quaternion<double>;
+
 
 	using BoxF2 = Box<float, 2>;
 	using BoxF3 = Box<float, 3>;

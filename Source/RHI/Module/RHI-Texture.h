@@ -207,7 +207,7 @@ namespace RHI {
 
 			if (!issinglemiplevel) {
 				const Int64 LastMipLevelPlusOne{ static_cast<Int64>(Math::Min(this->BaseMipLevel + this->MipLevelCount, desc.MipLevelCount)) };//Note 
-				Re.MipLevelCount = Math::Max(static_cast<Int64>(0), LastMipLevelPlusOne - this->BaseMipLevel);
+				Re.MipLevelCount = static_cast<Uint32>(Math::Max(static_cast<Int64>(0), LastMipLevelPlusOne - this->BaseMipLevel));//TODO :
 			}
 
 			switch (desc.Dimension) {
@@ -246,7 +246,7 @@ namespace RHI {
 		hash = HashCombine(hash, set.ArraySliceCount);
 
 		return hash;
-	};
+		};
 
 
 

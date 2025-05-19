@@ -45,7 +45,7 @@ PARTING_SUBMODE_IMPORT(Common)
 
 namespace RHI {
 
-	enum class RHIVertexAttribute :Uint8 {
+	enum class RHIVertexAttribute :Uint8 {//Joint ? maybe in render lay
 		Position,
 		PrevPosition,
 		TexCoord1,

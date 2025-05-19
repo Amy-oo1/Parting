@@ -62,47 +62,47 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT struct RHIRasterState final{
-        RHIRasterFillMode FillMode{ RHIRasterFillMode::Solid };
-        RHIRasterCullMode CullMode{ RHIRasterCullMode::Back };
-        bool FrontCounterClockwise{ false };
-        bool DepthClipEnable{ false };
-        bool ScissorEnable{ false };
-        bool MultisampleEnable{ false };
-        bool AntialiasedLineEnable{ false };
-        int DepthBias{ 0 };
-        float DepthBiasClamp{ 0.f };
-        float SlopeScaledDepthBias{ 0.f };
+		RHIRasterFillMode FillMode{ RHIRasterFillMode::Solid };
+		RHIRasterCullMode CullMode{ RHIRasterCullMode::Back };
+		bool FrontCounterClockwise{ false };
+		bool DepthClipEnable{ false };
+		bool ScissorEnable{ false };
+		bool MultisampleEnable{ false };
+		bool AntialiasedLineEnable{ false };
+		int DepthBias{ 0 };
+		float DepthBiasClamp{ 0.f };
+		float SlopeScaledDepthBias{ 0.f };
 
-        // Extended rasterizer state supported by Maxwell
-        // In D3D11, use NvAPI_D3D11_CreateRasterizerState to create such rasterizer state.
-        Uint8 ForcedSampleCount{ 0 };
-        bool ProgrammableSamplePositionsEnable{ false };
-        bool ConservativeRasterEnable{ false };
-        bool QuadFillEnable{ false };
-        Array<char, 16> SamplePositionsX{};
-        Array<char, 16> SamplePositionsY{};
-    };
+		// Extended rasterizer state supported by Maxwell
+		// In D3D11, use NvAPI_D3D11_CreateRasterizerState to create such rasterizer state.
+		Uint8 ForcedSampleCount{ 0 };
+		bool ProgrammableSamplePositionsEnable{ false };
+		bool ConservativeRasterEnable{ false };
+		bool QuadFillEnable{ false };
+		Array<char, 16> SamplePositionsX{};
+		Array<char, 16> SamplePositionsY{};
+	};
 
-	PARTING_EXPORT class RHIRaserStateBuilder final {
-    public:
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_FillMode(RHIRasterFillMode RasterFillMode) { this->m_RasterState.FillMode = RasterFillMode; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_CullMode(RHIRasterCullMode RasterCullMode) { this->m_RasterState.CullMode = RasterCullMode; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_FrontCounterClockwise(bool FrontCounterClockwise) { this->m_RasterState.FrontCounterClockwise = FrontCounterClockwise; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_DepthClipEnable(bool DepthClipEnable) { this->m_RasterState.DepthClipEnable = DepthClipEnable; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_ScissorEnable(bool ScissorEnable) { this->m_RasterState.ScissorEnable = ScissorEnable; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_MultisampleEnable(bool MultisampleEnable) { this->m_RasterState.MultisampleEnable = MultisampleEnable; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_AntialiasedLineEnable(bool AntialiasedLineEnable) { this->m_RasterState.AntialiasedLineEnable = AntialiasedLineEnable; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_DepthBias(int DepthBias) { this->m_RasterState.DepthBias = DepthBias; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_DepthBiasClamp(float DepthBiasClamp) { this->m_RasterState.DepthBiasClamp = DepthBiasClamp; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_SlopeScaledDepthBias(float SlopeScaledDepthBias) { this->m_RasterState.SlopeScaledDepthBias = SlopeScaledDepthBias; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_ForcedSampleCount(Uint8 ForcedSampleCount) { this->m_RasterState.ForcedSampleCount = ForcedSampleCount; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_ProgrammableSamplePositionsEnable(bool ProgrammableSamplePositionsEnable) { this->m_RasterState.ProgrammableSamplePositionsEnable = ProgrammableSamplePositionsEnable; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_ConservativeRasterEnable(bool ConservativeRasterEnable) { this->m_RasterState.ConservativeRasterEnable = ConservativeRasterEnable; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_QuadFillEnable(bool QuadFillEnable) { this->m_RasterState.QuadFillEnable = QuadFillEnable; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_SamplePositionsX(const Array<char, 16>& SamplePositionsX) { this->m_RasterState.SamplePositionsX = SamplePositionsX; return *this; }
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_SamplePositionsY(const Array<char, 16>& SamplePositionsY) { this->m_RasterState.SamplePositionsY = SamplePositionsY; return *this; }
+	PARTING_EXPORT class RHIRasterStateBuilder final {
+	public:
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_FillMode(RHIRasterFillMode RasterFillMode) { this->m_RasterState.FillMode = RasterFillMode; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_CullMode(RHIRasterCullMode RasterCullMode) { this->m_RasterState.CullMode = RasterCullMode; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_FrontCounterClockwise(bool FrontCounterClockwise) { this->m_RasterState.FrontCounterClockwise = FrontCounterClockwise; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_DepthClipEnable(bool DepthClipEnable) { this->m_RasterState.DepthClipEnable = DepthClipEnable; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_ScissorEnable(bool ScissorEnable) { this->m_RasterState.ScissorEnable = ScissorEnable; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_MultisampleEnable(bool MultisampleEnable) { this->m_RasterState.MultisampleEnable = MultisampleEnable; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_AntialiasedLineEnable(bool AntialiasedLineEnable) { this->m_RasterState.AntialiasedLineEnable = AntialiasedLineEnable; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_DepthBias(int DepthBias) { this->m_RasterState.DepthBias = DepthBias; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_DepthBiasClamp(float DepthBiasClamp) { this->m_RasterState.DepthBiasClamp = DepthBiasClamp; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_SlopeScaledDepthBias(float SlopeScaledDepthBias) { this->m_RasterState.SlopeScaledDepthBias = SlopeScaledDepthBias; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_ForcedSampleCount(Uint8 ForcedSampleCount) { this->m_RasterState.ForcedSampleCount = ForcedSampleCount; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_ProgrammableSamplePositionsEnable(bool ProgrammableSamplePositionsEnable) { this->m_RasterState.ProgrammableSamplePositionsEnable = ProgrammableSamplePositionsEnable; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_ConservativeRasterEnable(bool ConservativeRasterEnable) { this->m_RasterState.ConservativeRasterEnable = ConservativeRasterEnable; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_QuadFillEnable(bool QuadFillEnable) { this->m_RasterState.QuadFillEnable = QuadFillEnable; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_SamplePositionsX(const Array<char, 16>& SamplePositionsX) { this->m_RasterState.SamplePositionsX = SamplePositionsX; return *this; }
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_SamplePositionsY(const Array<char, 16>& SamplePositionsY) { this->m_RasterState.SamplePositionsY = SamplePositionsY; return *this; }
 
-		STDNODISCARD constexpr RHIRaserStateBuilder& Set_SamplePositions(const char* x, const char* y, Uint32 Count) {
+		STDNODISCARD constexpr RHIRasterStateBuilder& Set_SamplePositions(const char* x, const char* y, Uint32 Count) {
 			ASSERT(x != nullptr);
 			ASSERT(y != nullptr);
 			ASSERT(Count <= 16);
@@ -116,8 +116,8 @@ namespace RHI {
 		}
 
 		STDNODISCARD constexpr RHIRasterState Build() const { return this->m_RasterState; }
-    private:
-        RHIRasterState m_RasterState{};
-    };
+	private:
+		RHIRasterState m_RasterState{};
+	};
 
 }

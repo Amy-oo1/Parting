@@ -207,7 +207,7 @@ namespace RHI {
 
 		STDNODISCARD RefCountPtr<Imp_CommandList> CreateCommandList(const RHICommandListParameters& desc = RHICommandListParameters{}) { return this->Get_Derived()->Imp_CreateCommandList(desc); }
 
-		STDNODISCARD Uint64 ExecuteCommandLists(Imp_CommandList* const* commandLists, Uint32 commandListCount, RHICommandQueue queue = RHICommandQueue::Graphics) { return this->Get_Derived()->Imp_ExecuteCommandLists(commandLists, commandListCount, queue); }
+		/*STDNODISCARD*/ Uint64 ExecuteCommandLists(Imp_CommandList* const* commandLists, Uint32 commandListCount, RHICommandQueue queue = RHICommandQueue::Graphics) { return this->Get_Derived()->Imp_ExecuteCommandLists(commandLists, commandListCount, queue); }
 
 		void QueueWaitForCommandList(RHICommandQueue WaitQueue, RHICommandQueue executeQueue, Uint64 instance) { this->Get_Derived()->Imp_QueueWaitForCommandList(WaitQueue, executeQueue, instance); }
 
@@ -228,7 +228,7 @@ namespace RHI {
 		//TODO
 
 	public:
-		STDNODISCARD Uint64 ExecuteCommandList(Imp_CommandList* commandList, RHICommandQueue queue = RHICommandQueue::Graphics) { return this->ExecuteCommandLists(&commandList, 1u, queue); }
+		/*STDNODISCARD*/ Uint64 ExecuteCommandList(Imp_CommandList* commandList, RHICommandQueue queue = RHICommandQueue::Graphics) { return this->ExecuteCommandLists(&commandList, 1u, queue); }
 
 
 	private:

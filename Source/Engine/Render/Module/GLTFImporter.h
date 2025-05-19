@@ -43,7 +43,8 @@ PARTING_IMPORT Utility;
 #include "Core/VFS/Module/VFS.h"
 #include "Core/Logger/Module/Logger.h"
 
-#include "Engine/Engine/Module/SceneGraph.h"
+#include "Engine/Render/Module/SceneGraph-Ini.h"
+#include "Engine/Render/Module/Camera.h"
 
 #endif // PARTING_MODULE_BUILD
 
@@ -118,7 +119,7 @@ namespace Parting {
 		return cgltf_result_success;
 	}
 
-	void cgltf_release_file_vfs(const struct cgltf_memory_options*, const struct cgltf_file_options*, void*) {/*do nothing*/ }
+	void cgltf_release_file_vfs(const cgltf_memory_options*, const cgltf_file_options*, void*) {/*do nothing*/ }
 
 	// glTF only support DDS images through the MSFT_texture_dds extension.
 	// Since cgltf does not support this extension, we parse the custom extension string as json here.
@@ -439,8 +440,6 @@ namespace Parting {
 	}
 
 
-
-
 	template<RHI::APITagConcept APITag>
 	inline bool GLTFImporter<APITag>::Load(const Path& fileName, TextureCache<APITag>& textureCache, SceneLoadingStats& stats, tf::Executor* executor, SceneImportResult<APITag>& result) {
 		// Set this to 'true' if you need to fix broken tangents in a model.
@@ -578,7 +577,7 @@ namespace Parting {
 			auto matinfo{ MakeShared<Material<APITag>>() };
 			if (nullptr != material.name)
 				matinfo->Name = material.name;
-			matinfo->ModelFileName = normalizedFileName;
+			matinfo->ModelFileName = normalizedFileName;//TDOD :better Name and MimType to do
 			matinfo->MaterialIndexInModel = static_cast<Int32>(mat_idx);
 
 			bool useTransmission = false;
@@ -730,8 +729,8 @@ namespace Parting {
 			if (nullptr != mesh.name)
 				minfo->Name = mesh.name;
 			minfo->Buffers = buffers;
-			minfo->IndexOffset = static_cast<uint32_t>(totalIndices);
-			minfo->VertexOffset = static_cast<uint32_t>(totalVertices);
+			minfo->IndexOffset = static_cast<Uint32>(totalIndices);
+			minfo->VertexOffset = static_cast<Uint32>(totalVertices);
 			meshes.push_back(minfo);
 
 			meshMap[&mesh] = minfo;
@@ -902,7 +901,7 @@ namespace Parting {
 					for (Uint64 v_idx = 0; v_idx < radius->count; ++v_idx) {
 						*radiusDst = *reinterpret_cast<const float*>(radiusSrc);
 
-						bounds |= *radiusDst;
+						bounds |= *radiusDst;//NOTE : radius is a float, but we use snorm8 in our engine
 
 						radiusSrc += radiusStride;
 						++radiusDst;
@@ -972,7 +971,7 @@ namespace Parting {
 					computedBitangents.assign(positions->count, Math::VecF3::Zero());
 
 					for (Uint64 t_idx = 0; t_idx < indexCount / 3; ++t_idx) {
-						Math::VecU3 tri{ indexSrc };
+						Math::VecU3 tri{ indexSrc };//NOTE :use ptr offset
 						indexSrc += 3;
 
 						Math::VecF3 p0{ reinterpret_cast<const float*>(positionSrc + positionStride * tri.X) };
@@ -1022,7 +1021,7 @@ namespace Parting {
 					for (Uint64 v_idx = 0; v_idx < positions->count; ++v_idx) {
 						Math::VecF3 normal{ reinterpret_cast<const float*>(normalSrc) };
 						Math::VecF3 tangent{ computedTangents[v_idx] };
-						Math::VecF3 bitangent = computedBitangents[v_idx];
+						Math::VecF3 bitangent{ computedBitangents[v_idx] };
 
 						float sign{ 0 };
 						float tangentLength{ Math::Length(tangent) };
@@ -1246,7 +1245,354 @@ namespace Parting {
 			}
 		}
 
+		UnorderedMap<const cgltf_camera*, SharedPtr<SceneCamera<APITag>>> cameraMap;
+		for (Uint64 camera_idx = 0; camera_idx < objects->cameras_count; ++camera_idx) {
+			const cgltf_camera* src{ &objects->cameras[camera_idx] };
+			SharedPtr<SceneCamera<APITag>> dst;
 
+			if (src->type == cgltf_camera_type_perspective) {
+				SharedPtr<PerspectiveCamera<APITag>> perspectiveCamera{ MakeShared<PerspectiveCamera<APITag>>() };
+
+				perspectiveCamera->ZNear = src->data.perspective.znear;
+				if (src->data.perspective.has_zfar)
+					perspectiveCamera->ZFar = src->data.perspective.zfar;
+				perspectiveCamera->VerticalFOV = src->data.perspective.yfov;
+				if (src->data.perspective.has_aspect_ratio)
+					perspectiveCamera->AspectRatio = src->data.perspective.aspect_ratio;
+
+				dst = perspectiveCamera;
+			}
+			else {
+				SharedPtr<OrthographicCamera<APITag>> orthographicCamera{ MakeShared<OrthographicCamera<APITag>>() };
+
+				orthographicCamera->ZNear = src->data.orthographic.znear;
+				orthographicCamera->ZFar = src->data.orthographic.zfar;
+				orthographicCamera->XMag = src->data.orthographic.xmag;
+				orthographicCamera->YMag = src->data.orthographic.ymag;
+
+				dst = orthographicCamera;
+			}
+
+			cameraMap[src] = dst;
+		}
+
+		UnorderedMap<const cgltf_light*, SharedPtr<Light<APITag>>> lightMap;
+		for (Uint64 light_idx = 0; light_idx < objects->lights_count; ++light_idx) {
+			const cgltf_light* src{ &objects->lights[light_idx] };
+			SharedPtr<Light<APITag>> dst;
+
+			switch (src->type) {
+			case cgltf_light_type_directional: {
+				auto directional{ MakeShared<DirectionalLight<APITag>>() };
+				directional->LightColor = src->color;
+
+				directional->Irradiance = src->intensity;
+
+				dst = directional;
+				break;
+			}
+			case cgltf_light_type_point: {
+				auto point{ MakeShared<PointLight<APITag>>() };
+				point->LightColor = src->color;
+
+				point->Intensity = src->intensity;
+				point->Range = src->range;
+
+				dst = point;
+				break;
+			}
+			case cgltf_light_type_spot: {
+				auto spot{ MakeShared<SpotLight<APITag>>() };
+				spot->LightColor = src->color;
+
+				spot->Intensity = src->intensity;
+				spot->Range = src->range;
+				spot->InnerAngle = Math::Degrees(src->spot_inner_cone_angle);
+				spot->OuterAngle = Math::Degrees(src->spot_outer_cone_angle);
+
+				dst = spot;
+				break;
+			}
+			default:
+				break;
+			}
+
+			if (nullptr != dst)
+				lightMap[src] = dst;
+		}
+
+		//Build
+		SharedPtr<SceneGraph<APITag>> graph{ MakeShared<SceneGraph<APITag>>() };
+		SharedPtr<SceneGraphNode<APITag>> root{ MakeShared<SceneGraphNode<APITag>>() };
+		UnorderedMap<cgltf_node*, SharedPtr<SceneGraphNode<APITag>>> nodeMap;
+		Vector<cgltf_node*> skinnedNodes;
+
+		struct StackItem final {
+			SharedPtr<SceneGraphNode<APITag>> dstParent;
+			cgltf_node** srcNodes{ nullptr };
+			Uint64 srcCount = 0;
+		};
+		Vector<StackItem> stack;
+
+		root->Set_Name(fileName.filename().generic_string());
+
+		Uint32 unnamedCameraCounter{ 1 };
+
+		StackItem context{
+			.dstParent{ root },
+			.srcNodes{ objects->scene->nodes },
+			.srcCount{ objects->nodes_count }
+		};
+
+		while (context.srcCount > 0) {
+			cgltf_node* src{ *context.srcNodes };
+			++context.srcNodes;
+			--context.srcCount;
+
+			auto dst{ MakeShared<SceneGraphNode<APITag>>() };
+
+			nodeMap[src] = dst;
+
+			if (src->has_matrix) {
+				// decompose the matrix into TRS
+				Math::AffineF3 aff{ &src->matrix[0], &src->matrix[4], &src->matrix[8], &src->matrix[12] };
+
+				Math::VecD3 translation;
+				Math::VecD3 scaling;
+				Math::QuatD rotation;
+				Math::DecomposeAffine(Math::AffineD3{ aff }, &translation, &rotation, &scaling);
+
+				dst->Set_Transform(&translation, &rotation, &scaling);
+			}
+			else {
+				if (src->has_scale)
+					dst->Set_Scaling(Math::VecD3{ Math::VecF3{ src->scale } });
+				if (src->has_rotation)
+					dst->Set_Rotation(Math::QuatD{ Math::QuatF::FromXYZW(src->rotation) });
+				if (src->has_translation)
+					dst->Set_Translation(Math::VecD3{ Math::VecF3{ src->translation } });
+			}
+
+			if (nullptr != src->name)
+				dst->Set_Name(src->name);
+
+			graph->Attach(context.dstParent, dst);//TODO :Move up
+
+
+			if (nullptr != src->skin)// process the skinned nodes later, when the graph is constructed
+				skinnedNodes.push_back(src);
+			else if (nullptr != src->mesh)
+				if (auto found = meshMap.find(src->mesh); found != meshMap.end())
+					dst->Set_Leaf(MakeShared<MeshInstance<APITag>>(found->second));
+
+			if (nullptr != src->camera) {
+				if (auto found{ cameraMap.find(src->camera) }; found != cameraMap.end()) {
+					const auto& camera{ found->second };
+
+					if (nullptr != dst->Get_Leaf()) {
+						auto node{ MakeShared<SceneGraphNode<APITag>>() };
+						node->Set_Leaf(camera);
+						graph->Attach(dst, node);
+					}
+					else
+						dst->Set_Leaf(camera);
+
+					if (nullptr != src->camera->name)
+						camera->Set_Name(String{ src->camera->name });
+					else if (camera->Get_Name().empty())
+						camera->Set_Name("Camera" + IntegralToString(unnamedCameraCounter++));
+				}
+			}
+
+			if (nullptr != src->light) {
+				if (auto found{ lightMap.find(src->light) }; found != lightMap.end()) {
+					auto light = found->second;
+
+					if (dst->Get_Leaf()) {
+						auto node{ MakeShared<SceneGraphNode<APITag>>() };
+						node->Set_Leaf(light);
+						graph->Attach(dst, node);
+					}
+					else
+						dst->Set_Leaf(light);
+				}
+			}
+
+			if (src->children_count > 0) {
+				stack.push_back(context);
+				context.dstParent = dst;
+				context.srcNodes = src->children;
+				context.srcCount = src->children_count;
+			}
+			else
+				while (context.srcCount == 0 && !stack.empty()) {// go up the stack until we find a node where some nodes are left
+					context = stack.back();
+					stack.pop_back();
+				}
+
+		}
+
+		for (auto* src : skinnedNodes) {
+			ASSERT(nullptr != src->skin);
+			ASSERT(nullptr != src->mesh);
+
+			SharedPtr<MeshInfo<APITag>> prototypeMesh;
+			if (auto found{ meshMap.find(src->mesh) }; found != meshMap.end()) {
+				prototypeMesh = found->second;
+				ASSERT(prototypeMesh->IsSkinPrototype);
+
+				auto skinnedInstance{ MakeShared<SkinnedMeshInstance<APITag>>(prototypeMesh) };
+				skinnedInstance->Joints.resize(src->skin->joints_count);
+
+				for (Uint64 joint_idx = 0; joint_idx < src->skin->joints_count; ++joint_idx) {
+					auto& joint{ skinnedInstance->Joints[joint_idx] };
+					cgltf_accessor_read_float(src->skin->inverse_bind_matrices, joint_idx, joint.InverseBindMatrix.m_Data, 16);//maybe use [0][0] addressof
+					joint.Node = nodeMap[src->skin->joints[joint_idx]];
+
+					auto jointNode{ joint.Node.lock() };
+					if (nullptr == jointNode->Get_Leaf())
+						jointNode->Set_Leaf(MakeShared<SkinnedMeshReference<APITag>>(skinnedInstance));
+				}
+
+				nodeMap[src]->Set_Leaf(skinnedInstance);
+			}
+		}
+
+		result.RootNode = root;
+
+		auto animationContainer = root;
+		if (objects->animations_count > 1) {
+			ASSERT(false);//anmiationContainer->Get_Leaf() == nullptr);
+			animationContainer = MakeShared<SceneGraphNode<APITag>>();
+			animationContainer->Set_Name("Animations");
+			graph->Attach(root, animationContainer);
+		}
+
+		/*std::unordered_map<const cgltf_animation_sampler*, std::shared_ptr<animation::Sampler>> animationSamplers;
+
+		for (size_t a_idx = 0; a_idx < objects->animations_count; a_idx++)
+		{
+			const cgltf_animation* srcAnim = &objects->animations[a_idx];
+			auto dstAnim = std::make_shared<SceneGraphAnimation>();
+
+			animationSamplers.clear();
+
+			for (size_t s_idx = 0; s_idx < srcAnim->samplers_count; s_idx++)
+			{
+				const cgltf_animation_sampler* srcSampler = &srcAnim->samplers[s_idx];
+				const cgltf_animation_channel* srcChannel = &srcAnim->channels[s_idx];
+				auto dstSampler = std::make_shared<animation::Sampler>();
+
+				switch (srcSampler->interpolation)
+				{
+				case cgltf_interpolation_type_linear:
+					if (srcChannel->target_path == cgltf_animation_path_type_rotation)
+						dstSampler->SetInterpolationMode(animation::InterpolationMode::Slerp);
+					else
+						dstSampler->SetInterpolationMode(animation::InterpolationMode::Linear);
+					break;
+				case cgltf_interpolation_type_step:
+					dstSampler->SetInterpolationMode(animation::InterpolationMode::Step);
+					break;
+				case cgltf_interpolation_type_cubic_spline:
+					dstSampler->SetInterpolationMode(animation::InterpolationMode::HermiteSpline);
+					break;
+				default:
+					break;
+				}
+
+				const cgltf_accessor* times = srcSampler->input;
+				const cgltf_accessor* values = srcSampler->output;
+				assert(times->type == cgltf_type_scalar);
+
+				for (size_t sample_idx = 0; sample_idx < times->count; sample_idx++)
+				{
+					animation::Keyframe keyframe;
+
+					bool timeRead = cgltf_accessor_read_float(times, sample_idx, &keyframe.time, 1);
+
+					bool valueRead;
+					if (srcSampler->interpolation == cgltf_interpolation_type_cubic_spline)
+					{
+						valueRead = cgltf_accessor_read_float(values, sample_idx * 3 + 0, &keyframe.inTangent.x, 4);
+						valueRead = cgltf_accessor_read_float(values, sample_idx * 3 + 1, &keyframe.value.x, 4);
+						valueRead = cgltf_accessor_read_float(values, sample_idx * 3 + 2, &keyframe.outTangent.x, 4);
+					}
+					else
+					{
+						valueRead = cgltf_accessor_read_float(values, sample_idx, &keyframe.value.x, 4);
+					}
+
+					if (timeRead && valueRead)
+						dstSampler->AddKeyframe(keyframe);
+				}
+
+				if (!dstSampler->GetKeyframes().empty())
+					animationSamplers[srcSampler] = dstSampler;
+				else
+					log::warning("Animation channel imported with no keyframes, ignoring.");
+			}
+
+			for (size_t channel_idx = 0; channel_idx < srcAnim->channels_count; channel_idx++)
+			{
+				const cgltf_animation_channel* srcChannel = &srcAnim->channels[channel_idx];
+
+				auto dstNode = nodeMap[srcChannel->target_node];
+				if (!dstNode)
+					continue;
+
+				AnimationAttribute attribute;
+				switch (srcChannel->target_path)
+				{
+				case cgltf_animation_path_type_translation:
+					attribute = AnimationAttribute::Translation;
+					break;
+
+				case cgltf_animation_path_type_rotation:
+					attribute = AnimationAttribute::Rotation;
+					break;
+
+				case cgltf_animation_path_type_scale:
+					attribute = AnimationAttribute::Scaling;
+					break;
+
+				case cgltf_animation_path_type_weights:
+				case cgltf_animation_path_type_invalid:
+				default:
+					log::warning("Unsupported glTF animation taregt: %d", srcChannel->target_path);
+					continue;
+				}
+
+				auto dstSampler = animationSamplers[srcChannel->sampler];
+				if (!dstSampler)
+					continue;
+
+				auto dstTrack = std::make_shared<SceneGraphAnimationChannel>(dstSampler, dstNode, attribute);
+
+				dstAnim->AddChannel(dstTrack);
+			}
+
+			if (dstAnim->IsVald())
+			{
+				auto animationNode = std::make_shared<SceneGraphNode>();
+				animationNode->SetName(dstAnim->GetName());
+				graph->Attach(animationContainer, animationNode);
+				animationNode->SetLeaf(dstAnim);
+				if (srcAnim->name)
+					animationNode->SetName(srcAnim->name);
+			}
+		}*/
+
+		if (c_ForceRebuildTangents) {
+			for (Uint64 buffer_idx = 0; buffer_idx < objects->buffers_count; ++buffer_idx) {
+				Path outputFileName{ fileName.parent_path() / fileName.stem() };
+				outputFileName += ".buffer" + IntegralToString(buffer_idx) + ".bin";
+
+				this->m_FS->WriteFile(outputFileName, objects->buffers[buffer_idx].data, objects->buffers[buffer_idx].size);
+			}
+		}
+
+		cgltf_free(objects);
 
 		return true;
 	}

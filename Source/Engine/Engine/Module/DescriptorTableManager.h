@@ -39,7 +39,7 @@ namespace Parting {
 		using Imp_Device = typename RHI::RHITypeTraits<APITag>::Imp_Device;
 
 	public:
-		using DescriptorIndex = Uint32;
+		using DescriptorIndex = Int32;
 
 	protected:
 		RHI::RefCountPtr<Imp_Device> m_Device{ nullptr };
@@ -60,9 +60,13 @@ namespace Parting {
 		}
 		~DescriptorHandle(void) = default;
 
+	public:
+		DescriptorIndex Get(void)const { return this->m_DescriptorIndex; }
+
+
 	private:
 		WeakPtr<DescriptorTableManager<APITag>> m_Manager;
-		DescriptorIndex m_DescriptorIndex{ 0 };//TODO set a Invalid value
+		DescriptorIndex m_DescriptorIndex{ -1 };//TODO set a Invalid value
 
 	};
 }

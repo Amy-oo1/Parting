@@ -144,7 +144,7 @@ namespace Math {
 	};
 
 	/*template <typename type, uint32 N>
-	struct affine;*/
+	struct Affine;*/
 
 	/*	template<typename Type,int ize,int a>
 	struct Mat;*/
@@ -163,7 +163,7 @@ namespace Math {
 		};
 	}
 
-	template <typename Type, Uint32 N>Affine<Type, N>& operator *= (const Affine<Type, N>& a, const Affine<Type, N>& b) { return a = a * b; }
+	template <typename Type, Uint32 N>Affine<Type, N>& operator *= (Affine<Type, N>& a, const Affine<Type, N>& b) { return a = a * b; }
 
 	template <typename Type, Uint32 N>Affine<Type, N> Transpose(const Affine<Type, N>& a) {
 		auto mTransposed{ Transpose(a.m_Linear) };
@@ -173,7 +173,7 @@ namespace Math {
 		};
 	}
 
-	template <typename Type, int N>Affine<Type, N> Pow(const Affine<Type, N>& a, Uint32 b) {
+	template <typename Type, int N>Affine<Type, N> Pow(const Affine<Type, N>& a, Int32 b) {
 		if (b <= 0)
 			return Affine<Type, N>::Identity();
 		if (b == 1)
@@ -212,7 +212,7 @@ namespace Math {
 	template <typename Type, Uint32 N>	Affine<Type, N> Translation(const Vec<Type, N>& a) { return Affine<Type, N> { Mat<Type, N, N>::Identity(), a }; }
 
 	template <typename Type, Uint32 N>	Affine<Type, N> Scaling(Type a) { return Affine<Type, N> { Diagonal<Type, N>(a), Vec<Type, N>::Zero() }; }
-	template <typename Type, Uint32 N>	Affine<Type, N> Scaling(const Affine<Type, N>& a) { return Affine<Type, N> { Diagonal(a), Vec<Type, N>::Zero() }; }
+	template <typename Type, Uint32 N>	Affine<Type, N> Scaling(const Vec<Type, N>& a) { return Affine<Type, N> { Diagonal(a), Vec<Type, N>::Zero() }; }
 
 	template<typename Type>Affine<Type, 2> Rotation(Type radians) {
 		auto sinTheta{ Sin(radians) };
@@ -229,7 +229,7 @@ namespace Math {
 		auto sinTheta{ Sin(radians) };
 		auto cosTheta{ Cos(radians) };
 
-		// Build matrix that does cross product by axis (on the right)
+		// Build Mat that does cross product by axis (on the right)
 		Mat<Type, 3, 3> crossProductMat{
 			static_cast<Type>(0), axis.Z, -axis.Y,
 			-axis.Z,static_cast<Type>(0), axis.X,
@@ -349,8 +349,8 @@ namespace Math {
 
 	template <typename Type, Uint32 N>
 	Affine<Type, N - 1> HomogeneousToAffine(const Mat<Type, N, N>& a) {
-		// Extract the relevant components of the matrix; note, NO checking
-		// that the matrix actually represents an affine transform!
+		// Extract the relevant components of the Mat; note, NO checking
+		// that the Mat actually represents an Affine transform!
 		Affine<Type, N - 1> result;
 		for (Uint32 RowIndex = 0; RowIndex < N - 1; ++RowIndex)
 			for (Uint32 ColIndex = 0; ColIndex < N - 1; ++ColIndex)

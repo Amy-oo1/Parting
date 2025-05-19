@@ -64,15 +64,17 @@ struct MaterialConstants
 	float			OcclusionStrength;
 	float			AlphaCutoff;
 	float			TransmissionFactor;
-	Uint32			BaseOrDiffuseTextureIndex;
 
-	Uint32			MetalRoughOrSpecularTextureIndex;
-	Uint32			EmissiveTextureIndex;
-	Uint32			NormalTextureIndex;
-	Uint32			OcclusionTextureIndex;
 
-	Uint32			TransmissionTextureIndex;
-	Uint32			OpacityTextureIndex;
+	Int32			BaseOrDiffuseTextureIndex;
+	Int32			MetalRoughOrSpecularTextureIndex;
+	Int32			EmissiveTextureIndex;
+	Int32			NormalTextureIndex;
+	Int32			OcclusionTextureIndex;
+	Int32			TransmissionTextureIndex;
+	Int32			OpacityTextureIndex;
+
+
 	Math::VecF2		NormalTextureTransformScale;
 
 	Math::VecU3		Padding1;
@@ -89,7 +91,7 @@ struct MaterialConstants
 
 	float			HairLongitudinalRoughness;
 	float			HairAzimuthalRoughness;
-	float			HairIor;
+	float			HairIOR;
 	float			HairCuticleAngle;
 
 	Math::VecF3		HairDiffuseReflectionTint;

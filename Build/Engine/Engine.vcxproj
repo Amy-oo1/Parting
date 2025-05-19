@@ -173,6 +173,7 @@
     <ClInclude Include="..\..\Source\Engine\Render\Module\MaterialBindingCache.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-Base.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-DepthPass.h" />
+    <ClInclude Include="..\..\Source\Engine\Render\Module\SceneGraph-Ini.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\SceneTypes.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\Sence.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\ShadowMap-Base.h" />
@@ -181,6 +182,10 @@
     <ClInclude Include="..\..\Source\Engine\Render\Module\ShadowMap-Planar.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\ShadowMap.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-SSAOPass.h" />
+    <ClInclude Include="..\..\Source\Engine\Render\Module\UIRender-Console.h" />
+    <ClInclude Include="..\..\Source\Engine\Render\Module\UIRender-RHI.h" />
+    <ClInclude Include="..\..\Source\Engine\Render\Module\UIRender-UIRender.h" />
+    <ClInclude Include="..\..\Source\Engine\Render\Module\UIRender.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\View.h" />
   </ItemGroup>
   <ItemGroup>

@@ -78,7 +78,7 @@ namespace Math {
 	inline float Log2f(float x) { return 1.442695041f * logf(x); }
 
 	template<typename Type>
-	inline float Sqrt(Type a) { return sqrt(a); }
+	inline Type Sqrt(Type a) { return sqrt(a); }
 
 	template<typename Type>
 	inline Type Pow(Type a, Type b) { return pow(a, b); }

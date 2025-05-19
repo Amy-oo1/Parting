@@ -134,6 +134,12 @@
     <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Box.h">
       <Filter>VectorMath\Module</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\Core\Json\Module\Json.h">
+      <Filter>Json\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Quaternion.h">
+      <Filter>VectorMath\Module</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Platform">
@@ -258,6 +264,12 @@
     </Filter>
     <Filter Include="VFS">
       <UniqueIdentifier>{97b095ff-429c-4621-838e-30fea15fb6d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Json">
+      <UniqueIdentifier>{b86ab46c-fcd7-47ca-a871-2af19c01f77f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Json\Module">
+      <UniqueIdentifier>{88754498-9286-4a24-a188-021af166f8b5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

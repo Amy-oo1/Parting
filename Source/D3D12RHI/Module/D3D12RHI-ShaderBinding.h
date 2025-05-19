@@ -73,11 +73,7 @@ namespace RHI::D3D12 {
 		using enum RHIResourceType;
 
 		if ((a == TypedBuffer_SRV && b == Texture_SRV) ||
-			(b == TypedBuffer_SRV && a == Texture_SRV) ||
-			(a == TypedBuffer_SRV && b == RayTracingAccelStruct) ||
-			(a == Texture_SRV && b == RayTracingAccelStruct) ||
-			(b == TypedBuffer_SRV && a == RayTracingAccelStruct) ||
-			(b == Texture_SRV && a == RayTracingAccelStruct))
+			(b == TypedBuffer_SRV && a == Texture_SRV))
 			return true;
 
 		if ((a == TypedBuffer_UAV && b == Texture_UAV) ||
@@ -181,7 +177,7 @@ namespace RHI::D3D12 {
 					D3D12_DESCRIPTOR_RANGE_TYPE TempRangeType{};
 					switch (BindingItem.Type) {
 						using enum RHIResourceType;
-					case Texture_SRV:case TypedBuffer_SRV:case StructuredBuffer_SRV:case RawBuffer_SRV:case RayTracingAccelStruct:
+					case Texture_SRV:case TypedBuffer_SRV:case StructuredBuffer_SRV:case RawBuffer_SRV:
 						TempRangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 						break;
 
@@ -337,7 +333,6 @@ namespace RHI::D3D12 {
 			case TypedBuffer_SRV:
 			case StructuredBuffer_SRV:
 			case RawBuffer_SRV:
-			case RayTracingAccelStruct:
 				rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 				break;
 
@@ -414,7 +409,7 @@ namespace RHI::D3D12 {
 		const Context& m_Context;
 		D3D12DeviceResources& m_DeviceResourcesRef;
 
-		RHIBindingSetDesc<D3D12Tag> m_Desc{};
+		RHIBindingSetDesc<D3D12Tag> m_Desc;
 		RefCountPtr<BindingLayout> m_Layout;
 
 		D3D12DescriptorIndex m_DescriptorTableSRVetc{ 0 };
@@ -635,7 +630,7 @@ namespace RHI::D3D12 {
 
 		DescriptorTable(D3D12DeviceResources& resources) :
 			RHIDescriptorTable<DescriptorTable>{},
-			m_DeviceResourcesRef{ resources } 
+			m_DeviceResourcesRef{ resources }
 		{}
 
 		~DescriptorTable(void) { this->m_DeviceResourcesRef.SamplerHeap.ReleaseDescriptor(this->m_FirstDescriptor, this->m_Capacity); }

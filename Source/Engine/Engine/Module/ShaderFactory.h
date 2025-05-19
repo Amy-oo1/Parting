@@ -136,6 +136,7 @@ namespace Parting {
 		/*if (descCopy.debugName.empty())
 			descCopy.debugName = fileName;*/
 
+			//TODO :  i do not know this TODO should,maybe i forget ,oooo Cache 
 		return this->CreateStaticShader(StaticShader{ .pBytecode { byteCode->Get_Data() }, .Size{ byteCode->Get_Size() } }, pDefines, desc);
 	}
 

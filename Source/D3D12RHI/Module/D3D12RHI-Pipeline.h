@@ -78,6 +78,7 @@ namespace RHI::D3D12 {
 		friend class RHIGraphicsPipeline<GraphicsPipeline, D3D12Tag>;
 
 		friend class CommandList;
+		friend class Device;
 	public:
 		GraphicsPipeline(void) = default;
 		~GraphicsPipeline(void) = default;
@@ -88,17 +89,17 @@ namespace RHI::D3D12 {
 
 	private:
 		RHIGraphicsPipelineDesc<D3D12Tag> m_Desc;
-		RHIFrameBufferInfo<D3D12Tag> m_FramebufferInfo;
+		RHIFrameBufferInfo<D3D12Tag> m_FrameBufferInfo;
 
-		RefCountPtr<D3D12RootSignature> m_RootSignature{ nullptr };
-		RefCountPtr<ID3D12PipelineState> m_PipelineState{ nullptr };
+		RefCountPtr<D3D12RootSignature> m_RootSignature;
+		RefCountPtr<ID3D12PipelineState> m_PipelineState;
 
 		bool m_RequiresBlendFactor{ false };
 	private:
 		RHIObject Imp_GetNativeObject(RHIObjectType type)const noexcept;
 
 		const RHIGraphicsPipelineDesc<D3D12Tag>& Imp_Get_Desc(void)const {return this->m_Desc;}
-		const RHIFrameBufferInfo<D3D12Tag>& Imp_Get_FramebufferInfo(void)const { return this->m_FramebufferInfo; }
+		const RHIFrameBufferInfo<D3D12Tag>& Imp_Get_FramebufferInfo(void)const { return this->m_FrameBufferInfo; }
 	};
 
 	//Imp
@@ -158,7 +159,7 @@ namespace RHI::D3D12 {
 
 	private:
 		RHIMeshletPipelineDesc<D3D12Tag> m_Desc;
-		RHIFrameBufferInfo<D3D12Tag> m_FramebufferInfo;
+		RHIFrameBufferInfo<D3D12Tag> m_FrameBufferInfo;
 		RefCountPtr<D3D12RootSignature> m_RootSignature{ nullptr };
 		RefCountPtr<ID3D12PipelineState> m_PipelineState{ nullptr };
 
@@ -169,7 +170,7 @@ namespace RHI::D3D12 {
 	private:
 		RHIObject Imp_GetNativeObject(RHIObjectType type)const noexcept;
 		const RHIMeshletPipelineDesc<D3D12Tag>& Imp_Get_Desc(void)const { return this->m_Desc; }
-		const RHIFrameBufferInfo<D3D12Tag>& Imp_Get_FramebufferInfo(void)const { return this->m_FramebufferInfo; }
+		const RHIFrameBufferInfo<D3D12Tag>& Imp_Get_FramebufferInfo(void)const { return this->m_FrameBufferInfo; }
 	};
 
 	//Imp

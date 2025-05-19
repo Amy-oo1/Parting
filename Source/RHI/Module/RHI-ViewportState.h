@@ -65,13 +65,8 @@ namespace RHI {
 
 
 
-		STDNODISCARD constexpr bool operator==(const RHIViewport& Other)const {
-			return 
-				this->MinX == Other.MinX && this->MaxX == Other.MaxX &&
-				this->MinY == Other.MinY && this->MaxY == Other.MaxY &&
-				this->MinZ == Other.MinZ && this->MaxZ == Other.MaxZ;
-		}
-		STDNODISCARD constexpr bool operator!=(const RHIViewport& Other)const { return !(*this == Other); }
+		STDNODISCARD constexpr bool operator==(const RHIViewport&)const noexcept = default;
+		STDNODISCARD constexpr bool operator!=(const RHIViewport&)const noexcept = default;
 	};
 
 	PARTING_EXPORT RHIRect2D BuildScissorRect(const RHIViewport& viewport) {
@@ -92,15 +87,19 @@ namespace RHI {
 		Uint16 ViewportCount{ 0 };
 		Uint16 ScissorCount{ 0 };
 
-		STDNODISCARD constexpr bool operator==(const RHIViewportState&)const noexcept = default;
-		STDNODISCARD constexpr bool operator!=(const RHIViewportState&)const noexcept = default;
+		STDNODISCARD constexpr bool operator==(const RHIViewportState& other)const noexcept {
+			return
+				ArrayEqual(this->Viewports, this->ViewportCount, other.Viewports, other.ViewportCount) &&
+				ArrayEqual(this->ScissorRects, this->ScissorCount, other.ScissorRects, other.ScissorCount);
+		}
+		STDNODISCARD constexpr bool operator!=(const RHIViewportState& other)const noexcept { return !(*this == other); }
 	};
 
 	PARTING_EXPORT class RHIViewportStateBuilder final {
 	public:
 		STDNODISCARD constexpr void AddViewport(const RHIViewport& Viewport) {
 			ASSERT(this->m_ViewportState.ViewportCount < g_MaxViewportCount);
-			
+
 			this->m_ViewportState.Viewports[this->m_ViewportState.ViewportCount++] = Viewport;
 		}
 		STDNODISCARD constexpr void AddScissorRect(const RHIRect2D& ScissorRect) {

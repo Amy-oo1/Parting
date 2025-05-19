@@ -161,6 +161,7 @@
     <ClInclude Include="..\..\Source\Core\Container\Module\Container-Variant.h" />
     <ClInclude Include="..\..\Source\Core\Container\Module\Container-Vector.h" />
     <ClInclude Include="..\..\Source\Core\Container\Module\Container.h" />
+    <ClInclude Include="..\..\Source\Core\Json\Module\Json.h" />
     <ClInclude Include="..\..\Source\Core\Logger\Include\LogMacros.h" />
     <ClInclude Include="..\..\Source\Core\Logger\Module\Logger.h" />
     <ClInclude Include="..\..\Source\Core\Memory\Module\Memory-Alloctor.h" />
@@ -181,6 +182,7 @@
     <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Frustum.h" />
     <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Mat.h" />
     <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Misc.h" />
+    <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Quaternion.h" />
     <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath-Vec.h" />
     <ClInclude Include="..\..\Source\Core\VectorMath\Module\VectorMath.h" />
     <ClInclude Include="..\..\Source\Core\VFS\Module\VFS.h" />

@@ -50,38 +50,46 @@ namespace RHI {
 	PARTING_EXPORT HEADER_INLINE constexpr Uint32 g_ConstantBufferOffsetSizeAlignment{ 256 };
 
 
-	PARTING_EXPORT struct RHIOffset2D final{
-		Uint32 X{};
-		Uint32 Y{};
+	PARTING_EXPORT struct RHIOffset2D final {
+		Uint32 X{ 0 };
+		Uint32 Y{ 0 };
+
+		STDNODISCARD constexpr bool operator==(const RHIOffset2D&)const noexcept = default;
+		STDNODISCARD constexpr bool operator!=(const RHIOffset2D&)const noexcept = default;
 	};
 
-	PARTING_EXPORT struct RHIOffset3D final{
-		Uint32 X{};
-		Uint32 Y{};
-		Uint32 Z{};
+	PARTING_EXPORT struct RHIOffset3D final {
+		Uint32 X{ 0 };
+		Uint32 Y{ 0 };
+		Uint32 Z{ 0 };
+
+		STDNODISCARD constexpr bool operator==(const RHIOffset3D&)const noexcept = default;
+		STDNODISCARD constexpr bool operator!=(const RHIOffset3D&)const noexcept = default;
 	};
 
 	PARTING_EXPORT struct RHIExtent2D final {
-		Uint32 Width{};
-		Uint32 Height{};
+		Uint32 Width{ 0 };
+		Uint32 Height{ 0 };
+
+		STDNODISCARD constexpr bool operator==(const RHIExtent2D&)const noexcept = default;
+		STDNODISCARD constexpr bool operator!=(const RHIExtent2D&)const noexcept = default;
 	};
 
 	PARTING_EXPORT struct RHIExtent3D final {
-		Uint32 Width{};
-		Uint32 Height{};
-		Uint32 Depth{};
+		Uint32 Width{ 0 };
+		Uint32 Height{ 0 };
+		Uint32 Depth{ 0 };
+
+		STDNODISCARD constexpr bool operator==(const RHIExtent3D&)const noexcept = default;
+		STDNODISCARD constexpr bool operator!=(const RHIExtent3D&)const noexcept = default;
 	};
 
 	PARTING_EXPORT struct RHIRect2D final {
-		RHIOffset2D Offset{};
-		RHIExtent2D Extent{};
+		RHIOffset2D Offset;
+		RHIExtent2D Extent;
 
-		STDNODISCARD constexpr bool operator==(const RHIRect2D& Other)const {
-			return 
-				this->Offset.X == Other.Offset.X && this->Offset.Y == Other.Offset.Y &&
-				this->Extent.Width == Other.Extent.Width && this->Extent.Height == Other.Extent.Height;
-		}
-		STDNODISCARD constexpr bool operator!=(const RHIRect2D& Other)const { return !(*this == Other); }
+		STDNODISCARD constexpr bool operator==(const RHIRect2D&)const noexcept = default;
+		STDNODISCARD constexpr bool operator!=(const RHIRect2D&)const noexcept = default;
 	};
 
 	PARTING_EXPORT enum class RHICPUAccessMode :Uint8 {
@@ -91,34 +99,34 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT enum class RHIResourceState :Uint32 {
-		Unknown                     = 0,
-		Common                      = 0x00000001,
-		ConstantBuffer              = 0x00000002,
-		VertexBuffer                = 0x00000004,
-		IndexBuffer                 = 0x00000008,
-		IndirectArgument            = 0x00000010,
-		ShaderResource              = 0x00000020,
-		UnorderedAccess             = 0x00000040,
-		RenderTarget                = 0x00000080,
-		DepthWrite                  = 0x00000100,
-		DepthRead                   = 0x00000200,
-		StreamOut                   = 0x00000400,
-		CopyDest                    = 0x00000800,
-		CopySource                  = 0x00001000,
-		ResolveDest                 = 0x00002000,
-		ResolveSource               = 0x00004000,
-		Present                     = 0x00008000,
-		AccelStructRead             = 0x00010000,
-		AccelStructWrite            = 0x00020000,
-		AccelStructBuildInput       = 0x00040000,
-		AccelStructBuildBlas        = 0x00080000,
-		ShadingRateSurface          = 0x00100000,
-		OpacityMicromapWrite        = 0x00200000,
-		OpacityMicromapBuildInput   = 0x00400000,
+		Unknown = 0,
+		Common = 0x00000001,
+		ConstantBuffer = 0x00000002,
+		VertexBuffer = 0x00000004,
+		IndexBuffer = 0x00000008,
+		IndirectArgument = 0x00000010,
+		ShaderResource = 0x00000020,
+		UnorderedAccess = 0x00000040,
+		RenderTarget = 0x00000080,
+		DepthWrite = 0x00000100,
+		DepthRead = 0x00000200,
+		StreamOut = 0x00000400,
+		CopyDest = 0x00000800,
+		CopySource = 0x00001000,
+		ResolveDest = 0x00002000,
+		ResolveSource = 0x00004000,
+		Present = 0x00008000,
+		AccelStructRead = 0x00010000,
+		AccelStructWrite = 0x00020000,
+		AccelStructBuildInput = 0x00040000,
+		AccelStructBuildBlas = 0x00080000,
+		ShadingRateSurface = 0x00100000,
+		OpacityMicromapWrite = 0x00200000,
+		OpacityMicromapBuildInput = 0x00400000,
 	};
 	EXPORT_ENUM_CLASS_OPERATORS(RHIResourceState);
 
-	PARTING_EXPORT enum class RHISharedResourceFlag : Uint32{
+	PARTING_EXPORT enum class RHISharedResourceFlag : Uint32 {
 		None = 0,
 
 		// D3D11: adds D3D11_RESOURCE_MISC_SHARED
@@ -136,7 +144,7 @@ namespace RHI {
 	};
 	EXPORT_ENUM_CLASS_OPERATORS(RHISharedResourceFlag);
 
-	PARTING_EXPORT enum class RHIFeature : Uint8{
+	PARTING_EXPORT enum class RHIFeature : Uint8 {
 		DeferredCommandLists,
 		SinglePassStereo,
 		RayTracingAccelStruct,
@@ -159,12 +167,12 @@ namespace RHI {
 		HeapDirectlyIndexed,
 		SamplerFeedback
 	};
-	
-	PARTING_EXPORT struct RHIVariableRateShadingFeatureInfo{
+
+	PARTING_EXPORT struct RHIVariableRateShadingFeatureInfo {
 		Uint32 ShadingRateImageTileSize;
 	};
 
-	PARTING_EXPORT enum class RHIMessageSeverity : Uint8{
+	PARTING_EXPORT enum class RHIMessageSeverity : Uint8 {
 		Info,
 		Warning,
 		Error,
@@ -172,17 +180,17 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT template<typename Derived>
-	class RHIMessageCallback :public NonCopyAndMoveAble {
-	protected:
-		RHIMessageCallback(void) = default;
-		PARTING_VIRTUAL ~RHIMessageCallback(void) = default;
+		class RHIMessageCallback :public NonCopyAndMoveAble {
+		protected:
+			RHIMessageCallback(void) = default;
+			PARTING_VIRTUAL ~RHIMessageCallback(void) = default;
 
-	public:
-		void Message(RHIMessageSeverity severity, const char* message) { this->Get_Derived()->Imp_Message(severity, message); }
-	private:
-		STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
-	private:
-		void Imp_Message(RHIMessageSeverity severity, const char* message) { LOG_ERROR("No Imp"); }
+		public:
+			void Message(RHIMessageSeverity severity, const char* message) { this->Get_Derived()->Imp_Message(severity, message); }
+		private:
+			STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
+		private:
+			void Imp_Message(RHIMessageSeverity severity, const char* message) { LOG_ERROR("No Imp"); }
 	};
 
 	PARTING_EXPORT template<typename Derived>
@@ -202,13 +210,13 @@ namespace RHI {
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
-	using RHIShaderBindingResources = Variant<
+		using RHIShaderBindingResources = Variant<
 		RefCountPtr<typename ShaderBindingResourceType<APITag>::Imp_Texture>,
 		RefCountPtr<typename ShaderBindingResourceType<APITag>::Imp_SamplerFeedbackTexture>,
 		RefCountPtr<typename ShaderBindingResourceType<APITag>::Imp_Buffer>,
 		RefCountPtr<typename ShaderBindingResourceType<APITag>::Imp_Sampler>,
 		Nullptr_T
-	>;
+		>;
 
 
 }

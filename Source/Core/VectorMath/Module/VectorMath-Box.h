@@ -51,9 +51,7 @@ namespace Math {
 				this->m_Maxs = Max(this->m_Maxs, points[Index]);
 			}
 		}
-
-		template<typename U>
-		constexpr Box(const Box<U, N>& b) : m_Mins(b.m_Mins), m_Maxs(b.m_Maxs) {}
+		template<typename OtherType>constexpr Box(const Box<OtherType, N>& b) : m_Mins(b.m_Mins), m_Maxs(b.m_Maxs) {}
 
 		constexpr bool Is_Empty(void) const { return Any(this->m_Mins > this->m_Maxs); }
 
@@ -121,7 +119,7 @@ namespace Math {
 		Box operator |= (const Vec<Type, N>& v) { *this = *this | v; return *this; }
 
 		Box operator * (const Affine<Type, N>& transform) const {
-			// fast method to apply an affine transform to an AABB
+			// fast method to apply an Affine transform to an AABB
 			Box<Type, N> result;
 			result.m_Mins = transform.m_Translation;
 			result.m_Maxs = transform.m_Translation;

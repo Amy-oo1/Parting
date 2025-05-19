@@ -36,6 +36,7 @@ PARTING_IMPORT Utility;
 #include "D3D12RHI/Module/D3D12RHI.h"
 
 #include "Engine/Engine/Module/ShaderFactory.h"
+#include "Engine/Engine/Module/BindingCache.h"
 
 
 #include "Shader/blit_cb.h"
@@ -49,6 +50,33 @@ namespace Parting {
 	class DepthPass;
 
 
+	enum class BLITSampler :Uint8 {
+		Point,
+		Linear,
+		Sharpen
+	};
+
+	template<RHI::APITagConcept APITag>
+	struct BLITParameters final {
+		using Imp_Texture = typename RHI::RHITypeTraits<APITag>::Imp_Texture;
+		using Imp_FramBuffer = typename RHI::RHITypeTraits<APITag>::Imp_FrameBuffer;
+
+		Imp_FramBuffer* TargetFrameBuffer{ nullptr };
+		RHI::RHIViewport TargetViewport;
+		Math::BoxF2 TargetBox{ 0.f, 1.f };
+
+		Imp_Texture* SourceTexture{ nullptr };
+		Uint32 SourceArraySlice{ 0 };
+		Uint32 SourceMip{ 0 };
+		Math::BoxF2 SourceBox{ 0.f, 1.f };
+		RHI::RHIFormat SourceFormat{ RHI::RHIFormat::UNKNOWN };
+
+		BLITSampler Sampler{ BLITSampler::Linear };
+		RHI::RHIBlendState::RHIRenderTarget BlendState;
+		Color BlendConstantColor;
+	};
+
+
 
 	template<RHI::APITagConcept APITag>
 	class CommonRenderPasses final {
@@ -57,9 +85,33 @@ namespace Parting {
 		using Imp_Device = typename RHI::RHITypeTraits<APITag>::Imp_Device;
 		using Imp_CommandList = typename RHI::RHITypeTraits<APITag>::Imp_CommandList;
 		using Imp_BindingLayout = typename RHI::RHITypeTraits<APITag>::Imp_BindingLayout;
+		using Imp_BindingSet = typename RHI::RHITypeTraits<APITag>::Imp_BindingSet;
 		using Imp_Shader = typename RHI::RHITypeTraits<APITag>::Imp_Shader;
 		using Imp_Sampler = typename RHI::RHITypeTraits<APITag>::Imp_Sampler;
 		using Imp_Texture = typename RHI::RHITypeTraits<APITag>::Imp_Texture;
+		using Imp_FrameBuffer = typename RHI::RHITypeTraits<APITag>::Imp_FrameBuffer;
+		using Imp_GraphicsPipeline = typename RHI::RHITypeTraits<APITag>::Imp_GraphicsPipeline;
+
+	public:
+		struct PSOCacheKey final {
+			RHI::RHIFrameBufferInfo<APITag> FrameBufferInfo;
+			Imp_Shader* Shader;
+			RHI::RHIBlendState::RHIRenderTarget BlendState;
+
+			bool operator==(const PSOCacheKey&) const noexcept = default;
+			bool operator!=(const PSOCacheKey&) const noexcept = default;
+
+			struct PSOCacheKeyHash {
+				Uint64 operator ()(const PSOCacheKey& s) const {
+					Uint64 hash{ 0 };
+					hash = HashCombine(hash, typename RHI::RHIFrameBufferInfo<APITag>::RHIFrameBufferInfoHash{}(s.FrameBufferInfo));
+					hash = HashCombine(hash, HashVoidPtr{}(s.Shader));
+					hash = HashCombine(hash, RHI::RHIBlendState::RHIRenderTarget::RHIRenderTargetHash{}(s.BlendState));
+					return hash;
+				}
+			};
+		};
+
 	public:
 		CommonRenderPasses(RHI::RefCountPtr<Imp_Device> device, SharedPtr<ShaderFactory<APITag>> shaderFactory) : m_Device{ device } {
 			{
@@ -77,11 +129,11 @@ namespace Parting {
 				Vector<ShaderMacro> blitMacros;
 				blitMacros.emplace_back(ShaderMacro{ .Name{ "TEXTURE_ARRAY" }, .Definition{ "0" } });
 
-				this->m_BlitPS = shaderFactory->CreateShader("Parting/blit_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
+				this->m_BLITPS = shaderFactory->CreateShader("Parting/blit_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
 				this->m_SharpenPS = shaderFactory->CreateShader("Parting/sharpen_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
 
 				blitMacros.back().Definition = "1";
-				this->m_BlitArrayPS = shaderFactory->CreateShader("Parting/blit_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
+				this->m_BLITArrayPS = shaderFactory->CreateShader("Parting/blit_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
 				this->m_SharpenArrayPS = shaderFactory->CreateShader("Parting/sharpen_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
 
 			}
@@ -154,11 +206,11 @@ namespace Parting {
 			commandList->Close();
 			m_Device->ExecuteCommandList(commandList);
 
-			this->m_BlitBindingLayout = this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
+			this->m_BLITBindingLayout = this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 				.Set_Visibility(RHI::RHIShaderType::All)
-				.AddBinding(RHI::RHIBindingLayoutItem::BuildPushConstants(0, sizeof(BlitConstants)))
-				.AddBinding(RHI::RHIBindingLayoutItem::BuildTexture_SRV(0))
-				.AddBinding(RHI::RHIBindingLayoutItem::BuildSampler(0))
+				.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(0, sizeof(BLITConstants)))
+				.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(0))
+				.AddBinding(RHI::RHIBindingLayoutItem::Sampler(0))
 				.Build()
 			);
 
@@ -166,14 +218,134 @@ namespace Parting {
 
 		}
 		~CommonRenderPasses(void) = default;
+
+
+	public:
+		void BLITTexture(Imp_CommandList* commandlist, const BLITParameters<APITag>& params, BindingCache<APITag>* bindingCache = nullptr) {
+			ASSERT(nullptr != commandlist);
+			ASSERT(nullptr != params.TargetFrameBuffer);
+			ASSERT(nullptr != params.SourceTexture);
+
+			const RHI::RHIFrameBufferDesc<APITag>& framebufferDesc{ params.TargetFrameBuffer->Get_Desc() };
+			ASSERT(1 == framebufferDesc.ColorAttachmentCount);
+			ASSERT(framebufferDesc.ColorAttachments[0].Is_Valid());
+
+			const RHI::RHIFrameBufferInfo<APITag>& fbinfo{ params.TargetFrameBuffer->Get_Info() };
+			const RHI::RHITextureDesc& sourceDesc{ params.SourceTexture->Get_Desc() };
+
+			ASSERT(CommonRenderPasses<APITag>::Is_SupportedBLITDimension(sourceDesc.Dimension));
+			bool isTextureArray{ CommonRenderPasses<APITag>::Is_TextureArray(sourceDesc.Dimension) };
+
+
+			RHI::RHIViewport targetViewport{ params.TargetViewport };
+			// If no viewport is specified, create one based on the framebuffer dimensions.
+			// Note that the FB dimensions may not be the same as target texture dimensions, in case a non-zero mip level is used.
+			if (targetViewport.Width() == 0 && targetViewport.Height() == 0)
+				targetViewport = RHI::RHIViewport::Build(static_cast<float>(fbinfo.Width), static_cast<float>(fbinfo.Height));
+
+			Imp_Shader* shader{ nullptr };
+			switch (params.Sampler) {
+			case BLITSampler::Point:
+			case BLITSampler::Linear: shader = isTextureArray ? this->m_BLITArrayPS : this->m_BLITPS; break;
+			case BLITSampler::Sharpen: shader = isTextureArray ? this->m_SharpenArrayPS : this->m_SharpenPS; break;
+			default: ASSERT(false);
+			}
+
+			auto& pso{ this->m_BLITPSOCache[CommonRenderPasses<APITag>::PSOCacheKey{.FrameBufferInfo{ fbinfo }, .Shader{ shader }, .BlendState{ params.BlendState } }] };
+			if (nullptr == pso)
+				pso = this->m_Device->CreateGraphicsPipeline(
+					RHI::RHIGraphicsPipelineDescBuilder<APITag>{}
+			.Set_PrimType(RHI::RHIPrimitiveType::TriangleStrip)
+				.Set_VS(this->m_RectVS)
+				.Set_PS(shader)
+				.Set_CullMode(RHI::RHIRasterCullMode::None)
+				.Set_DepthTestEnable(false)
+				/*.Set_StencilEnable(false)*/
+				.Set_BlendState(0, params.BlendState)
+				.AddBindingLayout(this->m_BLITBindingLayout)
+				.Build(),
+				params.TargetFrameBuffer
+				);
+
+			RHI::RHIBindingSetDescBuilder<APITag> bindingSetDescBuilder;
+			{
+				auto sourceDimension{ sourceDesc.Dimension };
+				if (sourceDimension == RHI::RHITextureDimension::TextureCube || sourceDimension == RHI::RHITextureDimension::TextureCubeArray)
+					sourceDimension = RHI::RHITextureDimension::Texture2DArray;
+
+				const auto sourceSubresources{ RHI::RHITextureSubresourceSet(params.SourceMip, 1, params.SourceArraySlice, 1) };
+
+				bindingSetDescBuilder
+					.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(0, sizeof(BLITConstants)))
+					.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(0, params.SourceTexture, params.SourceFormat, sourceSubresources, sourceDimension))
+					.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(0, params.Sampler == BLITSampler::Point ? this->m_PointClampSampler : this->m_LinearClampSampler));
+			}
+
+			// If a binding cache is provided, get the binding set from the cache.
+			// Otherwise, create one and then release it.
+			RHI::RefCountPtr<Imp_BindingSet>sourceBindingSet;
+			if (nullptr != bindingCache)
+				sourceBindingSet = bindingCache->GetOrCreateBindingSet(bindingSetDescBuilder.Build(), this->m_BLITBindingLayout);
+			else
+				sourceBindingSet = this->m_Device->CreateBindingSet(bindingSetDescBuilder.Build(), this->m_BLITBindingLayout);
+
+			commandlist->SetGraphicsState(RHI::RHIGraphicsStateBuilder<APITag>{}
+			.Set_Pipeline(pso)
+				.Set_FrameBuffer(params.TargetFrameBuffer)
+				.AddViewport(targetViewport)
+				.AddScissorRect(RHI::BuildScissorRect(targetViewport))
+				.Set_BlendConstantColor(params.BlendConstantColor)
+				.AddBindingSet(sourceBindingSet)
+				.Build()
+				);
+
+			BLITConstants blitConstants{
+				.SourceOrigin { params.SourceBox.m_Mins },
+				.SourceSize { params.SourceBox.Diagonal() },
+
+				.TargetOrigin { params.TargetBox.m_Mins },
+				.TargetSize { params.TargetBox.Diagonal() },
+			};
+
+			commandlist->SetPushConstants(&blitConstants, sizeof(blitConstants));
+			commandlist->Draw(RHI::RHIDrawArguments{ .VertexCount{ 4 } });
+		}
+
+		void BLITTexture(Imp_CommandList* commandList, Imp_FrameBuffer* targetFramebuffer, Imp_Texture* sourceTexture, BindingCache<APITag>* bindingCache = nullptr) {
+			ASSERT(nullptr != commandList);
+			ASSERT(nullptr != targetFramebuffer);
+			ASSERT(nullptr != sourceTexture);
+
+			this->BLITTexture(commandList, BLITParameters<APITag>{.TargetFrameBuffer{ targetFramebuffer }, .SourceTexture{ sourceTexture } }, bindingCache);
+		}
+
+	public:
+		static bool Is_SupportedBLITDimension(RHI::RHITextureDimension dimension) {
+			using enum RHI::RHITextureDimension;
+			return
+				dimension == Texture2D ||
+				dimension == Texture2DArray ||
+				dimension == TextureCube ||
+				dimension == TextureCubeArray;
+		}
+
+		static bool Is_TextureArray(RHI::RHITextureDimension dimension) {
+			using enum RHI::RHITextureDimension;
+			return
+				dimension == Texture2DArray ||
+				dimension == TextureCube ||
+				dimension == TextureCubeArray;
+		}
+
+
 	private:
 		RHI::RefCountPtr<Imp_Device> m_Device;
 
 		RHI::RefCountPtr<Imp_Shader> m_FullscreenVS;
 		RHI::RefCountPtr<Imp_Shader> m_FullscreenAtOneVS;
 		RHI::RefCountPtr<Imp_Shader> m_RectVS;
-		RHI::RefCountPtr<Imp_Shader> m_BlitPS;
-		RHI::RefCountPtr<Imp_Shader> m_BlitArrayPS;
+		RHI::RefCountPtr<Imp_Shader> m_BLITPS;
+		RHI::RefCountPtr<Imp_Shader> m_BLITArrayPS;
 		RHI::RefCountPtr<Imp_Shader> m_SharpenPS;
 		RHI::RefCountPtr<Imp_Shader> m_SharpenArrayPS;
 
@@ -190,7 +362,10 @@ namespace Parting {
 		RHI::RefCountPtr<Imp_Texture> m_BlackCubeMapArray;
 		RHI::RefCountPtr<Imp_Texture> m_BlackTexture3D;
 
-		RHI::RefCountPtr<Imp_BindingLayout> m_BlitBindingLayout;
+		RHI::RefCountPtr<Imp_BindingLayout> m_BLITBindingLayout;
+
+		UnorderedMap<PSOCacheKey, RHI::RefCountPtr<Imp_GraphicsPipeline>, typename PSOCacheKey::PSOCacheKeyHash> m_BLITPSOCache;
+
 
 	};
 }

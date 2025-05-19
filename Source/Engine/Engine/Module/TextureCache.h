@@ -119,6 +119,7 @@ namespace Parting {
 		using Imp_Device = typename RHI::RHITypeTraits<APITag>::Imp_Device;
 		using Imp_Texture = typename RHI::RHITypeTraits<APITag>::Imp_Texture;
 		using Imp_StagingTexture = typename RHI::RHITypeTraits<APITag>::Imp_StagingTexture;
+		using Imp_FrameBuffer = typename RHI::RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using Imp_CommandList = typename RHI::RHITypeTraits<APITag>::Imp_CommandList;
 	public:
 		TextureCache(RHI::RefCountPtr<Imp_Device> device, SharedPtr<IFileSystem> fs, SharedPtr<DescriptorTableManager<APITag>> descriptorTableManager) :
@@ -142,7 +143,7 @@ namespace Parting {
 		void FinalizeTexture(SharedPtr<TextureData<APITag>> texture, CommonRenderPasses<APITag>* passes, Imp_CommandList* commandList);
 
 
-		void ProcessRenderingThreadCommands(CommonRenderPasses<APITag>& passes, float timeLimitMilliseconds);
+		bool ProcessRenderingThreadCommands(CommonRenderPasses<APITag>& passes, float timeLimitMilliseconds);
 
 		void TextureLoaded(SharedPtr<TextureData<APITag>> texture);
 
@@ -153,6 +154,8 @@ namespace Parting {
 		SharedPtr<LoadedTexture<APITag>> LoadTextureFromFileAsync(const Path& path, bool sRGB, tf::Executor& executor);
 
 		SharedPtr<LoadedTexture<APITag>> LoadTextureFromFileDeferred(const Path& path, bool sRGB);
+
+		void LoadingFinished(void) { this->m_CommandList.Reset(); }
 
 	private:
 		static bool LoadDDSTextureFromMemory(TextureData<APITag>& textureInfo);
@@ -188,7 +191,7 @@ namespace Parting {
 
 	Uint32 GetMipLevelsNum(Uint32 width, Uint32 height) {
 		Uint32 size{ Math::Min(width, height) };
-		return static_cast<Uint32>(logf(static_cast<float>(size)) / logf(2.0f)) + 1;
+		return static_cast<Uint32>(Math::Log2f(static_cast<float>(size)) / Math::Log2f(2.0f)) + 1;
 	}
 
 	template<RHI::APITagConcept APITag>
@@ -237,7 +240,7 @@ namespace Parting {
 	}
 
 	template<RHI::APITagConcept APITag>
-	inline void TextureCache<APITag>::ProcessRenderingThreadCommands(CommonRenderPasses<APITag>& passes, float timeLimitMilliseconds) {
+	inline bool TextureCache<APITag>::ProcessRenderingThreadCommands(CommonRenderPasses<APITag>& passes, float timeLimitMilliseconds) {
 		Uint32 commandsExecuted{ 0 };
 
 		while (true) {
@@ -255,10 +258,21 @@ namespace Parting {
 			if (nullptr != texturedata->Data) {
 				++commandsExecuted;
 
+				if (nullptr == this->m_CommandList)
+					this->m_CommandList = this->m_Device->CreateCommandList();
+
 				this->m_CommandList->Open();
+
+				this->FinalizeTexture(texturedata, &passes, this->m_CommandList.Get());
+
+				this->m_CommandList->Close();
+				this->m_Device->ExecuteCommandList(this->m_CommandList);
+				this->m_Device->RunGarbageCollection();
 
 			}
 		}
+
+		return commandsExecuted > 0;
 
 	}
 
@@ -297,7 +311,7 @@ namespace Parting {
 
 		if (this->m_MaxTextureSize > 0 &&
 			Math::Max(originalWidth, originalHeight) > this->m_MaxTextureSize &&
-			texture->Texture.IsRenderTarget &&
+			texture->IsRenderTarget &&
 			texture->Dimension == RHI::RHITextureDimension::Texture2D) {
 			if (originalWidth >= originalHeight) {
 				scaledHeight = originalHeight * this->m_MaxTextureSize / originalWidth;
@@ -313,79 +327,76 @@ namespace Parting {
 
 		RHI::RHITextureDesc textureDesc{
 			.Extent{.Width{ scaledWidth }, .Height{ scaledHeight }, .Depth{ texture->Extent.Depth } },
-			.ArrayCount{ texture->MipLevelCount },
-			.MipLevelCount{ this->m_GenerateMipmaps && texture->Texture.IsRenderTarget && passes ? GetMipLevelsNum(scaledWidth, scaledHeight) : texture->MipLevelCount },
+			.ArrayCount{ texture->ArrayCount },
+			.MipLevelCount{ this->m_GenerateMipmaps && texture->IsRenderTarget && nullptr != passes ? GetMipLevelsNum(scaledWidth, scaledHeight) : texture->MipLevelCount },
 			.Format { texture->Format },
 			.Dimension{ texture->Dimension },
-			.DebugName{ texture->Texture.FilePath },
-			.IsRenderTarget{ texture->Texture.IsRenderTarget },
+			.DebugName{ texture->FilePath },
+			.IsRenderTarget{ texture->IsRenderTarget },
 		};
-		texture->Texture->Texture = m_Device->createTexture(textureDesc);
+		texture->Texture = m_Device->CreateTexture(textureDesc);
 
-		commandList->BeginTrackingTextureState(texture->Texture->Texture, RHI::g_AllSubResourceSet, RHI::RHIResourceState::Common);
+		commandList->BeginTrackingTextureState(texture->Texture, RHI::g_AllSubResourceSet, RHI::RHIResourceState::Common);
 
-		/*	if (this->m_DescriptorTableManager)
-				texture->BindlessDescriptor = this->m_DescriptorTableManager->CreateDescriptorHandle(nvrhi::BindingSetItem::Texture_SRV(0, texture->texture));*/
+		if (nullptr != this->m_DescriptorTableManager)
+			/*texture->BindlessDescriptor = this->m_DescriptorTableManager->CreateDescriptorHandle(nvrhi::BindingSetItem::Texture_SRV(0, texture->texture));*/
+			ASSERT(false);
 
-				/*if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
-					RHI::RHITextureDesc tempTextureDesc{
-						.Extent{.Width{ originalWidth }, .Height{ originalHeight }, .Depth{ textureDesc.depth } },
-						.ArrayCount{ textureDesc.arraySize },
-						.MipLevelCount{ 1 },
-						.Format{ texture->format },
-						.Dimension{ textureDesc.dimension },
+		if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
+			RHI::RHITextureDesc tempTextureDesc{
+				.Extent{.Width{ originalWidth }, .Height{ originalHeight }, .Depth{ textureDesc.Extent.Depth } },
+				.ArrayCount{ textureDesc.ArrayCount },
+				.Format{ textureDesc.Format },
+				.Dimension{ textureDesc.Dimension }
+			};
 
-					};
+			RHI::RefCountPtr<Imp_Texture> tempTexture{ m_Device->CreateTexture(tempTextureDesc) };
+			ASSERT(nullptr != tempTexture);
 
-					RHI::RefCountPtr<Imp_Texture> tempTexture{ m_Device->CreateTexture(tempTextureDesc) };
-					ASSERT(nullptr != tempTexture);
+			commandList->BeginTrackingTextureState(tempTexture, RHI::g_AllSubResourceSet, RHI::RHIResourceState::Common);
 
-					commandList->BeginTrackingTextureState(tempTexture, RHI::g_AllSubResourceSet, RHI::RHIResourceState::Common);
+			for (Uint32 arraySlice = 0; arraySlice < texture->ArrayCount; ++arraySlice) {
+				const TextureSubresourceData& layout{ texture->DataLayout[arraySlice][0] };
 
-					for (Uint32 arraySlice = 0; arraySlice < texture->arraySize; ++arraySlice){
-						const TextureSubresourceData& layout = texture->dataLayout[arraySlice][0];
+				commandList->WriteTexture(tempTexture, arraySlice, 0, dataPointer + layout.DataOffset, layout.RowPitch, layout.DepthPitch);
+			}
 
-						commandList->WriteTexture(tempTexture, arraySlice, 0, dataPointer + layout.DataOffset,layout.RowPitch, layout.DepthPitch);
-					}
+			RHI::RefCountPtr<Imp_FrameBuffer> framebuffer{ this->m_Device->CreateFrameBuffer(RHI::RHIFrameBufferDescBuilder<APITag>{}
+				.AddColorAttachment(texture->Texture)
+				.Build()
+			) };
 
-					nvrhi::FramebufferHandle framebuffer = m_Device->createFramebuffer(nvrhi::FramebufferDesc()
-						.addColorAttachment(texture->texture));
-
-					passes->BlitTexture(commandList, framebuffer, tempTexture);
+			passes->BLITTexture(commandList, framebuffer, tempTexture);
+		}
+		else {
+			for (Uint32 arraySlice = 0; arraySlice < texture->ArrayCount; ++arraySlice)
+				for (Uint32 mipLevel = 0; mipLevel < texture->MipLevelCount; ++mipLevel) {
+					const TextureSubresourceData& layout = texture->DataLayout[arraySlice][mipLevel];
+					commandList->WriteTexture(texture->Texture, arraySlice, mipLevel, dataPointer + layout.DataOffset, layout.RowPitch, layout.DepthPitch);
 				}
-				else
-				{
-					for (uint32_t arraySlice = 0; arraySlice < texture->arraySize; arraySlice++)
-					{
-						for (uint32_t mipLevel = 0; mipLevel < texture->mipLevels; mipLevel++)
-						{
-							const TextureSubresourceData& layout = texture->dataLayout[arraySlice][mipLevel];
+		}
 
-							commandList->writeTexture(texture->texture, arraySlice, mipLevel, dataPointer + layout.dataOffset,
-								layout.rowPitch, layout.depthPitch);
-						}
-					}
-				}
+		texture->Data.reset();
 
-				texture->data.reset();
+		for (Uint32 mipLevel = texture->MipLevelCount; mipLevel < textureDesc.MipLevelCount; ++mipLevel) {
+			RHI::RHIFrameBufferAttachment<APITag> MipLevelAttachment{
+				.Texture{ texture->Texture },
+				.Subresources{.BaseMipLevel{ mipLevel }}
+			};
+			RHI::RefCountPtr<Imp_FrameBuffer> framebuffer{ this->m_Device->CreateFrameBuffer(RHI::RHIFrameBufferDescBuilder<APITag>{}
+				.AddColorAttachment(MipLevelAttachment)
+				.Build()
+			) };
 
-				for (uint mipLevel = texture->mipLevels; mipLevel < textureDesc.mipLevels; mipLevel++)
-				{
-					nvrhi::FramebufferHandle framebuffer = m_Device->createFramebuffer(nvrhi::FramebufferDesc()
-						.addColorAttachment(nvrhi::FramebufferAttachment()
-							.setTexture(texture->texture)
-							.setArraySlice(0)
-							.setMipLevel(mipLevel)));
+			passes->BLITTexture(commandList, BLITParameters<APITag>{
+				.TargetFrameBuffer{ framebuffer },
+					.SourceTexture{ texture->Texture },
+					.SourceMip{ mipLevel - 1 }
+			});
+		}
 
-					BlitParameters blitParams;
-					blitParams.sourceTexture = texture->texture;
-					blitParams.sourceMip = mipLevel - 1;
-					blitParams.targetFramebuffer = framebuffer;
-					passes->BlitTexture(commandList, blitParams);
-				}
-
-				commandList->setPermanentTextureState(texture->texture, nvrhi::ResourceStates::ShaderResource);
-				commandList->commitBarriers();*/
+		commandList->SetPermanentTextureState(texture->Texture, RHI::RHIResourceState::ShaderResource);
+		commandList->CommitBarriers();
 
 		++this->m_TexturesFinalized;
 	}

@@ -173,7 +173,11 @@ namespace Parting {
 	inline void ApplicationBase<APITag>::SceneLoaded(void) {
 		if (nullptr != this->m_TextureCache) {
 			this->m_TextureCache->ProcessRenderingThreadCommands(*this->m_CommonPasses, 0.0f);
+
+			this->m_TextureCache->LoadingFinished();
 		}
+
+		this->m_SceneLoaded = true;
 	}
 
 }

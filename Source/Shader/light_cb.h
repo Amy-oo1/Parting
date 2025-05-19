@@ -43,11 +43,11 @@ struct LightProbeConstants final {
 	float DiffuseScale;
 	float SpecularScale;
 	float MipLevels;
-	float _adding1;
+	float Padding1;
 
 	Uint32 DiffuseArrayIndex;
 	Uint32 SpecularArrayIndex;
-	Math::VecU2 _Padding2;
+	Math::VecU2 Padding2;
 
 	Math::MatF44 FrustumPlanes[6];
 };

@@ -113,18 +113,24 @@ namespace RHI {
 					ConstantColor == this->DestBlendAlpha || OneMinusConstantColor == this->DestBlendAlpha;
 			}
 
-			STDNODISCARD constexpr bool operator==(const RHIRenderTarget& other)const {
-				return
-					this->BlendEnable == other.BlendEnable &&
-					this->SrcBlend == other.SrcBlend &&
-					this->DestBlend == other.DestBlend &&
-					this->BlendOp == other.BlendOp &&
-					this->SrcBlendAlpha == other.SrcBlendAlpha &&
-					this->DestBlendAlpha == other.DestBlendAlpha &&
-					this->BlendOpAlpha == other.BlendOpAlpha &&
-					this->ColorWriteMask == other.ColorWriteMask;
-			}
-			STDNODISCARD constexpr bool operator!=(const RHIRenderTarget& other)const { return !(*this == other); }
+			STDNODISCARD constexpr bool operator==(const RHIRenderTarget&)const noexcept = default;
+			STDNODISCARD constexpr bool operator!=(const RHIRenderTarget&)const noexcept = default;
+
+			struct RHIRenderTargetHash final {
+				Uint64 operator()(const RHIRenderTarget& s) const {
+					Uint64 hash{ 0 };
+					hash = HashCombine(hash, HashBool{}(s.BlendEnable));
+					hash = HashCombine(hash, Hash<RHIBlendFactor>{}(s.SrcBlend));
+					hash = HashCombine(hash, Hash<RHIBlendFactor>{}(s.DestBlend));
+					hash = HashCombine(hash, Hash<RHIBlendOp>{}(s.BlendOp));
+					hash = HashCombine(hash, Hash<RHIBlendFactor>{}(s.SrcBlendAlpha));
+					hash = HashCombine(hash, Hash<RHIBlendFactor>{}(s.DestBlendAlpha));
+					hash = HashCombine(hash, Hash<RHIBlendOp>{}(s.BlendOpAlpha));
+					hash = HashCombine(hash, Hash<RHIColorMask>{}(s.ColorWriteMask));
+					return hash;
+				}
+			};
+
 		};
 
 		class RHIRenderTargetBuilder final {
@@ -139,34 +145,25 @@ namespace RHI {
 			STDNODISCARD constexpr RHIRenderTargetBuilder& Set_DestBlendAlpha(RHIBlendFactor destBlendAlpha)noexcept { this->m_RenderTarget.DestBlendAlpha = destBlendAlpha; return *this; }
 			STDNODISCARD constexpr RHIRenderTargetBuilder& Set_BlendOpAlpha(RHIBlendOp blendOpAlpha)noexcept { this->m_RenderTarget.BlendOpAlpha = blendOpAlpha; return *this; }
 			STDNODISCARD constexpr RHIRenderTargetBuilder& Set_ColorWriteMask(RHIColorMask colorWriteMask)noexcept { this->m_RenderTarget.ColorWriteMask = colorWriteMask; return *this; }
-			
+
 			STDNODISCARD constexpr RHIRenderTarget Build(void)const noexcept { return this->m_RenderTarget; }
 		private:
 			RHIRenderTarget m_RenderTarget{};
 		};
 
-		Array<RHIRenderTarget, g_MaxRenderTargetCount> RenderTargets{};
-		bool alphaToCoverageEnable{ false };
+		Array<RHIRenderTarget, g_MaxRenderTargetCount> RenderTargets{};//NOTE : All RenderTarget 
+		/*RemoveCV<decltype(g_MaxRenderTargetCount)>::type RenderTargetCount{ 0 };*///see color atta
+		bool AlphaToCoverageEnable{ false };
 
 		STDNODISCARD constexpr bool Is_UsesConstantColor(Uint32 RenderTargetCount)const {
-			for(Uint32 Index=0;Index<RenderTargetCount;++Index)
+			for (Uint32 Index = 0; Index < RenderTargetCount; ++Index)
 				if (this->RenderTargets[Index].Is_UsesConstantColor())
 					return true;
 
 			return false;
 		}
 
-		STDNODISCARD constexpr bool operator==(const RHIBlendState& other)const {
-			if (this->alphaToCoverageEnable != other.alphaToCoverageEnable)
-				return false;
-
-			for (Uint32 Index = 0; Index < g_MaxRenderTargetCount; ++Index)
-				if (this->RenderTargets[Index] != other.RenderTargets[Index])
-					return false;
-
-			return true;
-		}
-
-		STDNODISCARD constexpr bool operator!=(const RHIBlendState& other)const { return !(*this == other); }
+		STDNODISCARD constexpr bool operator==(const RHIBlendState&)const noexcept = default;
+		STDNODISCARD constexpr bool operator!=(const RHIBlendState&)const noexcept = default;
 	};
 }

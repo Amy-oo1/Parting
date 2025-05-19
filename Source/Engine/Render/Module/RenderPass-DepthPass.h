@@ -185,9 +185,9 @@ namespace Parting {
 			.Set_Visibility(RHI::RHIShaderType::Vertex)
 			.Set_RegisterSpace(DepthSapceInput)
 			.Set_RegisterSpaceIsDescriptorSet(true)//not support d3d11.... i do not lean d3d11 forever
-			.AddBinding(RHI::RHIBindingLayoutItem::BuildStructuredBuffer_SRV(DepthBindingInstanceBuffer))
-			.AddBinding(RHI::RHIBindingLayoutItem::BuildRawBuffer_SRV(DepthBindingVertexBuffer))
-			.AddBinding(RHI::RHIBindingLayoutItem::BuildPushConstants(DepthBindingPushConstants, sizeof(DepthPushConstants)))
+			.AddBinding(RHI::RHIBindingLayoutItem::StructuredBuffer_SRV(DepthBindingInstanceBuffer))
+			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(DepthBindingVertexBuffer))
+			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(DepthBindingPushConstants, sizeof(DepthPushConstants)))
 			.Build()
 		);
 	}
@@ -217,8 +217,8 @@ namespace Parting {
 			.Set_Visibility(RHI::RHIShaderType::Vertex | RHI::RHIShaderType::Pixel)
 			.Set_RegisterSpace(DepthSpaceView)
 			.Set_RegisterSpaceIsDescriptorSet(true)//not support d3d11.... i do not lean d3d11 forever
-			.AddBinding(RHI::RHIBindingLayoutItem::BuildVolatileConstantBuffer(DepthBindingViewConstants))
-			.AddBinding(RHI::RHIBindingLayoutItem::BuildSampler(DepthBindingMaterialSampler))
+			.AddBinding(RHI::RHIBindingLayoutItem::VolatileConstantBuffer(DepthBindingViewConstants))
+			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(DepthBindingMaterialSampler))
 			.Build()
 		) };
 

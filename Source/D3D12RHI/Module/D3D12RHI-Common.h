@@ -113,7 +113,7 @@ namespace RHI::D3D12 {
 			STDNODISCARD D3D12_CPU_DESCRIPTOR_HANDLE Get_CPUHandleShaderVisible(D3D12DescriptorIndex Index)const { return this->Get_Derived()->Imp_Get_CPUHandleShaderVisible(Index); }
 
 			STDNODISCARD ID3D12DescriptorHeap* Get_Heap(void)const { return this->Get_Derived()->Imp_Get_Heap(); }
-			STDNODISCARD ID3D12DescriptorHeap* Get_ShaderVisibleHeap(void)const { return this->Get_Derived()->Imp_Get_Heap(); }
+			STDNODISCARD ID3D12DescriptorHeap* Get_ShaderVisibleHeap(void)const { return this->Get_Derived()->Imp_Get_ShaderVisibleHeap(); }
 
 		private:
 			STDNODISCARD Derived* Get_Derived(void)noexcept { return static_cast<Derived*>(this); }
@@ -486,7 +486,20 @@ namespace RHI::D3D12 {
 		}
 	}
 
-
+	D3D12_COMPARISON_FUNC ConvertComparisonFunc(RHIComparisonFunc value) {
+		switch (value) {
+			using enum RHIComparisonFunc;
+		case Never:return D3D12_COMPARISON_FUNC_NEVER;
+		case Less:return D3D12_COMPARISON_FUNC_LESS;
+		case Equal:return D3D12_COMPARISON_FUNC_EQUAL;
+		case LessOrEqual:return D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		case Greater:return D3D12_COMPARISON_FUNC_GREATER;
+		case NotEqual:return D3D12_COMPARISON_FUNC_NOT_EQUAL;
+		case GreaterOrEqual:return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+		case Always:return D3D12_COMPARISON_FUNC_ALWAYS;
+		default:ASSERT(false); return D3D12_COMPARISON_FUNC_NEVER;
+		}
+	}
 
 	void D3D12WaitForFence(ID3D12Fence* fence, uint64_t value, HANDLE event) {
 		// Test if the fence has been reached
@@ -762,13 +775,13 @@ namespace RHI::D3D12 {
 			if (endOfDataInChunk <= this->m_CurrentChunk->BufferSize) {
 				this->m_CurrentChunk->WritePointer = endOfDataInChunk;
 
-				if (pBuffer)
+				if (nullptr != pBuffer)
 					*pBuffer = this->m_CurrentChunk->D3D12Buffer.Get();
-				if (pOffset)
+				if (nullptr != pOffset)
 					*pOffset = alignedOffset;
-				if (pCpuVA && this->m_CurrentChunk->CPUVirtualAddress)
+				if (nullptr != pCpuVA && nullptr != this->m_CurrentChunk->CPUVirtualAddress)
 					*pCpuVA = static_cast<char*>(this->m_CurrentChunk->CPUVirtualAddress) + alignedOffset;
-				if (pGpuVA && this->m_CurrentChunk->GPUVirtualAddress)
+				if (nullptr != pGpuVA && 0 != this->m_CurrentChunk->GPUVirtualAddress)
 					*pGpuVA = this->m_CurrentChunk->GPUVirtualAddress + alignedOffset;
 
 				return true;
@@ -781,7 +794,7 @@ namespace RHI::D3D12 {
 		auto completedInstance{ m_Queue->m_LastCompletedInstance };
 
 		for (auto It = this->m_ChunkPool.begin(); It != this->m_ChunkPool.end(); ++It) {
-			auto& chunk{ *It };
+			auto chunk{ *It };
 			if (VersionGetSubmitted(chunk->Version) && VersionGetInstance(chunk->Version) <= completedInstance)
 				chunk->Version = 0;
 
@@ -797,14 +810,14 @@ namespace RHI::D3D12 {
 			this->m_ChunkPool.push_back(chunkToRetire);
 
 		if (nullptr == this->m_CurrentChunk) {
-			Uint64 sizeToAllocate{ Math::Align(Math::Max(size, m_DefaultChunkSize), BufferChunk::c_SizeAlignment) };
+			Uint64 sizeToAllocate{ Math::Align(Math::Max(size, this->m_DefaultChunkSize), BufferChunk::c_SizeAlignment) };
 
 			if ((this->m_MemoryLimit > 0) && (this->m_AllocatedMemory + sizeToAllocate > this->m_MemoryLimit)) {
 				if (this->m_IsScratchBuffer) {
 					SharedPtr<BufferChunk> bestChunk{ nullptr };
 					for (const auto& candidateChunk : this->m_ChunkPool) {
 						if (candidateChunk->BufferSize >= sizeToAllocate) {
-							if (nullptr==bestChunk) {
+							if (nullptr == bestChunk) {
 								bestChunk = candidateChunk;
 
 								continue;
@@ -823,12 +836,12 @@ namespace RHI::D3D12 {
 						}
 					}
 
-					if (nullptr==bestChunk)
+					if (nullptr == bestChunk)
 						return false;
 
 
-					m_ChunkPool.erase(STDFind(m_ChunkPool.begin(), m_ChunkPool.end(), bestChunk));
-					m_CurrentChunk = bestChunk;
+					this->m_ChunkPool.erase(STDFind(this->m_ChunkPool.begin(), this->m_ChunkPool.end(), bestChunk));
+					this->m_CurrentChunk = bestChunk;
 
 					// Place a UAV barrier on the chunk.
 					D3D12_RESOURCE_BARRIER barrier{
@@ -848,7 +861,7 @@ namespace RHI::D3D12 {
 		this->m_CurrentChunk->Version = currentVersion;
 		this->m_CurrentChunk->WritePointer = size;
 
-		if (nullptr!=pBuffer) 
+		if (nullptr != pBuffer)
 			*pBuffer = this->m_CurrentChunk->D3D12Buffer.Get();
 		if (nullptr != pOffset)
 			*pOffset = 0;

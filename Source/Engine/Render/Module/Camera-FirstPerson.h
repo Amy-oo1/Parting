@@ -44,16 +44,39 @@ namespace Parting {
 		~FirstPersonCamera(void) = default;
 
 	public:
+		void LookAt(Math::VecF3 cameraPos, Math::VecF3 cameraTarget, Math::VecF3 cameraUp = Math::VecF3{ 0.f, 1.f, 0.f });
 
 
 	private:
 
 
 	private:
+		Math::VecF2 m_MousePos{ Math::VecF2::Zero() };
+		Math::VecF2 m_MousePosPrev{ Math::VecF2::Zero() };
+		Math::VecF2 m_MouseMotionAccumulator{ Math::VecF2::Zero() };
+		Math::VecF3 m_CameraMovePrev{ Math::VecF3::Zero() };
+		Math::VecF3 m_CameraMoveDamp{ Math::VecF3::Zero() };
+		bool m_IsDragging{ false };
 
 
 	private:
 
 
 	};
+
+
+
+	void FirstPersonCamera::LookAt(Math::VecF3 cameraPos, Math::VecF3 cameraTarget, Math::VecF3 cameraUp) {
+		this->BaseLookAt(cameraPos, cameraTarget, cameraUp);
+
+		this->m_MouseMotionAccumulator = 0.f;
+		this->m_CameraMoveDamp = 0.f;
+		this->m_CameraMovePrev = 0.f;
+
+	}
+
+
+
+
+
 }

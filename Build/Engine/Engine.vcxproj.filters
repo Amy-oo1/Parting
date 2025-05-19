@@ -144,6 +144,21 @@
     <ClInclude Include="..\..\Source\Engine\Render\Module\DDSFile.h">
       <Filter>Render\Module</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\SceneGraph-Ini.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\UIRender.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\UIRender-RHI.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\UIRender-Console.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\UIRender-UIRender.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\Engine\EnghineSrcEmpty.cpp" />

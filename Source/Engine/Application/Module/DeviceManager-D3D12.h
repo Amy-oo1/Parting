@@ -232,7 +232,7 @@ namespace Parting {
 		{
 			DXGI_ADAPTER_DESC aDesc;
 			this->m_DXGIAdapter->GetDesc(&aDesc);
-			this->m_RendererString = WstringtoString(WString{ aDesc.Description });
+			this->m_RendererString = WStringToString(WString{ aDesc.Description });
 		}
 
 

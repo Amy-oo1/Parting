@@ -68,7 +68,6 @@ namespace RHI {
 		ConstantBuffer,
 		VolatileConstantBuffer,
 		Sampler,
-		RayTracingAccelStruct,
 		PushConstants,
 		SamplerFeedbackTexture_UAV,
 
@@ -84,19 +83,18 @@ namespace RHI {
 		STDNODISCARD constexpr bool operator==(const RHIBindingLayoutItem& other) const noexcept { return Slot == other.Slot && Type == other.Type && ByteSize == other.ByteSize; }
 		STDNODISCARD constexpr bool operator!=(const RHIBindingLayoutItem& other) const noexcept { return !(*this == other); }
 
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildTexture_SRV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::Texture_SRV } }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildTexture_UAV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::Texture_UAV } }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildTypedBuffer_SRV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::TypedBuffer_SRV } }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildTypedBuffer_UAV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::TypedBuffer_UAV } }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildStructuredBuffer_SRV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::StructuredBuffer_SRV } }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildStructuredBuffer_UAV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::StructuredBuffer_UAV } }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildRawBuffer_SRV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::RawBuffer_SRV} }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildRawBuffer_UAV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::RawBuffer_UAV} }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildConstantBuffer(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::ConstantBuffer } }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildVolatileConstantBuffer(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::VolatileConstantBuffer } }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildSampler(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::Sampler } }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildRayTracingAccelStruct(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::RayTracingAccelStruct } }; }
-		STDNODISCARD static constexpr RHIBindingLayoutItem BuildPushConstants(Uint32 solt, Uint16 Size) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::PushConstants }, .ByteSize { Size } }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem Texture_SRV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::Texture_SRV } }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem Texture_UAV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::Texture_UAV } }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem TypedBuffer_SRV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::TypedBuffer_SRV } }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem TypedBuffer_UAV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::TypedBuffer_UAV } }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem StructuredBuffer_SRV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::StructuredBuffer_SRV } }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem StructuredBuffer_UAV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::StructuredBuffer_UAV } }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem RawBuffer_SRV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::RawBuffer_SRV} }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem RawBuffer_UAV(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::RawBuffer_UAV} }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem ConstantBuffer(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::ConstantBuffer } }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem VolatileConstantBuffer(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::VolatileConstantBuffer } }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem Sampler(Uint32 solt) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::Sampler } }; }
+		STDNODISCARD static constexpr RHIBindingLayoutItem PushConstants(Uint32 solt, Uint16 Size) noexcept { return RHIBindingLayoutItem{ .Slot{ solt }, .Type { RHIResourceType::PushConstants }, .ByteSize { Size } }; }
 
 
 	};
@@ -216,15 +214,21 @@ namespace RHI {
 			Uint64 RawData[2];
 		};
 
+		STDNODISCARD constexpr bool operator==(const RHIBindingSetItem<APITag>& other) const noexcept {
+			return
+				this->ResourcePtr == other.ResourcePtr &&
+				this->Slot == other.Slot &&
+				this->Type == other.Type &&
+				this->Dimension == other.Dimension &&
+				this->Format == other.Format &&
+				this->RawData[0] == other.RawData[0] &&
+				this->RawData[1] == other.RawData[1];
+		}
+		STDNODISCARD constexpr bool operator!=(const RHIBindingSetItem<APITag>& other) const noexcept { return !(*this == other); }
 
+		STDNODISCARD static constexpr decltype(auto) None(Uint32 Slot = 0) { return RHIBindingSetItem<APITag>{.Slot{ Slot }, .RawData{ 0, 0 } }; }
 
-
-		STDNODISCARD constexpr bool operator==(const RHIBindingSetItem<APITag>&) const noexcept = default;
-		STDNODISCARD constexpr bool operator!=(const RHIBindingSetItem<APITag>&) const noexcept = default;
-
-		STDNODISCARD static constexpr auto None(Uint32 Slot = 0) { return RHIBindingSetItem<APITag>{.Slot{ Slot }, .RawData{ 0, 0 } }; }
-
-		STDNODISCARD static constexpr auto Texture_SRV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Texture* texture, RHIFormat format = RHIFormat::UNKNOWN, RHITextureSubresourceSet subresources = g_AllSubResourceSet, RHITextureDimension dimension = RHITextureDimension::Unknown) {
+		STDNODISCARD static constexpr decltype(auto) Texture_SRV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Texture* texture, RHIFormat format = RHIFormat::UNKNOWN, RHITextureSubresourceSet subresources = g_AllSubResourceSet, RHITextureDimension dimension = RHITextureDimension::Unknown) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ texture },
 					.Slot{ Slot },
@@ -235,7 +239,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr auto Texture_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Texture* texture, RHIFormat format = RHIFormat::UNKNOWN, RHITextureSubresourceSet subresources = g_AllSubResourceSet, RHITextureDimension dimension = RHITextureDimension::Unknown) {
+		STDNODISCARD static constexpr decltype(auto) Texture_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Texture* texture, RHIFormat format = RHIFormat::UNKNOWN, RHITextureSubresourceSet subresources = g_AllSubResourceSet, RHITextureDimension dimension = RHITextureDimension::Unknown) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ texture },
 					.Slot{ Slot },
@@ -246,7 +250,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr auto TypedBuffer_SRV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIFormat format = RHIFormat::UNKNOWN, RHIBufferRange range = RHIBufferRange{ .Offset{ 0 }, .ByteSize{ 0 } }) {
+		STDNODISCARD static constexpr decltype(auto) TypedBuffer_SRV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIFormat format = RHIFormat::UNKNOWN, RHIBufferRange range = RHIBufferRange{ .Offset{ 0 }, .ByteSize{ 0 } }) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ buffer },
 					.Slot{ Slot },
@@ -256,7 +260,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr auto TypedBuffer_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIFormat format = RHIFormat::UNKNOWN, RHIBufferRange range = g_EntireBuffer) {
+		STDNODISCARD static constexpr decltype(auto) TypedBuffer_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIFormat format = RHIFormat::UNKNOWN, RHIBufferRange range = g_EntireBuffer) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ buffer },
 					.Slot{ Slot },
@@ -266,7 +270,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr auto ConstantBuffer(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIBufferRange range = g_EntireBuffer) {
+		STDNODISCARD static constexpr decltype(auto) ConstantBuffer(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIBufferRange range = g_EntireBuffer) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ buffer },
 					.Slot{ Slot },
@@ -275,7 +279,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr auto Sampler(Uint32 Slot, RHITypeTraits<APITag>::Imp_Sampler* sampler) {
+		STDNODISCARD static constexpr decltype(auto) Sampler(Uint32 Slot, RHITypeTraits<APITag>::Imp_Sampler* sampler) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ sampler },
 					.Slot{ Slot },
@@ -284,7 +288,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr auto StructuredBuffer_SRV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIFormat format = RHIFormat::UNKNOWN, RHIBufferRange range = g_EntireBuffer) {
+		STDNODISCARD static constexpr decltype(auto) StructuredBuffer_SRV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIFormat format = RHIFormat::UNKNOWN, RHIBufferRange range = g_EntireBuffer) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ buffer },
 					.Slot{ Slot },
@@ -294,7 +298,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr auto StructuredBuffer_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIFormat format = RHIFormat::UNKNOWN, RHIBufferRange range = g_EntireBuffer) {
+		STDNODISCARD static constexpr decltype(auto) StructuredBuffer_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIFormat format = RHIFormat::UNKNOWN, RHIBufferRange range = g_EntireBuffer) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ buffer },
 					.Slot{ Slot },
@@ -304,7 +308,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr auto RawBuffer_SRV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIBufferRange range = g_EntireBuffer) {
+		STDNODISCARD static constexpr decltype(auto) RawBuffer_SRV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIBufferRange range = g_EntireBuffer) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ buffer },
 					.Slot{ Slot },
@@ -313,7 +317,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr auto RawBuffer_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIBufferRange range = g_EntireBuffer) {
+		STDNODISCARD static constexpr decltype(auto) RawBuffer_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Buffer* buffer, RHIBufferRange range = g_EntireBuffer) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ buffer },
 					.Slot{ Slot },
@@ -322,7 +326,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr auto PushConstants(Uint32 Slot, Uint32 ByteSize) {
+		STDNODISCARD static constexpr decltype(auto) PushConstants(Uint32 Slot, Uint32 ByteSize) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ nullptr },
 					.Slot{ Slot },
@@ -331,7 +335,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr auto SamplerFeedbackTexture_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_SamplerFeedbackTexture* texture) {
+		STDNODISCARD static constexpr decltype(auto) SamplerFeedbackTexture_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_SamplerFeedbackTexture* texture) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ texture },
 					.Slot{ Slot },
@@ -341,13 +345,27 @@ namespace RHI {
 		}
 
 
+		struct BindingSetItemHash final {
+			Uint64 operator()(const RHIBindingSetItem<APITag>& item) {
+				Uint64 hash{ 0 };
+				/*	hash = HashCombine(hash, HashVoidPtr::operator()(item.ResourcePtr.valueless_by_exception));*/
+				hash = HashCombine(hash, HashUint32{}(item.Slot));
+				hash = HashCombine(hash, Hash<RHIResourceType>{}(item.Type));
+				hash = HashCombine(hash, Hash<RHITextureDimension>{}(item.Dimension));
+				hash = HashCombine(hash, Hash<RHIFormat>{}(item.Format));
+				hash = HashCombine(hash, HashUint64{}(item.RawData[0]));
+				hash = HashCombine(hash, HashUint64{}(item.RawData[1]));
+				return hash;
+			}
+		};
+
 	};
 
 	// describes a set of bindings across all stages of the pipeline
 	// (not all bindings need to be present in the set, but the set must be defined by a single BindingSetItem object)
 	PARTING_EXPORT template<APITagConcept APITag>
 		struct RHIBindingSetDesc final {
-		Array<RHIBindingSetItem<APITag>, g_MaxBindingsPerLayout> Bindings;
+		Array<RHIBindingSetItem<APITag>, g_MaxBindingsPerLayout> Bindings{};
 		RemoveCV<decltype(g_MaxBindingsPerLayout)>::type BindingCount{ 0 };
 
 		// Enables automatic liveness tracking of this binding set by nvrhi command lists.
@@ -356,11 +374,25 @@ namespace RHI {
 		bool TrackLiveness{ true };
 
 		STDNODISCARD constexpr bool operator==(const RHIBindingSetDesc<APITag>& other) const noexcept {
-			return
-				this->BindingCount == other.BindingCount &&
-				this->Bindings == other.Bindings;
+			if (this->BindingCount != other.BindingCount)
+				return false;
+
+			for (Uint32 Index = 0; Index < this->BindingCount; ++Index)
+				if (this->Bindings[Index] != other.Bindings[Index])
+					return false;
+			return true;
 		}
 		STDNODISCARD constexpr bool operator!=(const RHIBindingSetDesc<APITag>& other) const noexcept { return !(*this == other); }
+
+		struct BindingSetHash final {
+			Uint64 operator ()(const RHIBindingSetDesc<APITag>& desc)const noexcept {
+				Uint64 hash{ 0 };
+				for (Uint32 Index = 0; Index < desc.BindingCount; ++Index)
+					hash = HashCombine(hash, typename RHIBindingSetItem<APITag>::BindingSetItemHash{}(desc.Bindings[Index]));
+
+				return hash;
+			}
+		};
 
 		void AddBinding(const RHIBindingSetItem<APITag>& value) { this->Bindings[this->BindingCount++] = value; }//TODO Move
 	};
@@ -368,10 +400,10 @@ namespace RHI {
 	/*PARTING_EXPORT*/ template<APITagConcept APITag>
 	class RHIBindingSetDescBuilder final {
 	public:
-		STDNODISCARD constexpr RHIBindingSetDescBuilder& Reset(void) { this->m_Desc = RHIBindingSetDesc<APITag>{}; return *this; }
+		constexpr RHIBindingSetDescBuilder& Reset(void) { this->m_Desc = RHIBindingSetDesc<APITag>{}; return *this; }
 
-		STDNODISCARD RHIBindingSetDescBuilder& Set_TrackLiveness(bool trackLiveness) { this->m_Desc.TrackLiveness = trackLiveness; return *this; }
-		STDNODISCARD constexpr RHIBindingSetDescBuilder& AddBinding(const RHIBindingSetItem<APITag>& binding) { this->m_Desc.Bindings[this->m_Desc.BindingCount++] = binding; return *this; }
+		constexpr RHIBindingSetDescBuilder& Set_TrackLiveness(bool trackLiveness) { this->m_Desc.TrackLiveness = trackLiveness; return *this; }
+		constexpr RHIBindingSetDescBuilder& AddBinding(const RHIBindingSetItem<APITag>& binding) { this->m_Desc.Bindings[this->m_Desc.BindingCount++] = binding; return *this; }
 
 		STDNODISCARD constexpr const RHIBindingSetDesc<APITag>& Build(void) { return this->m_Desc; }
 

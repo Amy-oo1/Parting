@@ -28,6 +28,8 @@ PARTING_IMPORT Utility;
 #include "Core/Concurrent/Module/Concurrent.h"
 #include "Core/Container/Module/Container.h"
 #include "Core/String/Module/String.h"
+#include "Core/Algorithm/Module/Algorithm.h"
+#include "Core/VectorMath/Module/VectorMath.h"
 #include "Core/VFS/Module/VFS.h"
 #include "Core/Logger/Module/Logger.h"
 
@@ -42,15 +44,45 @@ namespace Parting {
 		PARTING_VIRTUAL ~BaseCamera(void) = default;
 
 	public:
+
+		STDNODISCARD const Math::AffineF3& Get_WorldToViewMatrix(void) const { return this->m_MatWorldToView; }
+		STDNODISCARD const Math::AffineF3& Get_TranslatedWorldToViewMatrix(void) const { return this->m_MatTranslatedWorldToView; }
+		STDNODISCARD const Math::VecF3& Get_Position(void) const { return this->m_CameraPos; }
+		STDNODISCARD const Math::VecF3& Get_Dir(void) const { return this->m_CameraDir; }
+		STDNODISCARD const Math::VecF3& Get_Up(void) const { return this->m_CameraUp; }
+
+
+
+
 		void Set_MoveSpeed(float value) { this->m_MoveSpeed = value; }
 		void Set_RotateSpeed(float value) { this->m_RotateSpeed = value; }
 
-	private:
-	
+
+
+
+		void BaseLookAt(Math::VecF3 cameraPos, Math::VecF3 cameraTarget, Math::VecF3 cameraUp);
+
+		void UpdateWorldToView(void);
 
 	private:
+
+
+
+	protected:
+		Math::AffineF3 m_MatWorldToView{ Math::AffineF3::Identity() };
+		Math::AffineF3 m_MatTranslatedWorldToView{ Math::AffineF3::Identity() };
+
+		Math::VecF3 m_CameraPos{ 0.f };				// in worldspace
+		Math::VecF3 m_CameraDir{ 1.f, 0.f, 0.f };	// normalized
+		Math::VecF3 m_CameraUp{ 0.f, 1.f, 0.f };	// normalized
+		Math::VecF3 m_CameraRight{ 0.f, 0.f, 1.f }; // normalized
+
+
 		float m_MoveSpeed{ 1.f };		// movement speed in units/second
 		float m_RotateSpeed{ 0.005f };	// mouse sensitivity in radians/pixel
+
+
+
 
 
 	private:
@@ -60,4 +92,35 @@ namespace Parting {
 
 
 	};
+
+
+
+
+
+
+
+
+
+	template<typename Derived>
+	inline void BaseCamera<Derived>::BaseLookAt(Math::VecF3 cameraPos, Math::VecF3 cameraTarget, Math::VecF3 cameraUp) {
+		this->m_CameraPos = cameraPos;
+		this->m_CameraDir = Math::Normalize(cameraTarget - cameraPos);
+		this->m_CameraUp = Math::Normalize(cameraUp);
+		this->m_CameraRight = Math::Normalize(Math::Cross(this->m_CameraDir, this->m_CameraUp));
+		this->m_CameraUp = Math::Normalize(Math::Cross(this->m_CameraRight, this->m_CameraDir));
+
+		this->UpdateWorldToView();
+	}
+
+	template<typename Derived>
+	inline void BaseCamera<Derived>::UpdateWorldToView(void) {
+		this->m_MatTranslatedWorldToView = Math::AffineF3::FromCols(
+			this->m_CameraRight,
+			this->m_CameraUp,
+			this->m_CameraDir,
+			0.f
+		);
+		this->m_MatWorldToView = Math::Translation(-this->m_CameraPos) * this->m_MatTranslatedWorldToView;
+	}
+
 }

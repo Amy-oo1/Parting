@@ -132,6 +132,7 @@ namespace RHI {
 		using Imp_InputLayout = typename RHITypeTraits<APITag>::Imp_InputLayout;
 		using Imp_Shader = typename RHITypeTraits<APITag>::Imp_Shader;
 		using Imp_BindingLayout = typename RHITypeTraits<APITag>::Imp_BindingLayout;
+
 		RHIPrimitiveType PrimType{ RHIPrimitiveType::TriangleList };
 		Uint32 PatchControlPoints{ 0 };
 		RefCountPtr<Imp_InputLayout> InputLayout{ nullptr };
@@ -156,20 +157,27 @@ namespace RHI {
 		using Imp_Shader = typename RHITypeTraits<APITag>::Imp_Shader;
 		using Imp_BindingLayout = typename RHITypeTraits<APITag>::Imp_BindingLayout;
 		public:
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Reset(void) { this->m_Desc = RHIGraphicsPipelineDesc{}; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Reset(void) { this->m_Desc = RHIGraphicsPipelineDesc{}; return *this; }
 
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_PrimType(RHIPrimitiveType primType) { this->m_Desc.PrimType = primType; return *this; }
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_PatchControlPoints(Uint32 patchControlPoints) { this->m_Desc.PatchControlPoints = patchControlPoints; return *this; }
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_InputLayout(Imp_InputLayout* inputLayout) { this->m_Desc.InputLayout = inputLayout; return *this; }
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_VS(Imp_Shader* shader) { this->m_Desc.VS = shader; return *this; }
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_HS(Imp_Shader* shader) { this->m_Desc.HS = shader; return *this; }
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_DS(Imp_Shader* shader) { this->m_Desc.DS = shader; return *this; }
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_GS(Imp_Shader* shader) { this->m_Desc.GS = shader; return *this; }
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_PS(Imp_Shader* shader) { this->m_Desc.PS = shader; return *this; }
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_RenderState(const RHIRenderState& renderState) { this->m_Desc.RenderState = renderState; return *this; }
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& Set_ShadingRateState(const RHIVariableRateShadingState& shadingRateState) { this->m_Desc.ShadingRateState = shadingRateState; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_PrimType(RHIPrimitiveType primType) { this->m_Desc.PrimType = primType; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_PatchControlPoints(Uint32 patchControlPoints) { this->m_Desc.PatchControlPoints = patchControlPoints; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_InputLayout(RefCountPtr<Imp_InputLayout> inputLayout) { this->m_Desc.InputLayout = inputLayout; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_VS(Imp_Shader* shader) { this->m_Desc.VS = shader; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_HS(Imp_Shader* shader) { this->m_Desc.HS = shader; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_DS(Imp_Shader* shader) { this->m_Desc.DS = shader; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_GS(Imp_Shader* shader) { this->m_Desc.GS = shader; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_PS(Imp_Shader* shader) { this->m_Desc.PS = shader; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_RenderState(const RHIRenderState& renderState) { this->m_Desc.RenderState = renderState; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_ShadingRateState(const RHIVariableRateShadingState& shadingRateState) { this->m_Desc.ShadingRateState = shadingRateState; return *this; }
 
-			STDNODISCARD constexpr RHIGraphicsPipelineDescBuilder& AddBindingLayout(Imp_BindingLayout* bindingLayout) { this->m_Desc.BindingLayouts[this->m_Desc.BindingLayoutCount++] = bindingLayout; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& AddBindingLayout(RefCountPtr<Imp_BindingLayout> bindingLayout) { this->m_Desc.BindingLayouts[this->m_Desc.BindingLayoutCount++] = bindingLayout; return *this; }
+
+			constexpr RHIGraphicsPipelineDescBuilder& Set_CullMode(RHI::RHIRasterCullMode cullMode) { this->m_Desc.RenderState.RasterState.CullMode = cullMode; return *this; }
+
+			constexpr RHIGraphicsPipelineDescBuilder& Set_DepthTestEnable(bool enable) { this->m_Desc.RenderState.DepthStencilState.DepthTestEnable = enable; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_StencilEnable(bool enable) { this->m_Desc.RenderState.DepthStencilState.StencilEnable = enable; return *this; }
+
+			constexpr RHIGraphicsPipelineDescBuilder& Set_BlendState(Uint32 Index, const RHIBlendState::RHIRenderTarget& renderTarget) { this->m_Desc.RenderState.BlendState.RenderTargets[Index] = renderTarget; return *this; }
 
 			STDNODISCARD constexpr const RHIGraphicsPipelineDesc<APITag>& Build(void) { return this->m_Desc; }
 		private:

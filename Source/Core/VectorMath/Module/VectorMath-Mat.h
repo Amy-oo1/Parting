@@ -30,8 +30,8 @@ PARTING_IMPORT Utility;
 namespace Math {
 
 #define MATRIX_MEMBERS(Type, RowCount, ColCount) \
-		using Array_T = Type[RowCount*ColCount]; \
-		using ConstArray_T = const Type[RowCount*ColCount]; \
+		using Array_T = Type(&)[RowCount*ColCount]; \
+		using ConstArray_T = const Type(&)[RowCount*ColCount]; \
 		Mat(void)= default; \
 		Mat(const Type* ValuePtr) { for (Uint32 Index = 0; Index < RowCount*ColCount; ++Index) this->m_Data[Index] = ValuePtr[Index]; } \
 		operator Array_T (void) { return this->m_Data; } \
@@ -62,6 +62,7 @@ namespace Math {
 		operator ConstArray_T (void) const { return this->m_Data; }
 		Vec<Type, ColCount>& operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, ColCount>&>(this->m_Data[RowIndex * ColCount]); }
 		const Vec<Type, ColCount>& operator [] (Uint32 RowIndex) const { return reinterpret_cast<const Vec<Type, ColCount>&>(this->m_Data[RowIndex * ColCount]); }
+
 		Vec<Type, RowCount> Col(int ColIndex) const { Vec<Type, RowCount> Value; for (Uint32 RowIndex = 0; RowIndex < RowCount; RowIndex++) Value[RowIndex] = this->m_Data[RowIndex * ColCount + ColIndex]; return Value; }
 
 		static Mat Diagonal(Vec<Type, (RowCount < ColCount) ? RowCount : ColCount> Value) {
@@ -194,13 +195,14 @@ namespace Math {
 			M10{ matrix.M10 }, M11{ matrix.M11 }, M12{ matrix.M12 },
 			M20{ matrix.M20 }, M21{ matrix.M21 }, M22{ matrix.M22 } {
 		}
-		template<typename OtherType>explicit constexpr Mat(const Mat<OtherType, 3, 3>& matrix) { for (Uint32 Index = 0; Index < 9; ++Index) this->m_Data[Index] = Type{ matrix.m_Data[Index] }; }
+		template<typename OtherType>explicit constexpr Mat(const Mat<OtherType, 3, 3>& matrix) { for (Uint32 Index = 0; Index < 9; ++Index) this->m_Data[Index] = static_cast<Type>(matrix.m_Data[Index]); }
 
 		operator Array_T (void) { return this->m_Data; }
 		operator ConstArray_T (void) const { return this->m_Data; }
 
 		Vec<Type, 3>& operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, 3> &>(this->m_Data[RowIndex * 3]); }
 		const Vec<Type, 3>& operator [] (Uint32 RowIndex) const { return reinterpret_cast<const Vec<Type, 3> &>(this->m_Data[RowIndex * 3]); }
+
 		Vec<Type, 3> Col(int ColIndex) const { Vec<Type, 3> Value; for (Uint32 RowIndex = 0; RowIndex < 3; RowIndex++) Value[RowIndex] = this->m_Data[RowIndex * 3 + ColIndex]; return Value; }
 
 		constexpr static Mat FromCols(const Vec<Type, 3>& col0, const Vec<Type, 3>& col1, const Vec<Type, 3>& col2) {
@@ -872,10 +874,10 @@ namespace Math {
 
 	template <typename Type>	Vec<Type, 4> operator * (const Vec<Type, 4>& a, const Mat<Type, 4, 4>& b) {
 		Vec<Type, 4> result;
-		result.X = a.X * b.Row0.X + a.Y * b.Row1.X + a.Z * b.Row2.X + a.W * b.row3.X;
-		result.Y = a.X * b.Row0.Y + a.Y * b.Row1.Y + a.Z * b.Row2.Y + a.W * b.row3.Y;
-		result.Z = a.X * b.Row0.Z + a.Y * b.Row1.Z + a.Z * b.Row2.Z + a.W * b.row3.Z;
-		result.W = a.X * b.Row0.W + a.Y * b.Row1.W + a.Z * b.Row2.W + a.W * b.row3.W;
+		result.X = a.X * b.Row0.X + a.Y * b.Row1.X + a.Z * b.Row2.X + a.W * b.Row3.X;
+		result.Y = a.X * b.Row0.Y + a.Y * b.Row1.Y + a.Z * b.Row2.Y + a.W * b.Row3.Y;
+		result.Z = a.X * b.Row0.Z + a.Y * b.Row1.Z + a.Z * b.Row2.Z + a.W * b.Row3.Z;
+		result.W = a.X * b.Row0.W + a.Y * b.Row1.W + a.Z * b.Row2.W + a.W * b.Row3.W;
 		return result;
 	}
 
@@ -891,7 +893,7 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type, Uint32 N>Mat<Type, N, N> Pow(const Mat<Type, N, N>& a, Uint32 b) {
+	template <typename Type, Uint32 N>Mat<Type, N, N> Pow(const Mat<Type, N, N>& a, Int32 b) {
 		if (b <= 0)
 			return Mat<Type, N, N>::Identity();
 		if (b == 1)
@@ -945,7 +947,7 @@ namespace Math {
 				}
 		}
 
-		// At this point, a should have been transformed to the identity matrix,
+		// At this point, a should have been transformed to the identity Mat,
 		// and b should have been transformed into the inverse of the original a.
 		return b;
 	}
@@ -961,7 +963,7 @@ namespace Math {
 		// Calculate determinant using Gaussian elimination
 
 		Mat<Type, N, N> a = m;
-		Type result{ 1 };
+		Type result{ static_cast<Type>(1) };
 
 		// Loop through columns
 		for (Uint32 ColIndex = 0; ColIndex < N; ++ColIndex) {
@@ -971,13 +973,13 @@ namespace Math {
 				if (Abs(a[RowIndex][ColIndex]) > Abs(a[pivot][ColIndex]))
 					pivot = RowIndex;
 			if (Abs(a[pivot][ColIndex]) < Epsilon)
-				return Type{ 0 };
+				return Type{ static_cast<Type>(0) };
 
 			// Interchange rows to put pivot element on the diagonal,
 			// if it is not already there
 			if (pivot != ColIndex) {
 				Swap(a[ColIndex], a[pivot]);
-				result *= Type{ -1 };
+				result *= Type{ static_cast<Type>(-1) };
 			}
 
 			// Divide the whole row by the pivot element
@@ -996,7 +998,7 @@ namespace Math {
 				}
 		}
 
-		// At this point, a should have been transformed to the identity matrix,
+		// At this point, a should have been transformed to the identity Mat,
 		// and we've accumulated the original a's determinant in result.
 		return result;
 	}
@@ -1014,7 +1016,7 @@ namespace Math {
 	}
 
 	template <typename Type, int N>Type Trace(const Mat<Type, N, N>& a) {
-		Type result{ 0 };
+		Type result{};//NOTE : default initialization "0" not static_cast
 		for (Uint32 RowIndex = 0; RowIndex < N; ++RowIndex)
 			result += a[RowIndex][RowIndex];
 		return result;

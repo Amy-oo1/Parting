@@ -24,7 +24,7 @@
 #define BINDLESS_H_
 
 //#include "material_cb.h"
-//
+
 struct GeometryData {
 	Uint32 NumIndices;
 	Uint32 NumVertices;
@@ -48,7 +48,7 @@ struct GeometryData {
 	Uint32 pad2;
 };
 
-//static const uint InstanceFlags_CurveDisjointOrthogonalTriangleStrips = 0x00000001u;
+static const Uint32 InstanceFlags_CurveDisjointOrthogonalTriangleStrips = 0x00000001u;
 
 struct InstanceData {
 	Uint32 Flags;

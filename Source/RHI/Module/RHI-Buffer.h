@@ -61,8 +61,8 @@ namespace RHI {
 		bool IsIndexBuffer{ false };
 		bool IsConstantBuffer{ false };
 		bool IsDrawIndirectArgs{ false };
-		bool IsAccelStructBuildInput{ false };
-		bool IsAccelStructStorage{ false };
+		bool IsAccelStructBuildInput{ false };//TO move
+		bool IsAccelStructStorage{ false };//TO move
 		bool IsShaderBindingTable{ false };
 
 		// A dynamic/upload buffer whose contents only live in the current command list
