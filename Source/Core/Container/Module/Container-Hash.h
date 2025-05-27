@@ -57,5 +57,21 @@ PARTING_EXPORT using HashWStringView = std::hash<std::wstring_view>;
 //TODO Set More
 
 PARTING_EXPORT constexpr Uint64 HashCombine(Uint64 seed, Uint64 value) { //TODO good ?
-    return seed ^ (value + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+	return seed ^ (value + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+}
+
+namespace std {
+	template<typename TypeFirst, typename TypeSecond>
+	struct hash<std::pair<TypeFirst, TypeSecond>> {
+		size_t operator()(const std::pair<TypeFirst, TypeSecond>& pair) const {
+			return ::HashCombine(Hash<TypeFirst>{}(pair.first), ::Hash<TypeSecond>{}(pair.second));
+		}
+	};
+
+	template<typename TypeFirst, typename TypeSecond>
+	struct hash<std::tuple<TypeFirst, TypeSecond>> {
+		size_t operator()(const std::tuple<TypeFirst, TypeSecond>& tuple) const {
+			return ::HashCombine(Hash<TypeFirst>{}(std::get<0>(tuple)), ::Hash<TypeSecond>{}(std::get<1>(tuple)));
+		}
+	};
 }

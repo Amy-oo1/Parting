@@ -44,7 +44,6 @@ namespace Parting {
 		PARTING_VIRTUAL ~BaseCamera(void) = default;
 
 	public:
-
 		STDNODISCARD const Math::AffineF3& Get_WorldToViewMatrix(void) const { return this->m_MatWorldToView; }
 		STDNODISCARD const Math::AffineF3& Get_TranslatedWorldToViewMatrix(void) const { return this->m_MatTranslatedWorldToView; }
 		STDNODISCARD const Math::VecF3& Get_Position(void) const { return this->m_CameraPos; }
@@ -64,6 +63,8 @@ namespace Parting {
 
 		void UpdateWorldToView(void);
 
+
+
 	private:
 
 
@@ -82,6 +83,14 @@ namespace Parting {
 		float m_RotateSpeed{ 0.005f };	// mouse sensitivity in radians/pixel
 
 
+	public:
+		void KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) { this->Get_Derived()->Imp_KeyboardUpdate(key, scancode, action, mods); }
+		void MousePosUpdate(double xpos, double ypos) { this->Get_Derived()->Imp_MousePosUpdate(xpos, ypos); }
+		void MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) { this->Get_Derived()->Imp_MouseButtonUpdate(button, action, mods); }
+		void MouseScrollUpdate(double xoffset, double yoffset) { this->Get_Derived()->Imp_MouseScrollUpdate(xoffset, yoffset); }
+		void JoystickButtonUpdate(Int32 button, bool pressed) { this->Get_Derived()->Imp_JoystickButtonUpdate(button, pressed); }
+		void JoystickUpdate(Int32 axis, float value) { this->Get_Derived()->Imp_JoystickUpdate(axis, value); }
+		void Animate(float deltaT) { this->Get_Derived()->Imp_Animate(deltaT); }
 
 
 
@@ -89,7 +98,13 @@ namespace Parting {
 		STDNODISCARD Derived* Get_Derived(void)noexcept { return static_cast<Derived*>(this); }
 		STDNODISCARD const Derived* Get_Derived(void)const noexcept { return static_cast<const Derived*>(this); }
 	private:
-
+		void Imp_KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) { LOG_ERROR("Empty Imp"); }
+		void Imp_MousePosUpdate(double xpos, double ypos) { LOG_ERROR("Empty Imp"); }
+		void Imp_MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) { LOG_ERROR("Empty Imp"); }
+		void Imp_MouseScrollUpdate(double xoffset, double yoffset) { LOG_ERROR("Empty Imp"); }
+		void Imp_JoystickButtonUpdate(Int32 button, bool pressed) { LOG_ERROR("Empty Imp"); }
+		void Imp_JoystickUpdate(Int32 axis, float value) { LOG_ERROR("Empty Imp"); }
+		void Imp_Animate(float deltaT) { LOG_ERROR("Empty Imp"); }
 
 	};
 

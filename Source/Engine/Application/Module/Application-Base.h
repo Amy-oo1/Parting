@@ -51,6 +51,7 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	class ApplicationBase : public IRenderPass<APITag> {
+		using Imp_FrameBuffer = typename RHI::RHITypeTraits<APITag>::Imp_FrameBuffer;
 	protected:
 		ApplicationBase(typename ManageTypeTraits<APITag>::DeviceManager* deviceManager) :
 			IRenderPass<APITag>{ deviceManager } {}
@@ -76,7 +77,8 @@ namespace Parting {
 	protected:
 		virtual void SceneUnloading(void) { this->m_SceneLoaded = false; }
 		virtual void SceneLoaded(void);
-
+		virtual void RenderSplashScreen(Imp_FrameBuffer* framebuffer) {}
+		virtual void RenderScene(Imp_FrameBuffer* framebuffer) {}
 
 
 	protected:
@@ -91,6 +93,8 @@ namespace Parting {
 
 	private:
 
+	public:
+		void Render(Imp_FrameBuffer* framebuffer) override;
 
 
 	};
@@ -178,6 +182,35 @@ namespace Parting {
 		}
 
 		this->m_SceneLoaded = true;
+	}
+
+	template<RHI::APITagConcept APITag>
+	void  ApplicationBase<APITag>::Render(Imp_FrameBuffer* framebuffer) {
+		if (nullptr != this->m_TextureCache) {
+			bool anyTexturesProcessed{ this->m_TextureCache->ProcessRenderingThreadCommands(*this->m_CommonPasses, 20.f) };
+
+			if (this->m_SceneLoaded && !anyTexturesProcessed)
+				this->m_AllTexturesFinalized = true;
+		}
+		else
+			this->m_AllTexturesFinalized = true;
+
+		if (!this->m_SceneLoaded || !this->m_AllTexturesFinalized) {
+			this->RenderSplashScreen(framebuffer);
+
+			return;
+		}
+
+		if (this->m_SceneLoaded && this->m_SceneLoadingThread) {
+			this->m_SceneLoadingThread->join();
+			this->m_SceneLoadingThread.reset();
+
+			// SceneLoaded() would already get called from 
+			// BeginLoadingScene() in case of synchronous loads
+			this->SceneLoaded();
+		}
+
+		this->RenderScene(framebuffer);
 	}
 
 }

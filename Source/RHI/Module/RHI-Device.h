@@ -108,7 +108,7 @@ namespace RHI {
 
 
 	public:
-		RHIFormat ChooseFormat(RHIFormatSupport requiredFeatures, const RHIFormat* requestedFormats, Uint32 requestedFormatCount) {
+		RHIFormat ChooseFormat(RHIFormatSupport requiredFeatures, const RHIFormat* requestedFormats, Uint32 requestedFormatCount) {//TODO :use Span
 			ASSERT(requestedFormats != nullptr);
 			ASSERT(requestedFormatCount > 0);
 
@@ -117,6 +117,25 @@ namespace RHI {
 					return requestedFormats[Index];
 
 			return RHIFormat::UNKNOWN;
+		}
+
+		STDNODISCARD Tuple<RefCountPtr<Imp_BindingLayout>, RefCountPtr<Imp_BindingSet>> CreateBindingLayoutAndSet(RHIShaderType visibility, Uint32 registerSpace, const RHIBindingSetDesc<APITag>& bindingSetDesc) {
+			RHIBindingLayoutDesc layoutDesc{ .Visibility = visibility, .RegisterSpace = registerSpace };
+
+			for (const RHIBindingSetItem<APITag>& binding : Span<const RHIBindingSetItem<APITag>>{ bindingSetDesc.Bindings.data(), bindingSetDesc.BindingCount }) {
+				layoutDesc.Bindings[layoutDesc.BindingCount] = RHIBindingLayoutItem{ .Slot{ binding.Slot }, .Type{ binding.Type } };
+
+				if (binding.Type == RHIResourceType::PushConstants)
+					layoutDesc.Bindings[layoutDesc.BindingCount].ByteSize = static_cast<Uint16>(binding.Range.ByteSize);
+
+				++layoutDesc.BindingCount;
+			}
+
+			RefCountPtr<Imp_BindingLayout> layout{ this->CreateBindingLayout(layoutDesc) };
+			ASSERT(nullptr != layout);
+			RefCountPtr<Imp_BindingSet> set{ this->CreateBindingSet(bindingSetDesc, layout.Get()) };
+
+			return { layout, set };
 		}
 
 	public:
@@ -195,7 +214,7 @@ namespace RHI {
 
 		STDNODISCARD RefCountPtr<Imp_BindingLayout> CreateBindingLayout(const RHIBindingLayoutDesc& desc) { return this->Get_Derived()->Imp_CreateBindingLayout(desc); }
 
-		STDNODISCARD RefCountPtr<Imp_BindingLayout> CreateBindingLayout(const RHIBindlessLayoutDesc& desc) { return this->Get_Derived()->Imp_CreateBindingLayout(desc); }
+		STDNODISCARD RefCountPtr<Imp_BindingLayout> CreateBindingLayout(const RHIBindlessLayoutDesc& desc) { return this->Get_Derived()->Imp_CreateBindingLayout(desc); }//TODO :
 
 		STDNODISCARD RefCountPtr<Imp_BindingSet> CreateBindingSet(const RHIBindingSetDesc<APITag>& desc, Imp_BindingLayout* layout) { return this->Get_Derived()->Imp_CreateBindingSet(desc, layout); }
 
@@ -215,7 +234,7 @@ namespace RHI {
 
 		void RunGarbageCollection(void) { this->Get_Derived()->Imp_RunGarbageCollection(); }
 
-		STDNODISCARD bool QueryFeatureSupport(RHIFeature feature, void* outData, Uint64 outDataSize) { return this->Get_Derived()->Imp_QueryFeatureSupport(feature, outData, outDataSize); }
+		STDNODISCARD bool QueryFeatureSupport(RHIFeature feature, void* outData = nullptr, Uint64 outDataSize = 0) { return this->Get_Derived()->Imp_QueryFeatureSupport(feature, outData, outDataSize); }
 
 		STDNODISCARD RHIFormatSupport QueryFormatSupport(RHIFormat format) { return this->Get_Derived()->Imp_QueryFormatSupport(format); }
 

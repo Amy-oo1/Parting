@@ -122,7 +122,7 @@ namespace Math {
 		constexpr Vec(void) = default;
 		constexpr Vec(Type Scale) : X{ Scale }, Y{ Scale } {}
 		constexpr Vec(Type _x, Type _y) : X{ _x }, Y{ _y } {}
-		template<typename OtherType> explicit constexpr Vec(const Vec<OtherType, 2>& other) : X{ static_cast<OtherType>(other.X) }, Y{ static_cast<OtherType>(other.Y) } {}
+		template<typename OtherType> explicit constexpr Vec(const Vec<OtherType, 2>& other) : X{ static_cast<Type>(other.X) }, Y{ static_cast<Type>(other.Y) } {}
 		constexpr Vec(const Vec<Type, 3>& other) : X{ other.X }, Y{ other.Y } {}
 		constexpr Vec(const Vec<Type, 4>& other) : X{ other.X }, Y{ other.Y } {}
 		Vec(const Type* VaulePtr) { for (Uint32 Index = 0; Index < 2; ++Index) this->Data()[Index] = VaulePtr[Index]; }
@@ -133,7 +133,7 @@ namespace Math {
 		const Type& operator [] (Uint32 Index) const { return this->Data()[Index]; }
 
 		Type* Data(void) { return &this->X; }
-		const Type* Data(void) const { return &this->Y; }
+		const Type* Data(void) const { return &this->X; }
 
 		constexpr static Vec Zero(void) { return Vec{ static_cast<Type>(0) }; }
 	};
@@ -434,10 +434,10 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type, Uint32 N>Vec<int, N> Round(const Vec<Type, N>& a) {
-		Vec<Uint32, N> result;
+	template <typename Type, Uint32 N>Vec<Type, N> Round(const Vec<Type, N>& a) {
+		Vec<Type, N> result;
 		for (Uint32 Index = 0; Index < N; ++Index)
-			result[Index] = Round(a[Index]);
+			result[Index] = static_cast<Type>(Math::Round(a[Index]));
 		return result;
 	}
 

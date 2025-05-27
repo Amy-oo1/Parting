@@ -23,32 +23,30 @@
 #ifndef SKY_CB_H
 #define SKY_CB_H
 
-struct ProceduralSkyShaderParameters
-{
-    float3 directionToLight;
-    float angularSizeOfLight;
+struct ProceduralSkyShaderParameters {
+	Math::VecF3						DirectionToLight;
+	float							AngularSizeOfLight;
 
-    float3 lightColor;
-    float glowSize;
+	Math::VecF3						LightColor;
+	float							GlowSize;
 
-    float3 skyColor;
-    float glowIntensity;
+	Math::VecF3						SkyColor;
+	float							GlowIntensity;
 
-    float3 horizonColor;
-    float horizonSize;
+	Math::VecF3						HorizonColor;
+	float							HorizonSize;
 
-    float3 groundColor;
-    float glowSharpness;
+	Math::VecF3						GroundColor;
+	float							GlowSharpness;
 
-    float3 directionUp;
-    float pad1;
+	Math::VecF3						DirectionUp;
+	float							Padding1;
 };
 
-struct SkyConstants
-{
-    float4x4 matClipToTranslatedWorld;
+struct SkyConstants {
+	Math::MatF44					MatClipToTranslatedWorld;
 
-    ProceduralSkyShaderParameters params;
+	ProceduralSkyShaderParameters	Params;
 };
 
 #endif // SKY_CB_H

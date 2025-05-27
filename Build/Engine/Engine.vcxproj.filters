@@ -46,6 +46,9 @@
     <Filter Include="ThridParty\ShaderMake">
       <UniqueIdentifier>{7e953743-a431-44d8-b05e-7d0cfe0f8b74}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThridParty\ImGui">
+      <UniqueIdentifier>{00cea224-57e8-4678-868d-783a09964522}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\Engine\Application\Module\Application.h">
@@ -159,11 +162,62 @@
     <ClInclude Include="..\..\Source\Engine\Render\Module\UIRender-UIRender.h">
       <Filter>Render\Module</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-ToneMappingPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\GBuffer.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-TemporalAntiAliasingPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-ForwardShadingPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-GBufferFillPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-PixelReadbackPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-MipMapGenPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-DeferredLightingPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-SkyPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-LightProbeProcessingPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Render\Module\RenderPass-BloomPass.h">
+      <Filter>Render\Module</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\Engine\EnghineSrcEmpty.cpp" />
     <ClCompile Include="..\..\Source\ThirdParty\ShaderMake\src\ShaderBlob.cpp">
       <Filter>ThridParty\ShaderMake</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ThirdParty\imgui\imgui.cpp">
+      <Filter>ThridParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ThirdParty\imgui\imgui_draw.cpp">
+      <Filter>ThridParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ThirdParty\imgui\backends\imgui_impl_dx12.cpp">
+      <Filter>ThridParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ThirdParty\imgui\backends\imgui_impl_glfw.cpp">
+      <Filter>ThridParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ThirdParty\imgui\imgui_tables.cpp">
+      <Filter>ThridParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ThirdParty\imgui\imgui_widgets.cpp">
+      <Filter>ThridParty\ImGui</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

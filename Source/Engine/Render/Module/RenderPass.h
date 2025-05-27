@@ -26,7 +26,18 @@ PARTING_EXPORT PARTING_SUBMODE_IMPORT(SSAOPass)
 
 #include "Engine/Render/Module/RenderPass-Base.h"
 #include "Engine/Render/Module/RenderPass-DepthPass.h"
+#include "Engine/Render/Module/RenderPass-ToneMappingPass.h"
+#include "Engine/Render/Module/RenderPass-TemporalAntiAliasingPass.h"
+#include "Engine/Render/Module/RenderPass-ForwardShadingPass.h"
+#include "Engine/Render/Module/RenderPass-GBufferFillPass.h"
+#include "Engine/Render/Module/RenderPass-PixelReadbackPass.h"
+#include "Engine/Render/Module/RenderPass-MipMapGenPass.h"
+#include "Engine/Render/Module/RenderPass-DeferredLightingPass.h"
+#include "Engine/Render/Module/RenderPass-SkyPass.h"
 #include "Engine/Render/Module/RenderPass-SSAOPass.h"
+#include "Engine/Render/Module/RenderPass-LightProbeProcessingPass.h"
+#include "Engine/Render/Module/RenderPass-BloomPass.h"
+
 
 #endif // PARTING_MODULE_BUILD
 

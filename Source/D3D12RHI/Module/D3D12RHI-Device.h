@@ -496,10 +496,10 @@ namespace RHI::D3D12 {
 
 	RefCountPtr<Texture> Device::Imp_CreateTexture(const RHITextureDesc& d) {
 		auto rd{ Texture::ConvertTextureDesc(d) };
-		D3D12_HEAP_PROPERTIES heapProps = {};
+		D3D12_HEAP_PROPERTIES heapProps{};
 		D3D12_HEAP_FLAGS heapFlags = D3D12_HEAP_FLAG_NONE;
 
-		bool isShared = false;
+		bool isShared{ false };
 		if (RHISharedResourceFlag::None != (d.SharedResourceFlags & RHISharedResourceFlag::Shared)) {
 			heapFlags |= D3D12_HEAP_FLAG_SHARED;
 			isShared = true;
@@ -517,7 +517,7 @@ namespace RHI::D3D12 {
 		auto clearValue{ d.ClearValue.has_value() ? Texture::ConvertTextureClearValue(d) : D3D12_CLEAR_VALUE{} };
 
 		if (d.IsVirtual)
-			return RefCountPtr<Texture>::Create(texture);
+			return RefCountPtr<Texture>::Create(texture);// The resource is created in BindTextureMemory
 
 		if (d.IsTiled)
 			this->m_Context.Device->CreateReservedResource(
@@ -564,7 +564,7 @@ namespace RHI::D3D12 {
 	}
 
 	bool Device::Imp_BindTextureMemory(Texture* texture, Heap* heap, Uint64 offset) {
-		if (texture->m_Resource)
+		if (nullptr != texture->m_Resource)
 			return false; // already bound
 
 		if (!texture->m_Desc.IsVirtual)
@@ -854,9 +854,9 @@ namespace RHI::D3D12 {
 		if (d.IsVirtual)
 			return RefCountPtr<Buffer>::Create(buffer);
 
-		D3D12_HEAP_PROPERTIES heapProps = {};
-		D3D12_HEAP_FLAGS heapFlags = D3D12_HEAP_FLAG_NONE;
-		D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON;
+		D3D12_HEAP_PROPERTIES heapProps{};
+		D3D12_HEAP_FLAGS heapFlags{ D3D12_HEAP_FLAG_NONE };
+		D3D12_RESOURCE_STATES initialState{ D3D12_RESOURCE_STATE_COMMON };
 
 		bool isShared{ false };
 		if (RHISharedResourceFlag::None != (d.sharedResourceFlags & RHISharedResourceFlag::Shared)) {

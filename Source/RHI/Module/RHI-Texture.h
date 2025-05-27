@@ -206,8 +206,8 @@ namespace RHI {
 			};
 
 			if (!issinglemiplevel) {
-				const Int64 LastMipLevelPlusOne{ static_cast<Int64>(Math::Min(this->BaseMipLevel + this->MipLevelCount, desc.MipLevelCount)) };//Note 
-				Re.MipLevelCount = static_cast<Uint32>(Math::Max(static_cast<Int64>(0), LastMipLevelPlusOne - this->BaseMipLevel));//TODO :
+				const Uint64 LastMipLevelPlusOne{ Math::Min<Uint64>(static_cast<Uint64>(this->BaseMipLevel) + this->MipLevelCount, desc.MipLevelCount) };
+				Re.MipLevelCount = static_cast<Uint32>(Math::Max<Uint64>(0, LastMipLevelPlusOne - static_cast<Uint64>(this->BaseMipLevel)));
 			}
 
 			switch (desc.Dimension) {
@@ -240,15 +240,13 @@ namespace RHI {
 
 	Function<Uint64(const RHITextureSubresourceSet&)> g_TextureSubresourceSetHash = [](const RHITextureSubresourceSet& set) noexcept {
 		Uint64 hash{ 0 };
-		hash = HashCombine(hash, set.BaseMipLevel);
-		hash = HashCombine(hash, set.MipLevelCount);
-		hash = HashCombine(hash, set.BaseArraySlice);
-		hash = HashCombine(hash, set.ArraySliceCount);
+		hash = HashCombine(hash, HashUint32{}(set.BaseMipLevel));
+		hash = HashCombine(hash, HashUint32{}(set.MipLevelCount));
+		hash = HashCombine(hash, HashUint32{}(set.BaseArraySlice));
+		hash = HashCombine(hash, HashUint32{}(set.ArraySliceCount));
 
 		return hash;
 		};
-
-
 
 	Function<Uint64(const RHITextureBindingKey&)> g_TextureBindingKeyHash = [](const RHITextureBindingKey& key)noexcept {
 		// Hash function for RHITextureBindingKey
@@ -264,6 +262,28 @@ namespace RHI {
 
 	template<typename Value>
 	using RHITextureBindingMap = UnorderedMap<RHITextureBindingKey, Value, decltype(g_TextureBindingKeyHash)>;
+
+	template<APITagConcept APITag>
+	struct RHITextureSubresourcesKey final {
+		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
+		Imp_Texture* Texture{ nullptr };
+		RHITextureSubresourceSet Subresources;
+
+		STDNODISCARD constexpr bool operator==(const RHITextureSubresourcesKey<APITag>&) const noexcept = default;
+		STDNODISCARD constexpr bool operator!=(const RHITextureSubresourcesKey<APITag>&) const noexcept = default;
+
+		struct Hash final {
+			Uint64 operator()(const RHITextureSubresourcesKey<APITag>& key) const noexcept {
+				Uint64 hash{ 0 };
+				hash = ::HashCombine(hash, ::HashVoidPtr{}(key.Texture));
+				hash = ::HashCombine(hash, g_TextureSubresourceSetHash(key.Subresources));
+				return hash;
+			}
+		};
+
+	};
+
+
 
 	PARTING_EXPORT HEADER_INLINE constexpr RHITextureSubresourceSet g_AllSubResourceSet{
 		.BaseMipLevel{ 0 },

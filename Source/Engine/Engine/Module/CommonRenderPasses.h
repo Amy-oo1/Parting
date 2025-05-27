@@ -50,6 +50,8 @@ namespace Parting {
 	class DepthPass;
 
 
+	constexpr Uint32 c_MaxRenderPassConstantBufferVersions{ 16 };
+
 	enum class BLITSampler :Uint8 {
 		Point,
 		Linear,
@@ -104,9 +106,9 @@ namespace Parting {
 			struct PSOCacheKeyHash {
 				Uint64 operator ()(const PSOCacheKey& s) const {
 					Uint64 hash{ 0 };
-					hash = HashCombine(hash, typename RHI::RHIFrameBufferInfo<APITag>::RHIFrameBufferInfoHash{}(s.FrameBufferInfo));
-					hash = HashCombine(hash, HashVoidPtr{}(s.Shader));
-					hash = HashCombine(hash, RHI::RHIBlendState::RHIRenderTarget::RHIRenderTargetHash{}(s.BlendState));
+					hash = ::HashCombine(hash, typename RHI::RHIFrameBufferInfo<APITag>::RHIFrameBufferInfoHash{}(s.FrameBufferInfo));
+					hash = ::HashCombine(hash, HashVoidPtr{}(s.Shader));
+					hash = ::HashCombine(hash, RHI::RHIBlendState::RHIRenderTarget::RHIRenderTargetHash{}(s.BlendState));
 					return hash;
 				}
 			};
@@ -226,12 +228,12 @@ namespace Parting {
 			ASSERT(nullptr != params.TargetFrameBuffer);
 			ASSERT(nullptr != params.SourceTexture);
 
-			const RHI::RHIFrameBufferDesc<APITag>& framebufferDesc{ params.TargetFrameBuffer->Get_Desc() };
+			const auto& framebufferDesc{ params.TargetFrameBuffer->Get_Desc() };
 			ASSERT(1 == framebufferDesc.ColorAttachmentCount);
 			ASSERT(framebufferDesc.ColorAttachments[0].Is_Valid());
 
-			const RHI::RHIFrameBufferInfo<APITag>& fbinfo{ params.TargetFrameBuffer->Get_Info() };
-			const RHI::RHITextureDesc& sourceDesc{ params.SourceTexture->Get_Desc() };
+			const auto& fbinfo{ params.TargetFrameBuffer->Get_Info() };
+			const auto& sourceDesc{ params.SourceTexture->Get_Desc() };
 
 			ASSERT(CommonRenderPasses<APITag>::Is_SupportedBLITDimension(sourceDesc.Dimension));
 			bool isTextureArray{ CommonRenderPasses<APITag>::Is_TextureArray(sourceDesc.Dimension) };
@@ -275,6 +277,7 @@ namespace Parting {
 
 				const auto sourceSubresources{ RHI::RHITextureSubresourceSet(params.SourceMip, 1, params.SourceArraySlice, 1) };
 
+				//TODO : TODO ?
 				bindingSetDescBuilder
 					.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(0, sizeof(BLITConstants)))
 					.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(0, params.SourceTexture, params.SourceFormat, sourceSubresources, sourceDimension))
@@ -292,8 +295,7 @@ namespace Parting {
 			commandlist->SetGraphicsState(RHI::RHIGraphicsStateBuilder<APITag>{}
 			.Set_Pipeline(pso)
 				.Set_FrameBuffer(params.TargetFrameBuffer)
-				.AddViewport(targetViewport)
-				.AddScissorRect(RHI::BuildScissorRect(targetViewport))
+				.AddViewportAndScissorRect(targetViewport)
 				.Set_BlendConstantColor(params.BlendConstantColor)
 				.AddBindingSet(sourceBindingSet)
 				.Build()
@@ -338,7 +340,7 @@ namespace Parting {
 		}
 
 
-	private:
+	public://TODO :Pass Friend....
 		RHI::RefCountPtr<Imp_Device> m_Device;
 
 		RHI::RefCountPtr<Imp_Shader> m_FullscreenVS;

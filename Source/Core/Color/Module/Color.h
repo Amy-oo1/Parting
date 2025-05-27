@@ -27,10 +27,10 @@ PARTING_IMPORT Utility;
 class Color final {
 	CONSTEXPR_TRIVIAL_FUNCTION(Color)
 public:
-	constexpr Color(float c) noexcept : R{ c }, G{ c }, B{ c }, A{ 1.0f } {}
+	constexpr Color(float c) noexcept : R{ c }, G{ c }, B{ c }, A{ c } {}
 	constexpr Color(float r, float g, float b, float a = 1.0f)noexcept : R{ r }, G{ g }, B{ b }, A{ a } {}
 
-	constexpr Color(const Math::VecF3& vec)noexcept : R{ vec.X }, G{ vec.Y }, B{ vec.Z }, A{ 1.0f } {}
+	constexpr Color(const Math::VecF3& vec)noexcept : R{ vec.X }, G{ vec.Y }, B{ vec.Z }, A{ 0.f } {}
 	constexpr Color(const Math::VecF4& vec)noexcept : R{ vec.X }, G{ vec.Y }, B{ vec.Z }, A{ vec.W } {}
 
 	operator Math::VecF3(void) { return Math::VecF3{ this->R, this->G, this->B }; }

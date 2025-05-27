@@ -437,7 +437,7 @@ namespace Math {
 
 #define DEFINE_BINARY_OPERATORS(OP) \
 			template <typename Type, Uint32 RowCount, Uint32 ColCount> \
-			Mat<Type, RowCount, ColCount> & operator OP (const Mat<Type, RowCount, ColCount>& a,const Mat<Type, RowCount, ColCount>& b) {\
+			Mat<Type, RowCount, ColCount> operator OP (const Mat<Type, RowCount, ColCount>& a,const Mat<Type, RowCount, ColCount>& b) {\
 			Mat<Type, RowCount, ColCount> result; \
 				for (Uint32 Index = 0; Index < RowCount*ColCount; ++Index) \
 					result.m_Data[Index] = a.m_Data[Index] OP b.m_Data[Index]; \
@@ -546,7 +546,7 @@ namespace Math {
 
 
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount>& operator + (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator + (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] + b.m_Data[Index];
@@ -564,7 +564,7 @@ namespace Math {
 			result.m_Data[Index] = a.m_Data[Index] + b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount>& operator - (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator - (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] - b.m_Data[Index];
@@ -582,7 +582,7 @@ namespace Math {
 			result.m_Data[Index] = a.m_Data[Index] - b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount>& operator & (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator & (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] & b.m_Data[Index];
@@ -600,7 +600,7 @@ namespace Math {
 			result.m_Data[Index] = a.m_Data[Index] & b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount>& operator | (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator | (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] | b.m_Data[Index];
@@ -618,7 +618,7 @@ namespace Math {
 			result.m_Data[Index] = a.m_Data[Index] | b;
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount>& operator ^ (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount> Mat<Type, RowCount, ColCount> operator ^ (const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b) {
 		Mat<Type, RowCount, ColCount> result;
 		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
 			result.m_Data[Index] = a.m_Data[Index] ^ b.m_Data[Index];

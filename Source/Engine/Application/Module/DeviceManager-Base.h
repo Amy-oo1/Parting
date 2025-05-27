@@ -191,6 +191,7 @@ namespace Parting {
 		using Imp_Texture = typename RHI::RHITypeTraits<APITag>::Imp_Texture;
 		using Imp_FrameBuffer = typename RHI::RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using Imp_Device = typename RHI::RHITypeTraits<APITag>::Imp_Device;
+		using Imp_CommandList = typename RHI::RHITypeTraits<APITag>::Imp_CommandList;
 	protected:
 		DeviceManagerBase(void) = default;
 
@@ -207,11 +208,26 @@ namespace Parting {
 
 		void Shutdown(void);
 
+		void RunMessageLoop(void);
+
+		void Set_VsyncEnabled(bool enabled) { this->m_RequestedVSync = enabled; }
+
+
 	public:
 		STDNODISCARD Uint32 Get_FrameIndex(void) const { return this->m_FrameIndex; }
 
+		STDNODISCARD DeviceCreationParameters Get_DeviceParams(void) const { return this->m_DeviceParams; }
 
-	private:
+		STDNODISCARD Tuple<float, float> Get_DPIScaleInfo(void) const { return { this->m_DPIScaleFactorX, this->m_DPIScaleFactorY }; }
+
+		STDNODISCARD Tuple<Uint32, Uint32> Get_WindowDimensions(void)const { return { this->m_DeviceParams.BackBufferWidth, this->m_DeviceParams.BackBufferHeight }; }
+
+
+		STDNODISCARD double Get_AverageFrameTimeSeconds(void) const { return this->m_AverageFrameTime; }
+
+		STDNODISCARD double Get_PreviousFrameTimestamp(void) const { return this->m_PreviousFrameTimestamp; }
+
+	protected:
 		void Animate(double elapsedTime);
 
 		void Render(void);
@@ -228,7 +244,7 @@ namespace Parting {
 
 		void BackBufferResized(void);
 
-	private:
+	protected:
 		void WindowPosCallback(Int32 x, Int32 y);
 		void WindowCloseCallback(void) { LOG_INFO("TODO"); }
 		void WindowRefreshCallback() { LOG_INFO("TODO"); }
@@ -240,7 +256,7 @@ namespace Parting {
 		void MouseButtonUpdate(Int32 button, Int32 action, Int32 mods);
 		void MouseScrollUpdate(double xoffset, double yoffset);
 
-	private:
+	protected:
 		static void ErrorCallback_GLFW(int error, const char* description) { LOG_ERROR("GLFW Error"); }
 		static void WindowPosCallback_GLFW(GLFWwindow* window, Int32 xpos, Int32 ypos) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->WindowPosCallback(xpos, ypos); }
 		static void WindowCloseCallback_GLFW(GLFWwindow* window) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->WindowCloseCallback(); }
@@ -302,7 +318,8 @@ namespace Parting {
 		//NOTE :Frame
 		Uint32 m_FrameIndex{ 0 };
 		Imp_FrameBuffer* m_CurrentFrameBuffer{ nullptr };
-		Vector<RHI::RefCountPtr<Imp_FrameBuffer>> m_SwapChainFrameBuffers;
+		RHI::RefCountPtr<Imp_CommandList> m_CommandList;
+			Vector<RHI::RefCountPtr<Imp_FrameBuffer>> m_SwapChainFrameBuffers;
 
 		//NOTE :Render
 		bool m_SkipRenderOnFirstFrame{ false };
@@ -350,12 +367,12 @@ namespace Parting {
 
 
 	public:
-		virtual void SetLatewarpOptions() {}
-		virtual bool ShouldRenderUnfocused() { return false; }
+		virtual void SetLatewarpOptions(void) {}
+		virtual bool ShouldRenderUnfocused(void) { return false; }
 		virtual void Render(Imp_FrameBuffer* framebuffer) {}
 		virtual void Animate(float fElapsedTimeSeconds) {}
-		virtual void BackBufferResizing() {}
-		virtual void BackBufferResized(const uint32_t width, const uint32_t height, const uint32_t sampleCount) {}
+		virtual void BackBufferResizing(void) {}
+		virtual void BackBufferResized(Uint32 width, Uint32 height, Uint32 sampleCount) {}
 
 		// Called before Animate() when a DPI change was detected
 		virtual void DisplayScaleChanged(float scaleX, float scaleY) {}
@@ -616,6 +633,24 @@ namespace Parting {
 	}
 
 	template<typename Derived, RHI::APITagConcept APITag>
+	inline void DeviceManagerBase<Derived, APITag>::RunMessageLoop(void) {
+		this->m_PreviousFrameTimestamp = glfwGetTime();
+
+		while (!glfwWindowShouldClose(this->m_Window)) {
+			if (nullptr != this->m_Callbacks.BeforeFrame)
+				this->m_Callbacks.BeforeFrame(*this, this->m_FrameIndex);
+
+			glfwPollEvents();
+			this->UpdateWindowSize();
+
+			if (!this->AnimateRenderPresent())
+				break;
+
+			this->Get_Device()->WaitForIdle();
+		}
+	}
+
+	template<typename Derived, RHI::APITagConcept APITag>
 	inline void DeviceManagerBase<Derived, APITag>::Animate(double elapsedTime) {
 		for (IRenderPass<APITag>* pass : this->m_vRenderPasses) {
 			pass->Animate(static_cast<float>(elapsedTime));
@@ -627,7 +662,7 @@ namespace Parting {
 	inline void DeviceManagerBase<Derived, APITag>::Render(void) {
 		Imp_FrameBuffer* framebuffer{ this->m_SwapChainFrameBuffers[this->Get_CurrentBackBufferIndex()] };
 
-		for (IRenderPass<APITag>* it : m_vRenderPasses)
+		for (IRenderPass<APITag>* it : this->m_vRenderPasses)
 			it->Render(framebuffer);
 	}
 

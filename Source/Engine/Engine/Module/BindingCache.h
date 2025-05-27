@@ -29,6 +29,17 @@ PARTING_IMPORT Utility;
 
 #endif // PARTING_MODULE_BUILD
 
+namespace std {
+	template<RHI::APITagConcept APITag>
+	struct	hash<RHI::RHIBindingSetDesc<APITag>> final {
+		size_t operator()(const RHI::RHIBindingSetDesc<APITag>& desc) const noexcept {
+			return typename RHI::RHIBindingSetDesc<APITag>::BindingSetHash{}(desc);
+		}
+	};
+}
+
+
+
 namespace Parting {
 
 	template<RHI::APITagConcept APITag>
@@ -43,14 +54,10 @@ namespace Parting {
 		}
 
 		RHI::RefCountPtr<Imp_BindingSet> GetCachedBindingSet(const RHI::RHIBindingSetDesc<APITag>& desc, Imp_BindingLayout* layout) {
-			Uint64 hash = 0;
-			hash = HashCombine(hash, RHI::RHIBindingSetDesc<APITag>::BindingSetHash::operator()(desc));
-			hash = HashCombine(hash, HashVoidPtr{}(layout));
-
 			this->m_Mutex.lock_shared();
 
 			RHI::RefCountPtr<Imp_BindingSet> Re{ nullptr };
-			if (auto It{ this->m_BindingSets.find(hash) }; It != this->m_BindingSets.end())
+			if (auto It{ this->m_BindingSets.find(::MakeTuple(desc, layout)) }; It != this->m_BindingSets.end())
 				Re = It->second;
 
 			this->m_Mutex.unlock_shared();
@@ -63,14 +70,10 @@ namespace Parting {
 		}
 
 		RHI::RefCountPtr<Imp_BindingSet> GetOrCreateBindingSet(const RHI::RHIBindingSetDesc<APITag>& desc, Imp_BindingLayout* layout) {
-			Uint64 hash = 0;
-			hash = HashCombine(hash, typename RHI::RHIBindingSetDesc<APITag>::BindingSetHash{}(desc));
-			hash = HashCombine(hash, HashVoidPtr{}(layout));
-
 			this->m_Mutex.lock_shared();
 
 			RHI::RefCountPtr<Imp_BindingSet> Re{ nullptr };
-			if (auto It{ this->m_BindingSets.find(hash) }; It != this->m_BindingSets.end())
+			if (auto It{ this->m_BindingSets.find(::MakeTuple(desc, layout)) }; It != this->m_BindingSets.end())
 				Re = It->second;
 
 			this->m_Mutex.unlock_shared();
@@ -78,7 +81,7 @@ namespace Parting {
 			if (nullptr == Re) {
 				m_Mutex.lock();
 
-				RHI::RefCountPtr<Imp_BindingSet>& entry{ this->m_BindingSets[hash] };
+				RHI::RefCountPtr<Imp_BindingSet>& entry{ this->m_BindingSets[::MakeTuple(desc, layout)] };
 				if (nullptr == entry) {
 					Re = this->m_Device->CreateBindingSet(desc, layout);
 					entry = Re;
@@ -103,7 +106,7 @@ namespace Parting {
 
 	private:
 		RHI::RefCountPtr<Imp_Device> m_Device;
-		UnorderedMap<Uint64, RHI::RefCountPtr<Imp_BindingSet>> m_BindingSets;
+		UnorderedMap<Tuple<RHI::RHIBindingSetDesc<APITag>, Imp_BindingLayout*>, RHI::RefCountPtr<Imp_BindingSet>> m_BindingSets;//TODO :
 		SharedMutex m_Mutex;
 
 	};

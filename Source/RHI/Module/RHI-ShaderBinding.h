@@ -239,7 +239,7 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr decltype(auto) Texture_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Texture* texture, RHIFormat format = RHIFormat::UNKNOWN, RHITextureSubresourceSet subresources = g_AllSubResourceSet, RHITextureDimension dimension = RHITextureDimension::Unknown) {
+		STDNODISCARD static constexpr decltype(auto) Texture_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_Texture* texture, RHIFormat format = RHIFormat::UNKNOWN, RHITextureSubresourceSet subresources = RHITextureSubresourceSet{ .ArraySliceCount{ Max_Uint32 } }, RHITextureDimension dimension = RHITextureDimension::Unknown) {
 			return RHIBindingSetItem<APITag>{
 				.ResourcePtr{ texture },
 					.Slot{ Slot },
@@ -348,13 +348,13 @@ namespace RHI {
 		struct BindingSetItemHash final {
 			Uint64 operator()(const RHIBindingSetItem<APITag>& item) {
 				Uint64 hash{ 0 };
-				/*	hash = HashCombine(hash, HashVoidPtr::operator()(item.ResourcePtr.valueless_by_exception));*/
-				hash = HashCombine(hash, HashUint32{}(item.Slot));
-				hash = HashCombine(hash, Hash<RHIResourceType>{}(item.Type));
-				hash = HashCombine(hash, Hash<RHITextureDimension>{}(item.Dimension));
-				hash = HashCombine(hash, Hash<RHIFormat>{}(item.Format));
-				hash = HashCombine(hash, HashUint64{}(item.RawData[0]));
-				hash = HashCombine(hash, HashUint64{}(item.RawData[1]));
+			/*	hash = ::HashCombine(hash, Hash<RHIShaderBindingResources<APITag>>{}(item.ResourcePtr));*/
+				hash = ::HashCombine(hash, HashUint32{}(item.Slot));
+				hash = ::HashCombine(hash, Hash<RHIResourceType>{}(item.Type));
+				hash = ::HashCombine(hash, Hash<RHITextureDimension>{}(item.Dimension));
+				hash = ::HashCombine(hash, Hash<RHIFormat>{}(item.Format));
+				hash = ::HashCombine(hash, HashUint64{}(item.RawData[0]));
+				hash = ::HashCombine(hash, HashUint64{}(item.RawData[1]));
 				return hash;
 			}
 		};
@@ -407,7 +407,7 @@ namespace RHI {
 
 		STDNODISCARD constexpr const RHIBindingSetDesc<APITag>& Build(void) { return this->m_Desc; }
 
-	private:
+	public://TODO :
 		RHIBindingSetDesc<APITag> m_Desc{};
 	};
 

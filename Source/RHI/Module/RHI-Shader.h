@@ -92,7 +92,7 @@ namespace RHI {
 
 	PARTING_EXPORT struct RHIShaderDesc final {
 		RHIShaderType ShaderType{ RHIShaderType::None };
-		WString DebugName;
+		String DebugName;
 		String EntryName{ "main" };
 
 		Int32 HLSLExtensionsUAV{ -1 };
@@ -110,7 +110,7 @@ namespace RHI {
 		STDNODISCARD constexpr RHIShaderDescBuilder& Reset(void) { this->m_Desc = RHIShaderDesc{}; return *this; }
 
 		STDNODISCARD constexpr RHIShaderDescBuilder& Set_ShaderType(const RHIShaderType shaderType) { this->m_Desc.ShaderType = shaderType; return *this; }
-		STDNODISCARD constexpr RHIShaderDescBuilder& Set_DebugName(const WString& debugName) { this->m_Desc.DebugName = debugName; return *this; }
+		STDNODISCARD constexpr RHIShaderDescBuilder& Set_DebugName(const String& debugName) { this->m_Desc.DebugName = debugName; return *this; }
 		STDNODISCARD constexpr RHIShaderDescBuilder& Set_EntryName(const String& entryName) { this->m_Desc.EntryName = entryName; return *this; }
 		STDNODISCARD constexpr RHIShaderDescBuilder& Set_HLSLExtensionsUAV(const Int32 hlslextensionsUAV) { this->m_Desc.HLSLExtensionsUAV = hlslextensionsUAV; return *this; }
 		STDNODISCARD constexpr RHIShaderDescBuilder& Set_CustomSemanticCount(const Uint32 customSemanticCount) { this->m_Desc.CustomSemanticCount = customSemanticCount; return *this; }

@@ -67,8 +67,8 @@ namespace RHI {
 
 	PARTING_EXPORT template<APITagConcept APITag>
 		struct RHIFrameBufferDesc final {
-		RHIFrameBufferAttachment<APITag> ColorAttachments[g_MaxRenderTargetCount];
-		Uint32 ColorAttachmentCount{ 0 };
+		Array<RHIFrameBufferAttachment<APITag>, g_MaxRenderTargetCount> ColorAttachments;
+		RemoveCV<decltype(g_MaxRenderTargetCount)>::type ColorAttachmentCount{ 0 };
 
 		RHIFrameBufferAttachment<APITag> DepthStencilAttachment;
 		RHIFrameBufferAttachment<APITag> ShadingRateAttachment;
@@ -78,18 +78,18 @@ namespace RHI {
 		class RHIFrameBufferDescBuilder final {
 		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
 		public:
-			STDNODISCARD constexpr RHIFrameBufferDescBuilder& Reset(void) { this->m_Desc = RHIFrameBufferDesc<APITag>{}; return *this; }
+			constexpr RHIFrameBufferDescBuilder& Reset(void) { this->m_Desc = RHIFrameBufferDesc<APITag>{}; return *this; }
 
-			STDNODISCARD constexpr RHIFrameBufferDescBuilder& AddColorAttachment(const RHIFrameBufferAttachment<APITag>& attachment) {
+			constexpr RHIFrameBufferDescBuilder& AddColorAttachment(const RHIFrameBufferAttachment<APITag>& attachment) {
 				ASSERT(this->m_Desc.ColorAttachmentCount < g_MaxRenderTargetCount);
 
 				this->m_Desc.ColorAttachments[this->m_Desc.ColorAttachmentCount++] = attachment;
 				return *this;
 			}
-			STDNODISCARD constexpr RHIFrameBufferDescBuilder& Set_DepthStencilAttachment(const RHIFrameBufferAttachment<APITag>& attachment) { this->m_Desc.DepthStencilAttachment = attachment; return *this; }
-			STDNODISCARD constexpr RHIFrameBufferDescBuilder& Set_ShadingRateAttachment(const RHIFrameBufferAttachment<APITag>& attachment) { this->m_Desc.ShadingRateAttachment = attachment; return *this; }
+			constexpr RHIFrameBufferDescBuilder& Set_DepthStencilAttachment(const RHIFrameBufferAttachment<APITag>& attachment) { this->m_Desc.DepthStencilAttachment = attachment; return *this; }
+			constexpr RHIFrameBufferDescBuilder& Set_ShadingRateAttachment(const RHIFrameBufferAttachment<APITag>& attachment) { this->m_Desc.ShadingRateAttachment = attachment; return *this; }
 
-			STDNODISCARD RHIFrameBufferDescBuilder& AddColorAttachment(Imp_Texture* texture) { this->m_Desc.ColorAttachments[this->m_Desc.ColorAttachmentCount++] = RHIFrameBufferAttachment<APITag>{ .Texture { texture } }; return *this; }
+			RHIFrameBufferDescBuilder& AddColorAttachment(Imp_Texture* texture) { this->m_Desc.ColorAttachments[this->m_Desc.ColorAttachmentCount++] = RHIFrameBufferAttachment<APITag>{ .Texture { texture } }; return *this; }
 
 			STDNODISCARD constexpr const RHIFrameBufferDesc<APITag>& Build(void) { return this->m_Desc; }
 		private:

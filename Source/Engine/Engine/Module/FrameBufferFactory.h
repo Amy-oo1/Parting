@@ -43,8 +43,8 @@ namespace Parting {
 		~FrameBufferFactory(void) = default;
 
 	public:
-		Imp_FrameBuffer* Get_FrameBuffer(const RHI::RHITextureSubresourceSet& subresources);
-		Imp_FrameBuffer* Get_FrameBuffer(const IView* view);
+		auto Get_FrameBuffer(const RHI::RHITextureSubresourceSet& subresources) -> Imp_FrameBuffer*;
+		auto Get_FrameBuffer(const IView& view) -> Imp_FrameBuffer*;
 
 	public:
 		Vector<RHI::RefCountPtr<Imp_Texture>> RenderTargets;
@@ -53,9 +53,35 @@ namespace Parting {
 
 	private:
 		RHI::RefCountPtr<Imp_Device> m_Device;
-		UnorderedMap<RHI::RHITextureSubresourceSet, RHI::RefCountPtr<Imp_FrameBuffer>, decltype(RHI::g_TextureSubresourceSetHash)> m_FrameBufferCache{ 0, RHI::g_TextureSubresourceSetHash };
+		UnorderedMap<RHI::RHITextureSubresourceSet, RHI::RefCountPtr<Imp_FrameBuffer>, decltype(RHI::g_TextureSubresourceSetHash)> m_FrameBufferCache{ 0, RHI::g_TextureSubresourceSetHash };//TODO :
 
 
 	};
+
+	template<RHI::APITagConcept APITag>
+	inline auto FrameBufferFactory<APITag>::Get_FrameBuffer(const RHI::RHITextureSubresourceSet& subresources) -> Imp_FrameBuffer* {
+		auto& item{ this->m_FrameBufferCache[subresources] };
+
+		if (nullptr == item) {
+			RHI::RHIFrameBufferDescBuilder<APITag> descBuilder{};
+			for (auto renderTarget : this->RenderTargets)
+				descBuilder.AddColorAttachment(RHI::RHIFrameBufferAttachment<APITag>{.Texture{ renderTarget }, .Subresources{ subresources } });
+
+			if (nullptr != this->DepthStencil)
+				descBuilder.Set_DepthStencilAttachment(RHI::RHIFrameBufferAttachment<APITag>{.Texture{ this->DepthStencil }, .Subresources{ subresources } });
+
+			if (nullptr != ShadingRateSurface)
+				descBuilder.Set_ShadingRateAttachment(RHI::RHIFrameBufferAttachment<APITag>{.Texture{ this->ShadingRateSurface }, .Subresources{ subresources } });
+
+			item = this->m_Device->CreateFrameBuffer(descBuilder.Build());
+		}
+
+		return item;
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline auto FrameBufferFactory<APITag>::Get_FrameBuffer(const IView& view) -> Imp_FrameBuffer* {
+		return this->Get_FrameBuffer(view.Get_Subresources());
+	}
 
 }

@@ -25,6 +25,8 @@ PARTING_IMPORT Utility;
 #include "Core/VectorMath/Module/VectorMath-Vec.h"
 #include "Core/VectorMath/Module/VectorMath-Mat.h"
 #include "Core/VectorMath/Module/VectorMath-Affine.h"
+#include "Core/VectorMath/Module/VectorMath-Quaternion.h"
+#include "Core/VectorMath/Module/VectorMath-Box.h"
 
 #endif // PARTING_MODULE_BUILD
 
@@ -85,7 +87,7 @@ namespace Math {
 		Frustum(const Mat<float, 4, 4>& viewProjMatrix, bool isReverseProjection);
 
 		bool IntersectsWith(const Vec<float, 3>& point) const;
-		/*bool intersectsWith(const box3& Box) const;*/
+		bool IntersectsWith(const Box<float, 3>& Box) const;
 
 		static constexpr Uint32 NumCorners = 8;
 		Vec<float, 3> Get_Corner(Corners index) const;
@@ -96,6 +98,7 @@ namespace Math {
 				Re.m_Planes[Index++] = plane.Normalize();
 			return Re;
 		}
+
 		Frustum Grow(float distance) const {
 			Frustum Re;
 			for (Uint32 Index = 0; const auto & plane : this->m_Planes) {
@@ -154,6 +157,27 @@ namespace Math {
 		return true;
 	}
 
+	inline bool Frustum::IntersectsWith(const Box<float, 3>& Box) const {
+		for (const auto& plane : this->m_Planes) {
+			float x = plane.m_Normal.X > 0 ? Box.m_Mins.X : Box.m_Maxs.X;
+			float y = plane.m_Normal.Y > 0 ? Box.m_Mins.Y : Box.m_Maxs.Y;
+			float z = plane.m_Normal.Z > 0 ? Box.m_Mins.Z : Box.m_Maxs.Z;
+
+			float distance{
+				plane.m_Normal.X * x +
+				plane.m_Normal.Y * y +
+				plane.m_Normal.Z * z -
+				plane.m_Distance
+			};
+
+			if (distance > 0.f)
+				return false;
+		}
+
+		return true;
+	}
+
+
 	inline Vec<float, 3> Frustum::Get_Corner(Corners index) const {
 		const auto& a{ Corners::None != (index & static_cast<Corners>(0b001u)) ? this->m_Planes[Tounderlying(PlaneType::Right)] : this->m_Planes[Tounderlying(PlaneType::Left)] };
 		const auto& b{ Corners::None != (index & static_cast<Corners>(0b010u)) ? this->m_Planes[Tounderlying(PlaneType::Top)] : this->m_Planes[Tounderlying(PlaneType::Bottom)] };
@@ -194,8 +218,8 @@ namespace Math {
 	inline Frustum Frustum::Empty(void) {
 		Frustum Re;
 		// (dot(normal, v) - distance) positive for any v => any point is outside
-		for (Uint32 Index = 0; Index < Tounderlying(PlaneType::COUNT); ++Index)
-			Re.m_Planes[Index] = Plane{ Vec<float, 3>::Zero(), -1.f };
+		for (auto& plne : Re.m_Planes)
+			plne = Plane{ Vec<float, 3>::Zero(), -1.f };
 
 		return Re;
 	}
@@ -203,8 +227,9 @@ namespace Math {
 	inline Frustum Frustum::Infinite(void) {
 		Frustum Re;
 		// (dot(normal, v) - distance) negative for any v => any point is inside
-		for (Uint32 Index = 0; Index < Tounderlying(PlaneType::COUNT); ++Index)
-			Re.m_Planes[Index] = Plane{ Vec<float, 3>::Zero(), 1.f };
+		for (auto& plne : Re.m_Planes)
+			plne = Plane{ Vec<float, 3>::Zero(), 1.f };
+
 		return Re;
 	}
 

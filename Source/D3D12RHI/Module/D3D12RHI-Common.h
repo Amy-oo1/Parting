@@ -254,7 +254,7 @@ namespace RHI::D3D12 {
 	private:
 		D3D12DeviceResources& m_DeviceResourcesRef;
 
-		Uint64 m_Hash{ 0 };
+		Uint64 m_Hash{ 0 };//TODO :
 
 		Array<Pair<BingLayOutVariant, D3D12RootParameterIndex>, g_MaxBindingLayoutCount> m_BindLayouts;
 		RemoveCV<decltype(g_MaxBindingLayoutCount)>::type m_BindLayoutCount{ 0 };
@@ -662,7 +662,7 @@ namespace RHI::D3D12 {
 				}
 			}
 
-			if (false == Found) {
+			if (!Found) {
 				FoundIndex = this->m_DescriptorCount;
 
 				this->D3D12Grow(this->m_DescriptorCount + Count);
@@ -791,7 +791,7 @@ namespace RHI::D3D12 {
 			this->m_CurrentChunk.reset();
 		}
 
-		auto completedInstance{ m_Queue->m_LastCompletedInstance };
+		auto completedInstance{ this->m_Queue->m_LastCompletedInstance };
 
 		for (auto It = this->m_ChunkPool.begin(); It != this->m_ChunkPool.end(); ++It) {
 			auto chunk{ *It };

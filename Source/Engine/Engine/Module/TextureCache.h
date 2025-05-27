@@ -21,6 +21,8 @@ PARTING_IMPORT Utility;
 #include "Core/Logger/Include/LogMacros.h"
 //Global
 
+#include "ThirdParty/taskflow/taskflow.hpp"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "ThirdParty/stb/stb_image.h"
 #include "ThirdParty/stb/stb_image_write.h"
@@ -189,7 +191,7 @@ namespace Parting {
 	};
 
 
-	Uint32 GetMipLevelsNum(Uint32 width, Uint32 height) {
+	Uint32 GetMipLevelsNum(Uint32 width, Uint32 height) {//TODO Into Utility
 		Uint32 size{ Math::Min(width, height) };
 		return static_cast<Uint32>(Math::Log2f(static_cast<float>(size)) / Math::Log2f(2.0f)) + 1;
 	}

@@ -23,10 +23,9 @@
 #ifndef PIXEL_READBACK_CB_H
 #define PIXEL_READBACK_CB_H
 
-struct PixelReadbackConstants
-{
-    int2    pixelPosition;
-    int2    dummy;
+struct PixelReadbackConstants {
+	Math::VecI2	PixelPosition;
+	Math::VecI2	Dummy;
 };
 
 #endif // PIXEL_READBACK_CB_H

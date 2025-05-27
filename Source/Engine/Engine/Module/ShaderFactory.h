@@ -73,7 +73,7 @@ namespace Parting {
 		auto CreateStaticShader(StaticShader shader, const Vector<ShaderMacro>* pDefines, const RHI::RHIShaderDesc& desc) -> RHI::RefCountPtr<Imp_Shader>;
 
 
-		void ClearCache(void) { this->m_ShaderCache.clear(); }
+		void ClearCache(void) { this->m_BytecodeCache.clear(); }
 
 
 
@@ -131,6 +131,7 @@ namespace Parting {
 
 		RHI::RHIShaderDesc desc{
 			.ShaderType {type},
+			.DebugName{ String{ fileName } },
 			.EntryName { entryName },
 		};
 		/*if (descCopy.debugName.empty())

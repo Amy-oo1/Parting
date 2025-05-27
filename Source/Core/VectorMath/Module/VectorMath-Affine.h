@@ -124,17 +124,17 @@ namespace Math {
 		STDNODISCARD Vec<Type, 3> TransformVector(const Vec<Type, 3>& v) const {
 			Vec<Type, 3> result;
 			result.X = v.X * this->m_Linear.Row0.X + v.Y * this->m_Linear.Row1.X + v.Z * this->m_Linear.Row2.X;
-			result.Y = v.X * this->m_Linear.row0.Y + v.Y * this->m_Linear.Row1.Y + v.Z * this->m_Linear.Row2.Y;
-			result.Z = v.X * this->m_Linear.row0.Z + v.Y * this->m_Linear.Row1.Z + v.Z * this->m_Linear.Row2.Z;
+			result.Y = v.X * this->m_Linear.Row0.Y + v.Y * this->m_Linear.Row1.Y + v.Z * this->m_Linear.Row2.Y;
+			result.Z = v.X * this->m_Linear.Row0.Z + v.Y * this->m_Linear.Row1.Z + v.Z * this->m_Linear.Row2.Z;
 			return result;
 		}
 
-		STDNODISCARD Vec<Type, 3> transformPoint(const Vec<Type, 3>& v) const
+		STDNODISCARD Vec<Type, 3> TransformPoint(const Vec<Type, 3>& v) const
 		{
 			Vec<Type, 3> result;
 			result.X = v.X * this->m_Linear.Row0.X + v.Y * this->m_Linear.Row1.X + v.Z * this->m_Linear.Row2.X + this->m_Translation.X;
-			result.Y = v.X * this->m_Linear.row0.Y + v.Y * this->m_Linear.Row1.Y + v.Z * this->m_Linear.Row2.Y + this->m_Translation.Y;
-			result.Z = v.X * this->m_Linear.row0.Z + v.Y * this->m_Linear.Row1.Z + v.Z * this->m_Linear.Row2.Z + this->m_Translation.Z;
+			result.Y = v.X * this->m_Linear.Row0.Y + v.Y * this->m_Linear.Row1.Y + v.Z * this->m_Linear.Row2.Y + this->m_Translation.Y;
+			result.Z = v.X * this->m_Linear.Row0.Z + v.Y * this->m_Linear.Row1.Z + v.Z * this->m_Linear.Row2.Z + this->m_Translation.Z;
 			return result;
 		}
 
@@ -223,8 +223,7 @@ namespace Math {
 				static_cast<Type>(0), static_cast<Type>(0)
 		};
 	}
-
-	template<typename Type>Affine<Type, 3> Rotation(const Affine<Type, 3>& axis, Type radians) {
+	template<typename Type>Affine<Type, 3> Rotation(const Vec<Type, 3>& axis, Type radians) {
 		// Note: assumes axis is normalized
 		auto sinTheta{ Sin(radians) };
 		auto cosTheta{ Cos(radians) };
@@ -241,7 +240,6 @@ namespace Math {
 
 		return Affine<Type, 3>{ mat, Vec<Type, 3>::Zero() };
 	}
-
 	template<typename Type>Affine<Type, 3> Rotation(const Affine<Type, 3>& euler) {
 		Type sinX{ Sin(euler.X) };
 		Type cosX{ Cos(euler.X) };

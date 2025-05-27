@@ -92,25 +92,25 @@ namespace RHI {
 	public:
 		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Reset(void) { this->m_DepthStencilState = RHIDepthStencilState{}; return *this; }
 
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_DepthTestEnable(bool DepthTestEnable) { this->m_DepthStencilState.DepthTestEnable = DepthTestEnable; return *this; }
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_DepthWriteEnable(bool DepthWriteEnable) { this->m_DepthStencilState.DepthWriteEnable = DepthWriteEnable; return *this; }
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_DepthFunc(RHIComparisonFunc DepthFunc) { this->m_DepthStencilState.DepthFunc = DepthFunc; return *this; }
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_StencilEnable(bool StencilEnable) { this->m_DepthStencilState.StencilEnable = StencilEnable; return *this; }
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_StencilReadMask(Uint8 StencilReadMask) { this->m_DepthStencilState.StencilReadMask = StencilReadMask; return *this; }
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_StencilWriteMask(Uint8 StencilWriteMask) { this->m_DepthStencilState.StencilWriteMask = StencilWriteMask; return *this; }
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_StencilRefValue(Uint8 StencilRefValue) { this->m_DepthStencilState.StencilRefValue = StencilRefValue; return *this; }
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_DynamicStencilRef(bool DynamicStencilRef) { this->m_DepthStencilState.DynamicStencilRef = DynamicStencilRef; return *this; }
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_FrontFaceStencil(RHIDepthStencilState::RHIStencilOpDesc FrontFaceStencil) { this->m_DepthStencilState.FrontFaceStencil = FrontFaceStencil; return *this; }
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_BackFaceStencil(RHIDepthStencilState::RHIStencilOpDesc BackFaceStencil) { this->m_DepthStencilState.BackFaceStencil = BackFaceStencil; return *this; }
+		constexpr RHIDepthStencilStateBuilder& Set_DepthTestEnable(bool DepthTestEnable) { this->m_DepthStencilState.DepthTestEnable = DepthTestEnable; return *this; }
+		constexpr RHIDepthStencilStateBuilder& Set_DepthWriteEnable(bool DepthWriteEnable) { this->m_DepthStencilState.DepthWriteEnable = DepthWriteEnable; return *this; }
+		constexpr RHIDepthStencilStateBuilder& Set_DepthFunc(RHIComparisonFunc DepthFunc) { this->m_DepthStencilState.DepthFunc = DepthFunc; return *this; }
+		constexpr RHIDepthStencilStateBuilder& Set_StencilEnable(bool StencilEnable) { this->m_DepthStencilState.StencilEnable = StencilEnable; return *this; }
+		constexpr RHIDepthStencilStateBuilder& Set_StencilReadMask(Uint8 StencilReadMask) { this->m_DepthStencilState.StencilReadMask = StencilReadMask; return *this; }
+		constexpr RHIDepthStencilStateBuilder& Set_StencilWriteMask(Uint8 StencilWriteMask) { this->m_DepthStencilState.StencilWriteMask = StencilWriteMask; return *this; }
+		constexpr RHIDepthStencilStateBuilder& Set_StencilRefValue(Uint8 StencilRefValue) { this->m_DepthStencilState.StencilRefValue = StencilRefValue; return *this; }
+		constexpr RHIDepthStencilStateBuilder& Set_DynamicStencilRef(bool DynamicStencilRef) { this->m_DepthStencilState.DynamicStencilRef = DynamicStencilRef; return *this; }
+		constexpr RHIDepthStencilStateBuilder& Set_FrontFaceStencil(RHIDepthStencilState::RHIStencilOpDesc FrontFaceStencil) { this->m_DepthStencilState.FrontFaceStencil = FrontFaceStencil; return *this; }
+		constexpr RHIDepthStencilStateBuilder& Set_BackFaceStencil(RHIDepthStencilState::RHIStencilOpDesc BackFaceStencil) { this->m_DepthStencilState.BackFaceStencil = BackFaceStencil; return *this; }
 
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_FrontFaceStencil(RHIStencilOp FailOp, RHIStencilOp DepthFailOp, RHIStencilOp PassOp, RHIComparisonFunc StencilFunc) {
+		constexpr RHIDepthStencilStateBuilder& Set_FrontFaceStencil(RHIStencilOp FailOp, RHIStencilOp DepthFailOp, RHIStencilOp PassOp, RHIComparisonFunc StencilFunc) {
 			this->m_DepthStencilState.FrontFaceStencil.FailOp = FailOp;
 			this->m_DepthStencilState.FrontFaceStencil.DepthFailOp = DepthFailOp;
 			this->m_DepthStencilState.FrontFaceStencil.PassOp = PassOp;
 			this->m_DepthStencilState.FrontFaceStencil.StencilFunc = StencilFunc;
 			return *this;
 		}
-		STDNODISCARD constexpr RHIDepthStencilStateBuilder& Set_BackFaceStencil(RHIStencilOp FailOp, RHIStencilOp DepthFailOp, RHIStencilOp PassOp, RHIComparisonFunc StencilFunc) {
+		constexpr RHIDepthStencilStateBuilder& Set_BackFaceStencil(RHIStencilOp FailOp, RHIStencilOp DepthFailOp, RHIStencilOp PassOp, RHIComparisonFunc StencilFunc) {
 			this->m_DepthStencilState.BackFaceStencil.FailOp = FailOp;
 			this->m_DepthStencilState.BackFaceStencil.DepthFailOp = DepthFailOp;
 			this->m_DepthStencilState.BackFaceStencil.PassOp = PassOp;

@@ -98,8 +98,8 @@ namespace RHI::D3D12 {
 	private:
 		RHIObject Imp_GetNativeObject(RHIObjectType type)const noexcept;
 
-		const RHIGraphicsPipelineDesc<D3D12Tag>& Imp_Get_Desc(void)const {return this->m_Desc;}
-		const RHIFrameBufferInfo<D3D12Tag>& Imp_Get_FramebufferInfo(void)const { return this->m_FrameBufferInfo; }
+		const RHIGraphicsPipelineDesc<D3D12Tag>& Imp_Get_Desc(void)const { return this->m_Desc; }
+		const RHIFrameBufferInfo<D3D12Tag>& Imp_Get_FrameBufferInfo(void)const { return this->m_FrameBufferInfo; }
 	};
 
 	//Imp
@@ -136,7 +136,7 @@ namespace RHI::D3D12 {
 	};
 
 	//Imp
-	RHIObject ComputePipeline::Imp_GetNativeObject(RHIObjectType type) const noexcept{
+	RHIObject ComputePipeline::Imp_GetNativeObject(RHIObjectType type) const noexcept {
 		switch (type) {
 		case RHIObjectType::D3D12_RootSignature: return this->m_RootSignature->GetNativeObject(type);
 		case RHIObjectType::D3D12_PipelineState: return RHIObject{ .Pointer{ this->m_PipelineState.Get() } };

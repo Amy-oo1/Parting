@@ -142,6 +142,7 @@ namespace RHI {
 	class RHICommandList :public RHIResource<Derived> {
 		friend class RHIResource<Derived>;
 
+	protected:
 		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
 		using Imp_StagingTexture = typename RHITypeTraits<APITag>::Imp_StagingTexture;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
@@ -179,7 +180,7 @@ namespace RHI {
 
 			void ClearDepthStencilTexture(Imp_Texture* texture, const RHITextureSubresourceSet& subresources, Optional<float> depth, Optional<Uint8> stencil) { this->Get_Derived()->Imp_ClearDepthStencilTexture(texture, subresources, depth, stencil); }
 
-			void ClearTextureUInt(Imp_Texture* texture, RHITextureSubresourceSet subresources, Uint32 clearColor) { this->Get_Derived()->Imp_ClearTextureUInt(texture, subresources, clearColor); }
+			void ClearTextureUInt(Imp_Texture* texture, const RHITextureSubresourceSet& subresources, Uint32 clearColor) { this->Get_Derived()->Imp_ClearTextureUInt(texture, subresources, clearColor); }
 
 			void CopyTexture(Imp_Texture* des, RHITextureSlice desSlice, Imp_Texture* src, RHITextureSlice srcSlice) { this->Get_Derived()->Imp_CopyTexture(des, desSlice, src, srcSlice); }
 
@@ -274,7 +275,7 @@ namespace RHI {
 			void Imp_ClearState(void) { LOG_ERROR("No Imp"); }
 			void Imp_ClearTextureFloat(Imp_Texture*, const RHITextureSubresourceSet&, const Color&) { LOG_ERROR("No Imp"); }
 			void Imp_ClearDepthStencilTexture(Imp_Texture*, const RHITextureSubresourceSet&, Optional<float>, Optional<Uint8>) { LOG_ERROR("No Imp"); }
-			void Imp_ClearTextureUInt(Imp_Texture*, RHITextureSubresourceSet, Uint32) { LOG_ERROR("No Imp"); }
+			void Imp_ClearTextureUInt(Imp_Texture*, const RHITextureSubresourceSet&, Uint32) { LOG_ERROR("No Imp"); }
 			void Imp_CopyTexture(Imp_Texture*, RHITextureSlice, Imp_Texture*, RHITextureSlice) { LOG_ERROR("No Imp"); }
 			void Imp_CopyTexture(Imp_Texture*, RHITextureSlice, Imp_StagingTexture*, RHITextureSlice) { LOG_ERROR("No Imp"); }
 			void Imp_CopyTexture(Imp_StagingTexture*, RHITextureSlice, Imp_Texture*, RHITextureSlice) { LOG_ERROR("No Imp"); }

@@ -88,6 +88,23 @@ namespace RHI {
 		RHIOffset2D Offset;
 		RHIExtent2D Extent;
 
+		static constexpr RHIRect2D Build(Uint32 minX, Uint32 minY, Uint32 maxX, Uint32 maxY) {
+			return RHIRect2D{
+				RHIOffset2D{.X{ minX }, .Y{ minY } },
+				RHIExtent2D{.Width{ maxX - minX },.Height{ maxY - minY } }
+			};
+		}
+
+		//TODO :not use this func
+		static RHIRect2D Merge(const RHIRect2D& a, const RHIRect2D& b) {
+			return RHIRect2D{
+				RHIOffset2D{.X{ Math::Min(a.Offset.X, b.Offset.X) }, .Y{ Math::Min(a.Offset.Y, b.Offset.Y) } },
+				RHIExtent2D{
+					.Width{ Math::Max(a.Offset.X + a.Extent.Width, b.Offset.X + b.Extent.Width) - Math::Min(a.Offset.X, b.Offset.X) },
+					.Height{ Math::Max(a.Offset.Y + a.Extent.Height, b.Offset.Y + b.Extent.Height) - Math::Min(a.Offset.Y, b.Offset.Y) } }
+			};
+		}
+
 		STDNODISCARD constexpr bool operator==(const RHIRect2D&)const noexcept = default;
 		STDNODISCARD constexpr bool operator!=(const RHIRect2D&)const noexcept = default;
 	};

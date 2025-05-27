@@ -37,11 +37,10 @@
 #define MODE_MAX    2
 #define MODE_MINMAX 3
 
-struct MipmmapGenConstants
-{
-    uint dispatch;
-    uint numLODs;
-    uint padding[2];
+struct MipmmapGenConstants {
+	Uint32 Dispatch;
+	Uint32 NumLODs;
+	Math::VecU2 Padding;
 };
 
 #endif // MIPMAP_GEN_CB_H

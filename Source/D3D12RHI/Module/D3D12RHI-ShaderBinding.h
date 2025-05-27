@@ -520,7 +520,7 @@ namespace RHI::D3D12 {
 								if (RHIResourceState::Unknown == TempBuffer->m_StateExtension.PermanentState)
 									this->m_BindingsThatNeedTransitions.push_back(static_cast<Uint16>(BindIndex));
 								else
-									ASSERT(false);//TODO :
+									ASSERT(RHIResourceState::ShaderResource == (TempBuffer->m_StateExtension.PermanentState & RHIResourceState::ShaderResource));//TODO :
 							}
 							else
 								Buffer::CreateNullSRV(descriptorHandle, Binding.Format, this->m_Context);
@@ -556,7 +556,7 @@ namespace RHI::D3D12 {
 							if (RHIResourceState::Unknown == TempTexture->m_StateExtension.PermanentState)
 								this->m_BindingsThatNeedTransitions.push_back(static_cast<Uint16>(BindIndex));
 							else
-								ASSERT(false);//TODO :
+								ASSERT(RHIResourceState::ShaderResource == (TempTexture->m_StateExtension.PermanentState & RHIResourceState::ShaderResource));//TODO :
 
 							Found = true;
 							break;

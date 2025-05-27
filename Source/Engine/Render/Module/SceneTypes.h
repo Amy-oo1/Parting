@@ -256,6 +256,7 @@ namespace Parting {
 		Math::Frustum Bounds{ Math::Frustum::Infinite() };
 
 		STDNODISCARD bool Is_Active(void) const;
+
 		void FillLightProbeConstants(::LightProbeConstants& lightProbeConstants) const;
 	};
 
@@ -430,6 +431,30 @@ namespace Parting {
 		constants.OpacityTextureIndex = Parting::Get_BindlessTextureIndex(this->OpacityTexture);
 
 		constants.Padding1 = Math::VecU3{ 0u };
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline bool LightProbe<APITag>::Is_Active(void) const {
+		if (!this->Enabled)
+			return false;
+		if (this->Bounds.Is_Empty())
+			return false;
+		if ((this->DiffuseScale == 0.f || nullptr == this->DiffuseMap) && (this->SpecularScale == 0.f || nullptr == this->SpecularMap))
+			return false;
+
+		return true;
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline void LightProbe<APITag>::FillLightProbeConstants(::LightProbeConstants& lightProbeConstants) const {
+		lightProbeConstants.DiffuseArrayIndex = this->DiffuseArrayIndex;
+		lightProbeConstants.SpecularArrayIndex = this->SpecularArrayIndex;
+		lightProbeConstants.DiffuseScale = this->DiffuseScale;
+		lightProbeConstants.SpecularScale = this->SpecularScale;
+		lightProbeConstants.MipLevels = this->SpecularMap ? static_cast<float>(this->SpecularMap->Get_Desc().MipLevelCount) : 0.f;
+
+		for (Uint32 nPlane = 0; nPlane < Tounderlying(Math::Frustum::PlaneType::COUNT); ++nPlane)
+			lightProbeConstants.FrustumPlanes[nPlane] = Math::VecF4{ this->Bounds.m_Planes[nPlane].m_Normal, this->Bounds.m_Planes[nPlane].m_Distance };
 	}
 
 }

@@ -25,29 +25,29 @@
 
 struct TemporalAntiAliasingConstants
 {
-    float4x4 reprojectionMatrix;
+	Math::MatF44 ReprojectionMatrix;
 
-    float2 inputViewOrigin;
-    float2 inputViewSize;
+	Math::VecF2 InputViewOrigin;
+	Math::VecF2 InputViewSize;
 
-    float2 outputViewOrigin;
-    float2 outputViewSize;
+	Math::VecF2 OutputViewOrigin;
+	Math::VecF2 OutputViewSize;
 
-    float2 inputPixelOffset;
-    float2 outputTextureSizeInv;
+	Math::VecF2 InputPixelOffset;
+	Math::VecF2 OutputTextureSizeInv;
 
-    float2 inputOverOutputViewSize;
-    float2 outputOverInputViewSize;
+	Math::VecF2 InputOverOutputViewSize;
+	Math::VecF2 OutputOverInputViewSize;
 
-    float clampingFactor;
-    float newFrameWeight;
-    float pqC;
-    float invPqC;
+	float ClampingFactor;
+	float NewFrameWeight;
+	float PQC;
+	float InvPQC;
 
-    uint stencilMask;
-    uint useHistoryClampRelax;
-    uint padding0;
-    uint padding1;
+	Uint32 StencilMask;
+	Uint32 UseHistoryClampRelax;
+	Uint32 Padding0;
+	Uint32 Padding1;
 };
 
 #endif // TAA_CB_H

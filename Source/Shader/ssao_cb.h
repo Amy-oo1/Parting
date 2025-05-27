@@ -23,23 +23,22 @@
 #ifndef SSAO_CB_H
 #define SSAO_CB_H
 
-#include "donut/shaders/view_cb.h"
+#include "view_cb.h"
 
-struct SsaoConstants
-{
-    PlanarViewConstants view;
-    
-    float2      clipToView;
-    float2      invQuantizedGbufferSize;
+struct SsaoConstants {
+	PlanarViewConstants View;
 
-    int2        quantizedViewportOrigin;
-    float       amount;
-    float       invBackgroundViewDepth;
-    float       radiusWorld;
-    float       surfaceBias;
+	Math::VecF2			ClipToView;
+	Math::VecF2			InvQuantizedGbufferSize;
 
-    float       radiusToScreen;
-    float       powerExponent;
+	Math::VecI2			QuantizedViewportOrigin;
+	float				Amount;
+	float				InvBackgroundViewDepth;
+	float				RadiusWorld;
+	float				SurfaceBias;
+
+	float				RadiusToScreen;
+	float				PowerExponent;
 };
 
 #endif // SSAO_CB_H

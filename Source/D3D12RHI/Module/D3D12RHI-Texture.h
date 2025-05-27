@@ -522,9 +522,9 @@ namespace RHI::D3D12 {
 			};
 
 			D3D12DescriptorIndex descriptorIndex;
-			if (auto found{ m_CustomSRVs.find(key) }; found == m_CustomSRVs.end()) {
+			if (auto found{ this->m_CustomSRVs.find(key) }; found == this->m_CustomSRVs.end()) {
 				descriptorIndex = this->m_DeviceResourcesRef.ShaderResourceViewHeap.AllocateDescriptor();
-				m_CustomSRVs[key] = descriptorIndex;
+				this->m_CustomSRVs[key] = descriptorIndex;
 
 				const D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_CPUHandle(descriptorIndex) };
 				this->CreateSRV(cpuHandle, format, dimension, subresources);
@@ -544,9 +544,9 @@ namespace RHI::D3D12 {
 			};
 
 			D3D12DescriptorIndex descriptorIndex;
-			if (auto found{ m_CustomSRVs.find(key) }; found == m_CustomSRVs.end()) {
+			if (auto found{ this->m_CustomSRVs.find(key) }; found == this->m_CustomSRVs.end()) {
 				descriptorIndex = this->m_DeviceResourcesRef.ShaderResourceViewHeap.AllocateDescriptor();
-				m_CustomUAVs[key] = descriptorIndex;
+				this->m_CustomUAVs[key] = descriptorIndex;
 
 				const D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_CPUHandle(descriptorIndex) };
 				this->CreateUAV(cpuHandle, format, dimension, subresources);
@@ -565,11 +565,11 @@ namespace RHI::D3D12 {
 			};
 
 			D3D12DescriptorIndex descriptorIndex;
-			if (auto found{ m_CustomSRVs.find(key) }; found == m_CustomSRVs.end()) {
+			if (auto found{ this->m_CustomSRVs.find(key) }; found == this->m_CustomSRVs.end()) {
 				descriptorIndex = this->m_DeviceResourcesRef.RenderTargetViewHeap.AllocateDescriptor();
 				this->m_RenderTargetViews[key] = descriptorIndex;
 
-				const D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ this->m_DeviceResourcesRef.RenderTargetViewHeap.Get_GPUHandle(descriptorIndex).ptr };
+				const D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ this->m_DeviceResourcesRef.RenderTargetViewHeap.Get_CPUHandle(descriptorIndex).ptr };
 				this->CreateRTV(cpuHandle, format, subresources);
 			}
 			else
@@ -586,9 +586,9 @@ namespace RHI::D3D12 {
 			};
 
 			D3D12DescriptorIndex descriptorIndex;
-			if (auto found{ m_CustomSRVs.find(key) }; found == m_CustomSRVs.end()) {
+			if (auto found{ this->m_CustomSRVs.find(key) }; found == this->m_CustomSRVs.end()) {
 				descriptorIndex = this->m_DeviceResourcesRef.DepthStencilViewHeap.AllocateDescriptor();
-				m_DepthStencilViews[key] = descriptorIndex;
+				this->m_DepthStencilViews[key] = descriptorIndex;
 
 				const D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = this->m_DeviceResourcesRef.DepthStencilViewHeap.Get_CPUHandle(descriptorIndex);
 				this->CreateDSV(cpuHandle, subresources, isReadOnlyDSV);

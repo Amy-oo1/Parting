@@ -49,7 +49,7 @@ struct LightProbeConstants final {
 	Uint32 SpecularArrayIndex;
 	Math::VecU2 Padding2;
 
-	Math::MatF44 FrustumPlanes[6];
+	Math::VecF4 FrustumPlanes[6];
 };
 
 #endif // LIGHT_CB_H

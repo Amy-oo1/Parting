@@ -31,13 +31,14 @@ PARTING_IMPORT Utility;
 #include "Core/VFS/Module/VFS.h"
 #include "Core/Logger/Module/Logger.h"
 
+#include "Engine/Render/Module/View.h"
+
 #endif // PARTING_MODULE_BUILD
 
 namespace Parting {
 
 	class ThirdPersonCamera final :public BaseCamera<ThirdPersonCamera> {
 		friend class BaseCamera<ThirdPersonCamera>;
-
 	public:
 		enum class KeyboardControls :Uint8 {
 			HorizontalPan,
@@ -58,8 +59,12 @@ namespace Parting {
 		~ThirdPersonCamera(void) = default;
 
 	public:
-
-
+		Math::VecF3 GetTargetPosition(void) const { return this->m_TargetPos; }
+		float Get_Distance(void) const { return this->m_Distance; }
+		float Get_RotationYaw(void) const { return this->m_Yaw; }
+		float Get_RotationPitch(void) const { return this->m_Pitch; }
+		float Get_MaxDistance(void) const { return this->m_MaxDistance; }
+	public:
 
 
 
@@ -69,8 +74,13 @@ namespace Parting {
 
 		void Set_Distance(float distance) { this->m_Distance = distance; }
 
+		void SetMaxDistance(float value) { m_MaxDistance = value; }
 
-		void Animate(float deltaT);
+		void Set_View(const PlanarView& view);
+
+		void LookAt(Math::VecF3 cameraPos, Math::VecF3 cameraTarget);
+		void LookTo(Math::VecF3 cameraPos, Math::VecF3 cameraDir, Optional<float> targetDistance = NullOpt);
+
 
 		void AnimateOrbit(float deltaT);
 
@@ -101,8 +111,14 @@ namespace Parting {
 		float m_DeltaPitch{ 0.f };
 		float m_DeltaDistance{ 0.f };
 
-		const UnorderedMap<Uint32, KeyboardControls> m_KeyboardMap{
-			{ 342u /*GLFW_KEY_LEFT_ALT*/, KeyboardControls::HorizontalPan }
+		const UnorderedMap<Int32, KeyboardControls> m_KeyboardMap{
+			{ GLFW_KEY_LEFT_ALT, KeyboardControls::HorizontalPan }
+		};
+
+		const UnorderedMap<Int32, MouseButtons> m_MouseButtonMap{
+			{ GLFW_MOUSE_BUTTON_LEFT, MouseButtons::Left },
+			{ GLFW_MOUSE_BUTTON_MIDDLE, MouseButtons::Middle },
+			{ GLFW_MOUSE_BUTTON_RIGHT, MouseButtons::Right }
 		};
 
 		Array<bool, Tounderlying(KeyboardControls::COUNT)> m_KeyboardState{ false };
@@ -110,7 +126,13 @@ namespace Parting {
 
 
 	private:
-
+		void Imp_KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods);
+		void Imp_MousePosUpdate(double xpos, double ypos);
+		void Imp_MouseButtonUpdate(Int32 button, Int32 action, Int32 mods);
+		void Imp_MouseScrollUpdate(double xoffset, double yoffset);
+		void Imp_JoystickButtonUpdate(Int32 button, bool pressed);
+		void Imp_JoystickUpdate(Int32 axis, float value);
+		void Imp_Animate(float deltaT);
 
 	};
 
@@ -123,7 +145,54 @@ namespace Parting {
 		this->m_Pitch = pitch;
 	}
 
-	inline void ThirdPersonCamera::Animate(float deltaT) {
+	inline void ThirdPersonCamera::Imp_KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) {
+		if (this->m_KeyboardMap.find(key) == this->m_KeyboardMap.end()) {
+			LOG_INFO("Key not found in map");
+			return;
+		}
+
+		this->m_KeyboardState[Tounderlying(this->m_KeyboardMap.at(key))] = (action == GLFW_PRESS || action == GLFW_REPEAT);
+	}
+
+	inline void ThirdPersonCamera::Imp_MousePosUpdate(double xpos, double ypos) {
+		this->m_MousePos = Math::VecF2{ static_cast<float>(xpos), static_cast<float>(ypos) };
+	}
+
+	inline void ThirdPersonCamera::Imp_MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) {
+		if (this->m_MouseButtonMap.find(button) == this->m_MouseButtonMap.end()) {
+			LOG_INFO("Mouse button not found in map");
+			return;
+		}
+
+		this->m_MouseButtonState[Tounderlying(this->m_MouseButtonMap.at(button))] = (action == GLFW_PRESS);
+	}
+
+	inline void ThirdPersonCamera::Imp_MouseScrollUpdate(double xoffset, double yoffset) {
+		constexpr float scrollFactor{ 1.15f };
+		this->m_Distance = Math::Clamp(
+			this->m_Distance * (yoffset < 0 ? scrollFactor : 1.0f / scrollFactor),
+			this->m_MinDistance,
+			this->m_MaxDistance
+		);
+	}
+
+	inline void ThirdPersonCamera::Imp_JoystickButtonUpdate(Int32 button, bool pressed) {
+		switch (button) {
+		case GLFW_GAMEPAD_BUTTON_B: if (pressed) this->m_DeltaDistance -= 1; break;
+		case GLFW_GAMEPAD_BUTTON_A: if (pressed) this->m_DeltaDistance += 1; break;
+		default: break;
+		}
+	}
+
+	inline void ThirdPersonCamera::Imp_JoystickUpdate(Int32 axis, float value) {
+		switch (axis) {
+		case GLFW_GAMEPAD_AXIS_RIGHT_X: this->m_DeltaYaw = value; break;
+		case GLFW_GAMEPAD_AXIS_RIGHT_Y: this->m_DeltaPitch = value; break;
+		default: break;
+		}
+	}
+
+	inline void ThirdPersonCamera::Imp_Animate(float deltaT) {
 		AnimateOrbit(deltaT);
 
 		Math::QuatF orbit{ Math::RotationQuat(Math::VecF3{ this->m_Pitch, this->m_Yaw, 0 }) };
@@ -142,6 +211,13 @@ namespace Parting {
 		this->UpdateWorldToView();
 
 		this->m_MousePosPrev = this->m_MousePos;
+	}
+
+	inline void ThirdPersonCamera::Set_View(const PlanarView& view){
+		this->m_ProjectionMatrix = view.Get_ProjectionMatrix(false);
+		this->m_InverseProjectionMatrix = view.Get_InverseProjectionMatrix(false);
+		const auto& viewport{ view.Get_Viewport() };
+		this->m_ViewportSize = Math::VecF2{ viewport.Width(), viewport.Height() };
 	}
 
 	inline void ThirdPersonCamera::AnimateOrbit(float deltaT) {
@@ -210,5 +286,7 @@ namespace Parting {
 				this->m_TargetPos += viewMotion.Y * viewMatrix.Row1;
 		}
 	}
+
+
 
 }

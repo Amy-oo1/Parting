@@ -97,17 +97,21 @@ namespace RHI {
 
 	PARTING_EXPORT class RHIViewportStateBuilder final {
 	public:
-		STDNODISCARD constexpr void AddViewport(const RHIViewport& Viewport) {
+		RHIViewportStateBuilder& AddViewport(const RHIViewport& Viewport) {
 			ASSERT(this->m_ViewportState.ViewportCount < g_MaxViewportCount);
 
 			this->m_ViewportState.Viewports[this->m_ViewportState.ViewportCount++] = Viewport;
+
+			return *this;
 		}
-		STDNODISCARD constexpr void AddScissorRect(const RHIRect2D& ScissorRect) {
+		RHIViewportStateBuilder& AddScissorRect(const RHIRect2D& ScissorRect) {
 			ASSERT(this->m_ViewportState.ScissorCount < g_MaxViewportCount);
 			this->m_ViewportState.ScissorRects[this->m_ViewportState.ScissorCount++] = ScissorRect;
+
+			return *this;
 		}
 
-		STDNODISCARD void AddViewportAndScissorRect(const RHIViewport& Viewport) {
+		RHIViewportStateBuilder& AddViewportAndScissorRect(const RHIViewport& Viewport) {
 			RHIRect2D ScissorRect{
 				.Offset{ static_cast<Uint32>(Math::Floor(Viewport.MinX)), static_cast<Uint32>(Math::Floor(Viewport.MinY)) },
 				.Extent{ static_cast<Uint32>(Math::Ceil(Viewport.Width())), static_cast<Uint32>(Math::Ceil(Viewport.Height())) }
@@ -115,6 +119,15 @@ namespace RHI {
 
 			this->AddViewport(Viewport);
 			this->AddScissorRect(ScissorRect);
+
+			return *this;
+		}
+
+		STDNODISCARD const RHIViewportState& Build(void)const {
+			ASSERT(this->m_ViewportState.ViewportCount > 0);
+			ASSERT(this->m_ViewportState.ScissorCount > 0);
+
+			return this->m_ViewportState;
 		}
 
 	private:

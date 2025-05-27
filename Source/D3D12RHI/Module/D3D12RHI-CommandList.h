@@ -140,23 +140,9 @@ namespace RHI::D3D12 {
 
 		void BindFramebuffer(FrameBuffer* fb);
 
-		void SetGraphicsBindings(
-			const Array<BindingSet*, g_MaxBindingLayoutCount> bindings,
-			Uint32 BindingSetCount,
-			Uint32 bindingUpdateMask,
-			Buffer* indirectParams,
-			bool updateIndirectParams,
-			const D3D12RootSignature* rootSignature
-		);
+		void SetGraphicsBindings(const Array<BindingSet*, g_MaxBindingLayoutCount> bindings, Uint32 BindingSetCount, Uint32 bindingUpdateMask, Buffer* indirectParams, bool updateIndirectParams, const D3D12RootSignature* rootSignature);
 
-		void SetComputeBindings(
-			const Array<BindingSet*, g_MaxBindingLayoutCount> bindings,
-			Uint32 BindingSetCount,
-			Uint32 bindingUpdateMask,
-			Buffer* indirectParams,
-			bool updateIndirectParams,
-			const D3D12RootSignature* rootSignature
-		);
+		void SetComputeBindings(const Array<BindingSet*, g_MaxBindingLayoutCount> bindings, Uint32 BindingSetCount, Uint32 bindingUpdateMask, Buffer* indirectParams, bool updateIndirectParams, const D3D12RootSignature* rootSignature);
 
 		void UnbindShadingRateState(void);
 
@@ -213,7 +199,7 @@ namespace RHI::D3D12 {
 		void Imp_Close(void);
 		void Imp_ClearTextureFloat(Texture* texture, const RHITextureSubresourceSet& subresources, const Color& color);
 		void Imp_ClearDepthStencilTexture(Texture* texture, const RHITextureSubresourceSet& subresources, Optional<float> depth, Optional<Uint8> stencil);
-		void Imp_ClearTextureUInt(Texture* texture, RHITextureSubresourceSet subresources, Uint32 clearColor);
+		void Imp_ClearTextureUInt(Texture* texture, const RHITextureSubresourceSet& subresources, Uint32 clearColor);
 		void Imp_CopyTexture(Texture* des, RHITextureSlice desSlice, Texture* src, RHITextureSlice srcSlice);
 		void Imp_CopyTexture(Texture* des, RHITextureSlice desSlice, StagingTexture* src, RHITextureSlice srcSlice);
 		void Imp_CopyTexture(StagingTexture* des, RHITextureSlice desSlice, Texture* src, RHITextureSlice srcSlice);
@@ -399,13 +385,13 @@ namespace RHI::D3D12 {
 	}
 
 	//TODO :Use Span
-	void CommandList::SetGraphicsBindings(const Array<BindingSet*, g_MaxBindingLayoutCount> bindings, Uint32 BindingSetCount, Uint32 bindingUpdateMask, Buffer* indirectParams, bool updateIndirectParams, const D3D12RootSignature* rootSignature) {
+	void CommandList::SetComputeBindings(const Array<BindingSet*, g_MaxBindingLayoutCount> bindings, Uint32 BindingSetCount, Uint32 bindingUpdateMask, Buffer* indirectParams, bool updateIndirectParams, const D3D12RootSignature* rootSignature) {
 		if (bindingUpdateMask) {
 			Array<VolatileConstantBufferBinding, g_MaxVolatileConstantBuffers> newVolatileCBs{};
 			RemoveCV<decltype(g_MaxVolatileConstantBuffers)>::type newVolatileCBCount{ 0 };
 
 			for (Uint32 bindingSetIndex = 0; bindingSetIndex < BindingSetCount; ++bindingSetIndex) {
-				BindingSet* bindingSet = bindings[bindingSetIndex];
+				BindingSet* bindingSet{ bindings[bindingSetIndex] };
 
 				if (nullptr == bindingSet)
 					continue;
@@ -413,101 +399,91 @@ namespace RHI::D3D12 {
 				const bool updateThisSet{ (bindingUpdateMask & (1 << bindingSetIndex)) != 0 };
 
 				auto& [Layout, rootParameterOffset] { rootSignature->m_BindLayouts[bindingSetIndex] };
-				if (nullptr == GetIf<RefCountPtr<BindingLayout>>(&Layout))
-					ASSERT(false);
 				auto bindinglayout{ Get<RefCountPtr<BindingLayout>>(Layout).Get() };
 
 				//TODO : BingdSet and DescriptorTable
-				if (bindingSet->Get_Desc()) {
-					ASSERT(bindinglayout == bindingSet->Get_Layout()); // validation layer handles this
+				ASSERT(bindinglayout == bindingSet->Get_Layout()); // validation layer handles this
 
-					// Bind the volatile constant buffers
-					for (Uint64 volatileCbIndex = 0; volatileCbIndex < bindingSet->m_VolatileCBCount; ++volatileCbIndex) {
-						const auto& [ParameterIndex, buffer] { bindingSet->m_RootParametersVolatileCB[volatileCbIndex] };
-						auto rootParameterIndex = rootParameterOffset + ParameterIndex;
+				// Bind the volatile constant buffers
+				for (Uint32 volatileCbIndex = 0; volatileCbIndex < bindingSet->m_VolatileCBCount; ++volatileCbIndex) {
+					const auto& [ParameterIndex, buffer] { bindingSet->m_RootParametersVolatileCB[volatileCbIndex] };
+					auto rootParameterIndex{ rootParameterOffset + ParameterIndex };
 
-						if (nullptr != buffer) {
-							if (buffer->m_Desc.IsVolatile) {
-								const D3D12_GPU_VIRTUAL_ADDRESS volatileData{ this->m_VolatileConstantBufferAddresses[buffer] };
+					if (nullptr != buffer) {
+						if (buffer->m_Desc.IsVolatile) {
+							const D3D12_GPU_VIRTUAL_ADDRESS volatileData{ this->m_VolatileConstantBufferAddresses[buffer] };
 
-								if (0 != volatileData) {
-									LOG_ERROR("Volatile buffer address is null");
+							if (0 == volatileData) {
+								LOG_ERROR("Volatile buffer address is null");
 
-									continue;
-								}
-
-								if (updateThisSet || volatileData != m_CurrentGraphicsVolatileCBs[newVolatileCBCount].Address)
-									this->m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, volatileData);
-
-								newVolatileCBs[newVolatileCBCount++] = VolatileConstantBufferBinding{
-									.BindingPoint { rootParameterIndex },
-									.Buffer { buffer },
-									.Address{ volatileData }
-								};
+								continue;
 							}
-							else if (updateThisSet) {
-								ASSERT(0 != buffer->m_GPUVirtualAddress);
 
-								this->m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, buffer->m_GPUVirtualAddress);
-							}
+							if (updateThisSet || volatileData != m_CurrentComputeVolatileCBs[newVolatileCBCount].Address)
+								this->m_ActiveCommandList->CommandList->SetComputeRootConstantBufferView(rootParameterIndex, volatileData);
+
+							newVolatileCBs[newVolatileCBCount++] = VolatileConstantBufferBinding{
+								.BindingPoint { rootParameterIndex },
+								.Buffer { buffer },
+								.Address{ volatileData }
+							};
 						}
-						else if (updateThisSet)
-							this->m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, 0);
-						// This can only happen as a result of an improperly built binding set. 
-							// Such binding set should fail to create.
+						else if (updateThisSet) {
+							ASSERT(0 != buffer->m_GPUVirtualAddress);
+
+							this->m_ActiveCommandList->CommandList->SetComputeRootConstantBufferView(rootParameterIndex, buffer->m_GPUVirtualAddress);
+						}
 					}
-
-					if (updateThisSet) {
-						if (bindingSet->m_DescriptorTableValidSamplers)
-							this->m_ActiveCommandList->CommandList->SetGraphicsRootDescriptorTable(
-								rootParameterOffset + bindingSet->m_RootParameterIndexSamplers,
-								this->m_DeviceResourcesRef.SamplerHeap.Get_GPUHandle(bindingSet->m_DescriptorTableSamplers)
-							);
-						if (bindingSet->m_DescriptorTableValidSRVetc)
-							this->m_ActiveCommandList->CommandList->SetGraphicsRootDescriptorTable(
-								rootParameterOffset + bindingSet->m_RootParameterIndexSRVetc,
-								this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_GPUHandle(bindingSet->m_DescriptorTableSRVetc)
-							);
-
-						if (bindingSet->m_Desc.TrackLiveness)
-							this->m_Instance->ReferencedResources.push_back(bindingSet);
-					}
-
-					if (this->m_EnableAutomaticBarriers && (updateThisSet || bindingSet->m_HasUAVBindings)) // UAV bindings may place UAV barriers on the same binding set
-						this->SetResourceStatesForBindingSet(bindingSet);
+					else if (updateThisSet)
+						this->m_ActiveCommandList->CommandList->SetComputeRootConstantBufferView(rootParameterIndex, 0);
+					// This can only happen as a result of an improperly built binding set. Such binding set should fail to create.
 				}
-				/*else if (updateThisSet)
-				{
-					DescriptorTable* descriptorTable = checked_cast<DescriptorTable*>(_bindingSet);
 
-					m_ActiveCommandList->commandList->SetGraphicsRootDescriptorTable(rootParameterOffset, m_Resources.shaderResourceViewHeap.getGpuHandle(descriptorTable->firstDescriptor));
-				}*/
+				if (updateThisSet) {
+					if (bindingSet->m_DescriptorTableValidSamplers)
+						this->m_ActiveCommandList->CommandList->SetComputeRootDescriptorTable(
+							rootParameterOffset + bindingSet->m_RootParameterIndexSamplers,
+							this->m_DeviceResourcesRef.SamplerHeap.Get_GPUHandle(bindingSet->m_DescriptorTableSamplers)
+						);
+					if (bindingSet->m_DescriptorTableValidSRVetc)
+						this->m_ActiveCommandList->CommandList->SetComputeRootDescriptorTable(
+							rootParameterOffset + bindingSet->m_RootParameterIndexSRVetc,
+							this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_GPUHandle(bindingSet->m_DescriptorTableSRVetc)
+						);
+
+					if (bindingSet->m_Desc.TrackLiveness)//TODO :Remove
+						this->m_Instance->ReferencedResources.push_back(bindingSet);
+				}
+
+				if (this->m_EnableAutomaticBarriers && (updateThisSet || bindingSet->m_HasUAVBindings)) // UAV bindings may place UAV barriers on the same binding set
+					this->SetResourceStatesForBindingSet(bindingSet);
 			}
 
+			this->m_CurrentComputeVolatileCBCount = 0;
 			for (Uint32 Index = 0; Index < newVolatileCBCount; ++Index)
-				this->m_CurrentGraphicsVolatileCBs[Index] = newVolatileCBs[Index];
+				this->m_CurrentComputeVolatileCBs[this->m_CurrentComputeVolatileCBCount++] = newVolatileCBs[Index];
 		}
 
-		if (indirectParams && updateIndirectParams) {
+		if (nullptr != indirectParams && updateIndirectParams) {
 			if (this->m_EnableAutomaticBarriers)
 				this->m_StateTracker.RequireBufferState(&indirectParams->m_StateExtension, RHIResourceState::IndirectArgument);
 			this->m_Instance->ReferencedResources.push_back(indirectParams);
 		}
 
-		Uint32 bindingMask = (1 << BindingSetCount) - 1;
+		Uint32 bindingMask{ (1u << BindingSetCount) - 1u };
 		if ((bindingUpdateMask & bindingMask) == bindingMask)
-			m_AnyVolatileBufferWrites = false;
+			this->m_AnyVolatileBufferWrites = false;
 		// Only reset this flag when this function has gone over all the binging sets
 	}
 
 	//TODO :Use Span
-	void CommandList::SetComputeBindings(const Array<BindingSet*, g_MaxBindingLayoutCount> bindings, Uint32 BindingSetCount, Uint32 bindingUpdateMask, Buffer* indirectParams, bool updateIndirectParams, const D3D12RootSignature* rootSignature) {
+	void CommandList::SetGraphicsBindings(const Array<BindingSet*, g_MaxBindingLayoutCount> bindings, Uint32 BindingSetCount, Uint32 bindingUpdateMask, Buffer* indirectParams, bool updateIndirectParams, const D3D12RootSignature* rootSignature) {
 		if (bindingUpdateMask) {
 			Array<VolatileConstantBufferBinding, g_MaxVolatileConstantBuffers> newVolatileCBs{};
 			RemoveCV<decltype(g_MaxVolatileConstantBuffers)>::type newVolatileCBCount{ 0 };
 
 			for (Uint32 bindingSetIndex = 0; bindingSetIndex < BindingSetCount; ++bindingSetIndex) {
-				BindingSet* bindingSet = bindings[bindingSetIndex];
+				BindingSet* bindingSet{ bindings[bindingSetIndex] };
 
 				if (nullptr == bindingSet)
 					continue;
@@ -515,77 +491,68 @@ namespace RHI::D3D12 {
 				const bool updateThisSet{ (bindingUpdateMask & (1 << bindingSetIndex)) != 0 };
 
 				auto& [Layout, rootParameterOffset] = rootSignature->m_BindLayouts[bindingSetIndex];
-				if (nullptr == GetIf<RefCountPtr<BindingLayout>>(&Layout))
-					ASSERT(false);
 				auto bindinglayout{ Get<RefCountPtr<BindingLayout>>(Layout).Get() };
 
-				if (bindingSet->Get_Desc()) {
-					ASSERT(bindinglayout == bindingSet->Get_Layout()); // validation layer handles this
+				ASSERT(bindinglayout == bindingSet->Get_Layout()); // validation layer handles this
 
-					// Bind the volatile constant buffers
-					for (Uint64 volatileCbIndex = 0; volatileCbIndex < bindingSet->m_VolatileCBCount; ++volatileCbIndex) {
-						const auto& [ParameterIndex, buffer] { bindingSet->m_RootParametersVolatileCB[volatileCbIndex] };
-						auto rootParameterIndex = rootParameterOffset + ParameterIndex;
+				// Bind the volatile constant buffers
+				for (Uint32 volatileCbIndex = 0; volatileCbIndex < bindingSet->m_VolatileCBCount; ++volatileCbIndex) {
+					const auto& [ParameterIndex, buffer] { bindingSet->m_RootParametersVolatileCB[volatileCbIndex] };
+					auto rootParameterIndex = rootParameterOffset + ParameterIndex;
 
-						if (nullptr != buffer) {
-							if (buffer->m_Desc.IsVolatile) {
-								const D3D12_GPU_VIRTUAL_ADDRESS volatileData{ this->m_VolatileConstantBufferAddresses[buffer] };
+					if (nullptr != buffer) {
+						if (buffer->m_Desc.IsVolatile) {
+							const D3D12_GPU_VIRTUAL_ADDRESS volatileData{ this->m_VolatileConstantBufferAddresses[buffer] };
 
-								if (!volatileData) {
-									LOG_ERROR("Volatile buffer address is null");
+							if (0 == volatileData) {
+								LOG_ERROR("Volatile buffer address is null");
 
-									continue;
-								}
-
-								if (updateThisSet || volatileData != m_CurrentGraphicsVolatileCBs[newVolatileCBCount].Address)
-									m_ActiveCommandList->CommandList->SetComputeRootConstantBufferView(rootParameterIndex, volatileData);
-
-								newVolatileCBs[newVolatileCBCount++] = VolatileConstantBufferBinding{
-									.BindingPoint { rootParameterIndex },
-									.Buffer { buffer },
-									.Address{ volatileData }
-								};
+								continue;
 							}
-							else if (updateThisSet) {
-								ASSERT(0 != buffer->m_GPUVirtualAddress);
 
-								this->m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, buffer->m_GPUVirtualAddress);
-							}
+							if (updateThisSet || volatileData != this->m_CurrentGraphicsVolatileCBs[newVolatileCBCount].Address)
+								this->m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, volatileData);
+
+							newVolatileCBs[newVolatileCBCount++] = VolatileConstantBufferBinding{
+								.BindingPoint { rootParameterIndex },
+								.Buffer { buffer },
+								.Address{ volatileData }
+							};
 						}
-						else if (updateThisSet)
-							m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, 0);
-						// This can only happen as a result of an improperly built binding set. 
-							// Such binding set should fail to create.
+						else if (updateThisSet) {
+							ASSERT(0 != buffer->m_GPUVirtualAddress);
+
+							this->m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, buffer->m_GPUVirtualAddress);
+						}
 					}
-
-					if (updateThisSet) {
-						if (bindingSet->m_DescriptorTableValidSamplers)
-							m_ActiveCommandList->CommandList->SetGraphicsRootDescriptorTable(
-								rootParameterOffset + bindingSet->m_RootParameterIndexSamplers,
-								this->m_DeviceResourcesRef.SamplerHeap.Get_GPUHandle(bindingSet->m_DescriptorTableSamplers)
-							);
-						if (bindingSet->m_DescriptorTableValidSRVetc)
-							m_ActiveCommandList->CommandList->SetGraphicsRootDescriptorTable(
-								rootParameterOffset + bindingSet->m_RootParameterIndexSamplers,
-								this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_GPUHandle(bindingSet->m_DescriptorTableSRVetc)
-							);
-
-						if (bindingSet->m_Desc.TrackLiveness)
-							m_Instance->ReferencedResources.push_back(bindingSet);
-					}
-
-					if (m_EnableAutomaticBarriers && (updateThisSet || bindingSet->m_HasUAVBindings)) // UAV bindings may place UAV barriers on the same binding set
-						this->SetResourceStatesForBindingSet(bindingSet);
+					else if (updateThisSet)
+						this->m_ActiveCommandList->CommandList->SetGraphicsRootConstantBufferView(rootParameterIndex, 0);
+					// This can only happen as a result of an improperly built binding set.Such binding set should fail to create.
 				}
-				/*else if (updateThisSet)
-				{
-					DescriptorTable* descriptorTable = checked_cast<DescriptorTable*>(_bindingSet);
 
-					m_ActiveCommandList->commandList->SetGraphicsRootDescriptorTable(rootParameterOffset, m_Resources.shaderResourceViewHeap.getGpuHandle(descriptorTable->firstDescriptor));
-				}*/
+				if (updateThisSet) {
+					if (bindingSet->m_DescriptorTableValidSamplers)
+						this->m_ActiveCommandList->CommandList->SetGraphicsRootDescriptorTable(
+							rootParameterOffset + bindingSet->m_RootParameterIndexSamplers,
+							this->m_DeviceResourcesRef.SamplerHeap.Get_GPUHandle(bindingSet->m_DescriptorTableSamplers)
+						);
+					if (bindingSet->m_DescriptorTableValidSRVetc)
+						this->m_ActiveCommandList->CommandList->SetGraphicsRootDescriptorTable(
+							rootParameterOffset + bindingSet->m_RootParameterIndexSRVetc,
+							this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_GPUHandle(bindingSet->m_DescriptorTableSRVetc)
+						);
+
+					if (bindingSet->m_Desc.TrackLiveness)
+						this->m_Instance->ReferencedResources.push_back(bindingSet);
+				}
+
+				if (this->m_EnableAutomaticBarriers && (updateThisSet || bindingSet->m_HasUAVBindings)) // UAV bindings may place UAV barriers on the same binding set
+					this->SetResourceStatesForBindingSet(bindingSet);
 			}
 
-			this->m_CurrentGraphicsVolatileCBs = newVolatileCBs;
+			this->m_CurrentGraphicsVolatileCBCount = 0;
+			for (Uint32 Index = 0; Index < newVolatileCBCount; ++Index)
+				this->m_CurrentGraphicsVolatileCBs[this->m_CurrentGraphicsVolatileCBCount++] = newVolatileCBs[Index];
 		}
 
 		if (indirectParams && updateIndirectParams) {
@@ -594,9 +561,9 @@ namespace RHI::D3D12 {
 			this->m_Instance->ReferencedResources.push_back(indirectParams);
 		}
 
-		Uint32 bindingMask = (1 << BindingSetCount) - 1;
+		Uint32 bindingMask{ (1u << BindingSetCount) - 1u };
 		if ((bindingUpdateMask & bindingMask) == bindingMask)
-			m_AnyVolatileBufferWrites = false;
+			this->m_AnyVolatileBufferWrites = false;
 		// Only reset this flag when this function has gone over all the binging sets
 	}
 
@@ -630,7 +597,7 @@ namespace RHI::D3D12 {
 
 	inline void CommandList::UpdateComputeVolatileBuffers(void) {
 		// If there are some volatile buffers bound, and they have been written into since the last dispatch or setComputeState, patch their views
-		if (!m_AnyVolatileBufferWrites)
+		if (!this->m_AnyVolatileBufferWrites)
 			return;
 
 		for (Uint32 Index = 0; Index < this->m_CurrentComputeVolatileCBCount; ++Index) {
@@ -701,10 +668,10 @@ namespace RHI::D3D12 {
 
 		if (texture->m_Desc.IsRenderTarget) {
 			if (this->m_EnableAutomaticBarriers)
-				this->m_StateTracker.RequireTextureState(&texture->m_StateExtension, subresources, RHIResourceState::RenderTarget);
+				this->m_StateTracker.RequireTextureState(&texture->m_StateExtension, Resolvesubresources, RHIResourceState::RenderTarget);
 			this->CommitBarriers();
 
-			for (Uint32 mipLevel = subresources.BaseMipLevel; mipLevel < subresources.BaseMipLevel + subresources.MipLevelCount; ++mipLevel) {
+			for (Uint32 mipLevel = Resolvesubresources.BaseMipLevel; mipLevel < Resolvesubresources.BaseMipLevel + Resolvesubresources.MipLevelCount; ++mipLevel) {
 				D3D12_CPU_DESCRIPTOR_HANDLE RTV{ .ptr { texture->GetNativeView(RHIObjectType::D3D12_RenderTargetViewDescriptor, RHIFormat::UNKNOWN, subresources, RHITextureDimension::Unknown).Integer } };
 
 				m_ActiveCommandList->CommandList->ClearRenderTargetView(
@@ -716,12 +683,12 @@ namespace RHI::D3D12 {
 		}
 		else {
 			if (this->m_EnableAutomaticBarriers)
-				this->m_StateTracker.RequireTextureState(&texture->m_StateExtension, subresources, RHIResourceState::UnorderedAccess);
+				this->m_StateTracker.RequireTextureState(&texture->m_StateExtension, Resolvesubresources, RHIResourceState::UnorderedAccess);
 			this->CommitBarriers();
 
 			this->CommitDescriptorHeaps();
 
-			for (Uint32 mipLevel = subresources.BaseMipLevel; mipLevel < subresources.BaseMipLevel + subresources.MipLevelCount; ++mipLevel) {
+			for (Uint32 mipLevel = Resolvesubresources.BaseMipLevel; mipLevel < Resolvesubresources.BaseMipLevel + Resolvesubresources.MipLevelCount; ++mipLevel) {
 				D3D12DescriptorIndex index = texture->Get_ClearMipLevelUAV(mipLevel);
 
 				ASSERT(index != g_InvalidDescriptorIndex);
@@ -745,7 +712,7 @@ namespace RHI::D3D12 {
 		this->m_Instance->ReferencedResources.push_back(texture);
 
 		if (this->m_EnableAutomaticBarriers)
-			this->m_StateTracker.RequireTextureState(&texture->m_StateExtension, subresources, RHIResourceState::DepthWrite);
+			this->m_StateTracker.RequireTextureState(&texture->m_StateExtension, Resolvesubresources, RHIResourceState::DepthWrite);
 		this->CommitBarriers();
 
 		D3D12_CLEAR_FLAGS clearFlags{ D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL };
@@ -754,7 +721,7 @@ namespace RHI::D3D12 {
 		else if (NullOpt == stencil)
 			clearFlags = D3D12_CLEAR_FLAG_DEPTH;
 
-		for (Uint32 mipLevel = subresources.BaseMipLevel; mipLevel < subresources.BaseMipLevel + subresources.MipLevelCount; ++mipLevel) {
+		for (Uint32 mipLevel = Resolvesubresources.BaseMipLevel; mipLevel < Resolvesubresources.BaseMipLevel + Resolvesubresources.MipLevelCount; ++mipLevel) {
 			D3D12_CPU_DESCRIPTOR_HANDLE DSV{ .ptr{ texture->GetNativeView(RHIObjectType::D3D12_DepthStencilViewDescriptor, RHIFormat::UNKNOWN, subresources, RHITextureDimension::Unknown).Integer } };
 
 			m_ActiveCommandList->CommandList->ClearDepthStencilView(
@@ -767,24 +734,26 @@ namespace RHI::D3D12 {
 		}
 	}
 
-	inline void CommandList::Imp_ClearTextureUInt(Texture* texture, RHITextureSubresourceSet subresources, Uint32 clearColor) {
-		Uint32 clearValues[4]{ clearColor, clearColor, clearColor, clearColor };
+	inline void CommandList::Imp_ClearTextureUInt(Texture* texture, const RHITextureSubresourceSet& subresources, Uint32 clearColor) {//TODO :const&
+		const auto Resolvesubresources{ subresources.Resolve(texture->m_Desc, false) };
 
 		this->m_Instance->ReferencedResources.push_back(texture);
 
 		if (texture->m_Desc.IsUAV) {
-			if (m_EnableAutomaticBarriers)
-				this->m_StateTracker.RequireTextureState(&texture->m_StateExtension, subresources, RHIResourceState::UnorderedAccess);
+			if (this->m_EnableAutomaticBarriers)
+				this->m_StateTracker.RequireTextureState(&texture->m_StateExtension, Resolvesubresources, RHIResourceState::UnorderedAccess);
 			this->CommitBarriers();
 
 			this->CommitDescriptorHeaps();
 
-			for (Uint32 mipLevel = subresources.BaseMipLevel; mipLevel < subresources.BaseMipLevel + subresources.MipLevelCount; ++mipLevel) {
+			for (Uint32 mipLevel = Resolvesubresources.BaseMipLevel; mipLevel < Resolvesubresources.BaseMipLevel + Resolvesubresources.MipLevelCount; ++mipLevel) {
 				D3D12DescriptorIndex index{ texture->Get_ClearMipLevelUAV(mipLevel) };
 
 				ASSERT(index != g_InvalidDescriptorIndex);
 
-				m_ActiveCommandList->CommandList->ClearUnorderedAccessViewUint(
+				Uint32 clearValues[4]{ clearColor, clearColor, clearColor, clearColor };
+
+				this->m_ActiveCommandList->CommandList->ClearUnorderedAccessViewUint(
 					this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_GPUHandle(index),
 					this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_CPUHandle(index),
 					texture->m_Resource,
@@ -795,10 +764,10 @@ namespace RHI::D3D12 {
 		}
 		else if (texture->m_Desc.IsRenderTarget) {
 			if (this->m_EnableAutomaticBarriers)
-				this->m_StateTracker.RequireTextureState(&texture->m_StateExtension, subresources, RHIResourceState::RenderTarget);
+				this->m_StateTracker.RequireTextureState(&texture->m_StateExtension, Resolvesubresources, RHIResourceState::RenderTarget);
 			this->CommitBarriers();
 
-			for (Uint32 mipLevel = subresources.BaseMipLevel; mipLevel < subresources.BaseMipLevel + subresources.MipLevelCount; ++mipLevel) {
+			for (Uint32 mipLevel = Resolvesubresources.BaseMipLevel; mipLevel < Resolvesubresources.BaseMipLevel + Resolvesubresources.MipLevelCount; ++mipLevel) {
 				D3D12_CPU_DESCRIPTOR_HANDLE RTV = { .ptr{ texture->GetNativeView(RHIObjectType::D3D12_RenderTargetViewDescriptor, RHIFormat::UNKNOWN, subresources, RHITextureDimension::Unknown).Integer} };
 
 				float floatColor[4]{
@@ -1175,6 +1144,7 @@ namespace RHI::D3D12 {
 		const D3D12RootSignature* rootsig{ nullptr };
 		bool isGraphics{ false };
 
+		//TODO
 		if (this->m_CurrentGraphicsStateValid && nullptr != this->m_CurrentGraphicsState.Pipeline) {
 			GraphicsPipeline* pso = this->m_CurrentGraphicsState.Pipeline;
 			rootsig = pso->m_RootSignature;
@@ -1433,7 +1403,7 @@ namespace RHI::D3D12 {
 	}
 
 	void CommandList::Imp_SetComputeState(const RHIComputeState<D3D12Tag>& State) {
-		auto pso{ State.Pipeline };
+		ComputePipeline* pso{ State.Pipeline };
 
 		const bool updateRootSignature{
 			!this->m_CurrentComputeStateValid ||
@@ -1451,7 +1421,7 @@ namespace RHI::D3D12 {
 			this->m_CurrentComputeState.IndirectParams != State.IndirectParams
 		};
 
-		uint32_t bindingUpdateMask = 0;
+		Uint32 bindingUpdateMask{ 0 };
 		if (!this->m_CurrentComputeStateValid || updateRootSignature)
 			bindingUpdateMask = ~0u;
 
@@ -1641,11 +1611,11 @@ namespace RHI::D3D12 {
 				if (nullptr != GetIf<RefCountPtr<Texture>>(&binding.ResourcePtr))
 					this->m_StateTracker.RequireTextureState(&Get<RefCountPtr<Texture>>(binding.ResourcePtr)->m_StateExtension, binding.Subresources, RHIResourceState::ShaderResource);
 				else
-					this->m_StateTracker.RequireTextureState(&Get<RefCountPtr<SamplerFeedbackTexture>>(binding.ResourcePtr)->m_PairdTexture->m_StateExtension, binding.Subresources, RHIResourceState::ShaderResource);
+					this->m_StateTracker.RequireTextureState(&Get<RefCountPtr<SamplerFeedbackTexture>>(binding.ResourcePtr)->m_PairdTexture->m_StateExtension, binding.Subresources, RHIResourceState::ShaderResource);//TODO :
 				break;
 
 			case Texture_UAV:
-				this->m_StateTracker.RequireBufferState(&Get<RefCountPtr<Buffer>>(binding.ResourcePtr)->m_StateExtension, RHIResourceState::UnorderedAccess);
+				this->m_StateTracker.RequireTextureState(&Get<RefCountPtr<Texture>>(binding.ResourcePtr)->m_StateExtension, binding.Subresources, RHIResourceState::UnorderedAccess);
 				break;
 
 			case TypedBuffer_SRV:

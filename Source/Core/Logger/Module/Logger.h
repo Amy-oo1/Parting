@@ -85,7 +85,7 @@ public:
 
 Logger::Logger(void) {
 	//Consoule Sink
-	auto ConsoleSink{ std::make_shared<spdlog::sinks::stdout_color_sink_mt>() };
+	auto ConsoleSink{ std::make_shared<spdlog::sinks::wincolor_stderr_sink_mt>() };
 	ConsoleSink->set_level(spdlog::level::trace);
 	ConsoleSink->set_pattern("[%H:%M:%S %e] [%^%l%$] [thread %t] %v");
 

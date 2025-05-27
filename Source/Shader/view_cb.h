@@ -23,33 +23,32 @@
 #ifndef VIEW_CB_H
 #define VIEW_CB_H
 
-struct PlanarViewConstants
-{
-    float4x4    matWorldToView;
-    float4x4    matViewToClip;
-    float4x4    matWorldToClip;
-    float4x4    matClipToView;
-    float4x4    matViewToWorld;
-    float4x4    matClipToWorld;
+struct PlanarViewConstants {
+	Math::MatF44		MatWorldToView;
+	Math::MatF44		MatViewToClip;
+	Math::MatF44		MatWorldToClip;
+	Math::MatF44		MatClipToView;
+	Math::MatF44		MatViewToWorld;
+	Math::MatF44		MatClipToWorld;
 
-    float4x4    matViewToClipNoOffset;
-    float4x4    matWorldToClipNoOffset;
-    float4x4    matClipToViewNoOffset;
-    float4x4    matClipToWorldNoOffset;
+	Math::MatF44		MatViewToClipNoOffset;
+	Math::MatF44		MatWorldToClipNoOffset;
+	Math::MatF44		MatClipToViewNoOffset;
+	Math::MatF44		MatClipToWorldNoOffset;
 
-    float2      viewportOrigin;
-    float2      viewportSize;
+	Math::VecF2			ViewportOrigin;
+	Math::VecF2			ViewportSize;
 
-    float2      viewportSizeInv;
-    float2      pixelOffset;
+	Math::VecF2			ViewportSizeInv;
+	Math::VecF2			PixelOffset;
 
-    float2      clipToWindowScale;
-    float2      clipToWindowBias;
+	Math::VecF2			ClipToWindowScale;
+	Math::VecF2			ClipToWindowBias;
 
-    float2      windowToClipScale;
-    float2      windowToClipBias;
+	Math::VecF2			WindowToClipScale;
+	Math::VecF2			WindowToClipBias;
 
-    float4      cameraDirectionOrPosition;
+	Math::VecF4			CameraDirectionOrPosition;
 };
 
 #endif // VIEW_CB_H

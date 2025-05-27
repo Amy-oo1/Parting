@@ -61,8 +61,6 @@ namespace RHI {
 		bool IsIndexBuffer{ false };
 		bool IsConstantBuffer{ false };
 		bool IsDrawIndirectArgs{ false };
-		bool IsAccelStructBuildInput{ false };//TO move
-		bool IsAccelStructStorage{ false };//TO move
 		bool IsShaderBindingTable{ false };
 
 		// A dynamic/upload buffer whose contents only live in the current command list
@@ -85,29 +83,27 @@ namespace RHI {
 
 	PARTING_EXPORT class RHIBufferDescBuilder final {
 	public:
-		STDNODISCARD constexpr RHIBufferDescBuilder& Reset(void) { this->m_Desc = RHIBufferDesc{}; return *this; }
+		constexpr RHIBufferDescBuilder& Reset(void) { this->m_Desc = RHIBufferDesc{}; return *this; }
 		
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_ByteSize(const Uint64 byteSize) { this->m_Desc.ByteSize = byteSize; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_StructStride(const Uint32 structStride) { this->m_Desc.StructStride = structStride; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_MaxVersions(const Uint32 maxVersions) { this->m_Desc.MaxVersions = maxVersions; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_DebugName(const WString& debugName) { this->m_Desc.DebugName = debugName; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_Format(const RHIFormat format) { this->m_Desc.Format = format; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_CanHaveUAVs(const bool canHaveUAVs) { this->m_Desc.CanHaveUAVs = canHaveUAVs; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_CanHaveTypedViews(const bool canHaveTypedViews) { this->m_Desc.CanHaveTypedViews = canHaveTypedViews; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_CanHaveRawViews(const bool canHaveRawViews) { this->m_Desc.CanHaveRawViews = canHaveRawViews; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_IsVertexBuffer(const bool isVertexBuffer) { this->m_Desc.IsVertexBuffer = isVertexBuffer; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_IsIndexBuffer(const bool isIndexBuffer) { this->m_Desc.IsIndexBuffer = isIndexBuffer; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_IsConstantBuffer(const bool isConstantBuffer) { this->m_Desc.IsConstantBuffer = isConstantBuffer; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_IsDrawIndirectArgs(const bool isDrawIndirectArgs) { this->m_Desc.IsDrawIndirectArgs = isDrawIndirectArgs; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_IsAccelStructBuildInput(const bool isAccelStructBuildInput) { this->m_Desc.IsAccelStructBuildInput = isAccelStructBuildInput; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_IsAccelStructStorage(const bool isAccelStructStorage) { this->m_Desc.IsAccelStructStorage = isAccelStructStorage; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_IsShaderBindingTable(const bool isShaderBindingTable) { this->m_Desc.IsShaderBindingTable = isShaderBindingTable; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_IsVolatile(const bool isVolatile) { this->m_Desc.IsVolatile = isVolatile; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_IsVirtual(const bool isVirtual) { this->m_Desc.IsVirtual = isVirtual; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_InitialState(const RHIResourceState initialState) { this->m_Desc.InitialState = initialState; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_KeepInitialState(const bool keepInitialState) { this->m_Desc.KeepInitialState = keepInitialState; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_CPUAccess(const RHICPUAccessMode cpuAccess) { this->m_Desc.CPUAccess = cpuAccess; return *this; }
-		STDNODISCARD constexpr RHIBufferDescBuilder& Set_SharedResourceFlags(const RHISharedResourceFlag sharedResourceFlags) { this->m_Desc.sharedResourceFlags = sharedResourceFlags; return *this; }
+		constexpr RHIBufferDescBuilder& Set_ByteSize(const Uint64 byteSize) { this->m_Desc.ByteSize = byteSize; return *this; }
+		constexpr RHIBufferDescBuilder& Set_StructStride(const Uint32 structStride) { this->m_Desc.StructStride = structStride; return *this; }
+		constexpr RHIBufferDescBuilder& Set_MaxVersions(const Uint32 maxVersions) { this->m_Desc.MaxVersions = maxVersions; return *this; }
+		constexpr RHIBufferDescBuilder& Set_DebugName(const WString& debugName) { this->m_Desc.DebugName = debugName; return *this; }
+		constexpr RHIBufferDescBuilder& Set_Format(const RHIFormat format) { this->m_Desc.Format = format; return *this; }
+		constexpr RHIBufferDescBuilder& Set_CanHaveUAVs(const bool canHaveUAVs) { this->m_Desc.CanHaveUAVs = canHaveUAVs; return *this; }
+		constexpr RHIBufferDescBuilder& Set_CanHaveTypedViews(const bool canHaveTypedViews) { this->m_Desc.CanHaveTypedViews = canHaveTypedViews; return *this; }
+		constexpr RHIBufferDescBuilder& Set_CanHaveRawViews(const bool canHaveRawViews) { this->m_Desc.CanHaveRawViews = canHaveRawViews; return *this; }
+		constexpr RHIBufferDescBuilder& Set_IsVertexBuffer(const bool isVertexBuffer) { this->m_Desc.IsVertexBuffer = isVertexBuffer; return *this; }
+		constexpr RHIBufferDescBuilder& Set_IsIndexBuffer(const bool isIndexBuffer) { this->m_Desc.IsIndexBuffer = isIndexBuffer; return *this; }
+		constexpr RHIBufferDescBuilder& Set_IsConstantBuffer(const bool isConstantBuffer) { this->m_Desc.IsConstantBuffer = isConstantBuffer; return *this; }
+		constexpr RHIBufferDescBuilder& Set_IsDrawIndirectArgs(const bool isDrawIndirectArgs) { this->m_Desc.IsDrawIndirectArgs = isDrawIndirectArgs; return *this; }
+		constexpr RHIBufferDescBuilder& Set_IsShaderBindingTable(const bool isShaderBindingTable) { this->m_Desc.IsShaderBindingTable = isShaderBindingTable; return *this; }
+		constexpr RHIBufferDescBuilder& Set_IsVolatile(const bool isVolatile) { this->m_Desc.IsVolatile = isVolatile; return *this; }
+		constexpr RHIBufferDescBuilder& Set_IsVirtual(const bool isVirtual) { this->m_Desc.IsVirtual = isVirtual; return *this; }
+		constexpr RHIBufferDescBuilder& Set_InitialState(const RHIResourceState initialState) { this->m_Desc.InitialState = initialState; return *this; }
+		constexpr RHIBufferDescBuilder& Set_KeepInitialState(const bool keepInitialState) { this->m_Desc.KeepInitialState = keepInitialState; return *this; }
+		constexpr RHIBufferDescBuilder& Set_CPUAccess(const RHICPUAccessMode cpuAccess) { this->m_Desc.CPUAccess = cpuAccess; return *this; }
+		constexpr RHIBufferDescBuilder& Set_SharedResourceFlags(const RHISharedResourceFlag sharedResourceFlags) { this->m_Desc.sharedResourceFlags = sharedResourceFlags; return *this; }
 		
 		constexpr const RHIBufferDesc& Build(void) const { return this->m_Desc; }
 
@@ -120,7 +116,7 @@ namespace RHI {
 			};
 		}
 
-
+		//TODO Move
 
 	private:
 		RHIBufferDesc m_Desc{};

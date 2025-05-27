@@ -62,7 +62,7 @@ namespace RHI::D3D12 {
 		friend class Device;
 
 	public:
-		Buffer(const Context& context, D3D12DeviceResources& resource,RHIBufferDesc desc):
+		Buffer(const Context& context, D3D12DeviceResources& resource, RHIBufferDesc desc) :
 			RHIBuffer<Buffer>{},
 			m_Context{ context },
 			m_DeviceResourcesRef{ resource },
@@ -70,16 +70,16 @@ namespace RHI::D3D12 {
 		}
 
 		~Buffer(void) {
-			if (g_InvalidDescriptorIndex != this->m_ClearUVAIndex) {
-				this->m_DeviceResourcesRef.ShaderResourceViewHeap.ReleaseDescriptor(this->m_ClearUVAIndex, 1);
-				this->m_ClearUVAIndex = g_InvalidDescriptorIndex;
+			if (g_InvalidDescriptorIndex != this->m_ClearUAV) {
+				this->m_DeviceResourcesRef.ShaderResourceViewHeap.ReleaseDescriptor(this->m_ClearUAV, 1);
+				this->m_ClearUAV = g_InvalidDescriptorIndex;
 			}
 		}
 
 		void CreateCBV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIBufferRange range)const;
-		void CreateSRV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIBufferRange range, RHIFormat format,RHIResourceType type)const;
+		void CreateSRV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIBufferRange range, RHIFormat format, RHIResourceType type)const;
 		void CreateUAV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIBufferRange range, RHIFormat format, RHIResourceType type)const;
-		static void CreateNullSRV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle,  RHIFormat format, const Context& context) {
+		static void CreateNullSRV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIFormat format, const Context& context) {
 			D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc{};
 			SRVDesc.Format = Get_DXGIFormatMapping(RHIFormat::UNKNOWN == format ? RHIFormat::R32_UINT : format).SRVFormat;
 			SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
@@ -95,7 +95,7 @@ namespace RHI::D3D12 {
 		}
 
 		void PostCreate(void);
-		
+
 		D3D12DescriptorIndex Get_ClearUAV(void);
 
 
@@ -108,7 +108,7 @@ namespace RHI::D3D12 {
 		RefCountPtr<ID3D12Resource> m_Resource{ nullptr };
 		D3D12_GPU_VIRTUAL_ADDRESS m_GPUVirtualAddress{ 0 };
 		D3D12_RESOURCE_DESC m_ResourceDesc{};
-		D3D12DescriptorIndex m_ClearUVAIndex{ g_InvalidDescriptorIndex };
+		D3D12DescriptorIndex m_ClearUAV{ g_InvalidDescriptorIndex };
 
 		RefCountPtr<Heap> m_Heap{ nullptr };
 
@@ -259,10 +259,14 @@ namespace RHI::D3D12 {
 	D3D12DescriptorIndex Buffer::Get_ClearUAV(void) {
 		ASSERT(this->m_Desc.CanHaveUAVs);
 
-		if(this->m_ClearUVAIndex!=g_InvalidDescriptorIndex)
-			return this->m_ClearUVAIndex;
+		if (this->m_ClearUAV == g_InvalidDescriptorIndex) {
+			this->m_ClearUAV = this->m_DeviceResourcesRef.ShaderResourceViewHeap.AllocateDescriptor(1);
 
-		return this->m_ClearUVAIndex = this->m_DeviceResourcesRef.ShaderResourceViewHeap.AllocateDescriptor(1);
+			this->CreateUAV(this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_CPUHandle(this->m_ClearUAV), g_EntireBuffer, RHIFormat::R32_UINT, RHIResourceType::TypedBuffer_UAV);
+			this->m_DeviceResourcesRef.ShaderResourceViewHeap.CopyToShaderVisibleHeap(this->m_ClearUAV);
+		}
+
+		return this->m_ClearUAV;
 	}
 
 	//Imp

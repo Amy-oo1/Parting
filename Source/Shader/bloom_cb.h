@@ -23,14 +23,13 @@
 #ifndef BLOOM_CB_H
 #define BLOOM_CB_H
 
-struct BloomConstants
-{
-    float2 pixstep;
-    float argumentScale;
-    float normalizationScale;
+struct BloomConstants {
+	Math::VecF2			Pixstep;
+	float				ArgumentScale;
+	float				NormalizationScale;
 
-    float3 padding;
-    float numSamples;
+	Math::VecF3			Padding;
+	float				NumSamples;
 };
 
 #endif // BLOOM_CB_H

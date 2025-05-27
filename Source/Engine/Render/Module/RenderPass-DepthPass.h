@@ -52,18 +52,52 @@ PARTING_SUBMODULE(Parting, SSAOPass)
 
 namespace Parting {
 
+	namespace _NameSpace_DepthPass {
+		union PipelineKey {
+			struct {
+				RHI::RHIRasterCullMode CullMode : 2;
+				bool AlphaTested : 1;
+				bool FrontCounterClockwise : 1;
+				bool ReverseDepth : 1;
+			} Bits;
+			Uint32 Value;
+
+			static constexpr Uint64 COUNT{ 1 << 5 };
+		};
+
+	}
+
+
 	template<RHI::APITagConcept APITag>
 	class DepthPass : public IGeometryPass<APITag> {
 		using Imp_Device = typename RHI::RHITypeTraits<APITag>::Imp_Device;
 		using Imp_Shader = typename RHI::RHITypeTraits<APITag>::Imp_Shader;
+		using Imp_CommandList = typename RHI::RHITypeTraits<APITag>::Imp_CommandList;
 		using Imp_InputLayout = typename RHI::RHITypeTraits<APITag>::Imp_InputLayout;
 		using Imp_BindingLayout = typename RHI::RHITypeTraits<APITag>::Imp_BindingLayout;
 		using Imp_BindingSet = typename RHI::RHITypeTraits<APITag>::Imp_BindingSet;
 		using Imp_Texture = typename RHI::RHITypeTraits<APITag>::Imp_Texture;
 		using Imp_FrameBuffer = typename RHI::RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using Imp_Buffer = typename RHI::RHITypeTraits<APITag>::Imp_Buffer;
+		using Imp_Sampler = typename RHI::RHITypeTraits<APITag>::Imp_Sampler;
+		using Imp_Heap = typename RHI::RHITypeTraits<APITag>::Imp_Heap;
+		using Imp_GraphicsPipeline = typename RHI::RHITypeTraits<APITag>::Imp_GraphicsPipeline;
 
 	public:
+
+		using PipelineKey = _NameSpace_DepthPass::PipelineKey;
+
+		class Context final : public GeometryPassContext {
+		public:
+			RHI::RefCountPtr<Imp_BindingSet> InputBindingSet;
+			PipelineKey KeyTemplate;
+
+			Uint32 PositionOffset{ 0 };
+			Uint32 TexCoordOffset{ 0 };
+
+			Context() { this->KeyTemplate.Value = 0; }
+		};
+
 		struct CreateParameters final {
 			Int32 DepthBias{ 0 };
 			float DepthBiasClamp{ 0.f };
@@ -112,11 +146,22 @@ namespace Parting {
 
 	private:
 		auto CreateVertexShader(ShaderFactory<APITag>& shaderFactory, const CreateParameters& params) -> RHI::RefCountPtr<Imp_Shader>;
+
 		auto CreatePixelShadewr(ShaderFactory<APITag>& shaderFactory, const CreateParameters& params) -> RHI::RefCountPtr<Imp_Shader>;
+
 		auto CreateInputLayout(Imp_Shader* vertexShader, const CreateParameters& params) -> RHI::RefCountPtr<Imp_InputLayout>;
+
+		auto CreateInputBindingSet(const BufferGroup<APITag>* bufferGroup) -> RHI::RefCountPtr<Imp_BindingSet>;
+
 		auto CreateInputBindingLayout(void) -> RHI::RefCountPtr<Imp_BindingLayout>;
+
 		auto CreateMaterialBindingCache(CommonRenderPasses<APITag>& commonPasses) -> SharedPtr<MaterialBindingCache<APITag>>;
+
 		auto CreateViewBindings(const CreateParameters& params) -> Tuple<RHI::RefCountPtr<Imp_BindingLayout>, RHI::RefCountPtr<Imp_BindingSet>>;
+
+		auto CreateGraphicsPipeline(PipelineKey key, Imp_FrameBuffer* framebuffer) -> RHI::RefCountPtr<Imp_GraphicsPipeline>;
+
+		auto GetOrCreateInputBindingSet(const BufferGroup<APITag>* bufferGroup) -> RHI::RefCountPtr<Imp_BindingSet>;
 
 	private:
 		RHI::RefCountPtr<Imp_Device> m_Device;
@@ -128,20 +173,37 @@ namespace Parting {
 		RHI::RefCountPtr<Imp_InputLayout> m_InputLayout;//TODO : add Optional maybe better?
 		RHI::RefCountPtr<Imp_BindingLayout> m_InputBindingLayout;
 
-		SharedPtr<MaterialBindingCache<APITag>> m_MaterialBindings;
-
-		RHI::RefCountPtr<Imp_Buffer> m_DepthCB;
-
 		RHI::RefCountPtr<Imp_BindingLayout> m_ViewBindingLayout;
 		RHI::RefCountPtr<Imp_BindingSet> m_ViewBindingSet;
 
-		
+		RHI::RefCountPtr<Imp_Buffer> m_DepthCB;
+
+		Array<RHI::RefCountPtr<Imp_GraphicsPipeline>, PipelineKey::COUNT> m_Pipelines;
+
+		UnorderedMap<const BufferGroup<APITag>*, RHI::RefCountPtr<Imp_BindingSet>> m_InputBindingSets;
+
+
+		Mutex m_Mutex;
+
+		SharedPtr<MaterialBindingCache<APITag>> m_MaterialBindings;
+
+
 		Int32 m_DepthBias{ 0 };
 		float m_DepthBiasClamp{ 0.f };
 		float m_SlopeScaledDepthBias{ 0.f };
 		bool m_UseInputAssembler{ false };
 		bool m_TrackLiveness{ true };
 
+	public:
+		STDNODISCARD ViewType Get_SupportedViewTypes(void)const override { return ViewType::PLANAR; }
+
+		void SetupView(GeometryPassContext& context, Imp_CommandList* commandList, const IView* view, const IView* viewPrev) override;
+
+		bool SetupMaterial(GeometryPassContext& context, const Material<APITag>* material, RHI::RHIRasterCullMode cullMode, RHI::RHIGraphicsState<APITag>& state) override;
+
+		void SetupInputBuffers(GeometryPassContext& context, const BufferGroup<APITag>* buffers, RHI::RHIGraphicsState<APITag>& state) override;
+
+		void SetPushConstants(GeometryPassContext& context, Imp_CommandList* commandList, RHI::RHIGraphicsState<APITag>& state, RHI::RHIDrawArguments& args) override;
 	};
 
 
@@ -177,6 +239,17 @@ namespace Parting {
 	}
 
 	template<RHI::APITagConcept APITag>
+	inline auto DepthPass<APITag>::CreateInputBindingSet(const BufferGroup<APITag>* bufferGroup) -> RHI::RefCountPtr<Imp_BindingSet> {
+		return this->m_Device->CreateBindingSet(RHI::RHIBindingSetDescBuilder<APITag>{}
+		.AddBinding(RHI::RHIBindingSetItem<APITag>::StructuredBuffer_SRV(DepthBindingInstanceBuffer, bufferGroup->InstanceBuffer))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(DepthBindingVertexBuffer, bufferGroup->VertexBuffer))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(DepthBindingPushConstants, sizeof(DepthPushConstants)))
+			.Build(),
+			this->m_InputBindingLayout
+			);
+	}
+
+	template<RHI::APITagConcept APITag>
 	inline auto DepthPass<APITag>::CreateInputBindingLayout(void) -> RHI::RefCountPtr<Imp_BindingLayout> {
 		if (this->m_UseInputAssembler)
 			return nullptr;
@@ -203,7 +276,7 @@ namespace Parting {
 		return MakeShared<MaterialBindingCache<APITag>>(
 			this->m_Device,
 			RHI::RHIShaderType::Pixel,
-			DepthSapceInput,
+			DepthSpaceMaterial,
 			true,//not use d3d11 opengl...
 			materialBindings,
 			commonPasses.m_AnisotropicWrapSampler.Get(),
@@ -231,6 +304,151 @@ namespace Parting {
 		) };
 
 		return MakeTuple<RHI::RefCountPtr<Imp_BindingLayout>, RHI::RefCountPtr<Imp_BindingSet>>(MoveTemp(layout), MoveTemp(bindingset));
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline auto DepthPass<APITag>::CreateGraphicsPipeline(PipelineKey key, Imp_FrameBuffer* framebuffer) -> RHI::RefCountPtr<Imp_GraphicsPipeline> {
+		RHI::RHIGraphicsPipelineDescBuilder<APITag> pipelineDescBuilder{}; pipelineDescBuilder
+			.Set_InputLayout(this->m_InputLayout)
+			.Set_VS(this->m_VertexShader)
+			.Set_DepthBias(this->m_DepthBias)
+			.Set_DepthBiasClamp(this->m_DepthBiasClamp)
+			.Set_SlopeScaledDepthBias(this->m_SlopeScaledDepthBias)
+			.Set_DepthFunc(key.Bits.ReverseDepth ? RHI::RHIComparisonFunc::GreaterOrEqual : RHI::RHIComparisonFunc::LessOrEqual)
+			.Set_FrontCounterClockwise(key.Bits.FrontCounterClockwise)
+			.Set_CullMode(key.Bits.CullMode)
+			.AddBindingLayout(this->m_ViewBindingLayout);
+
+		if (key.Bits.AlphaTested)
+			pipelineDescBuilder
+			.Set_PS(this->m_PixelShader)
+			.AddBindingLayout(this->m_MaterialBindings->Get_Layout());
+
+		if (!m_UseInputAssembler)
+			pipelineDescBuilder
+			.AddBindingLayout(this->m_InputBindingLayout);
+
+		return this->m_Device->CreateGraphicsPipeline(pipelineDescBuilder.Build(), framebuffer);
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline auto DepthPass<APITag>::GetOrCreateInputBindingSet(const BufferGroup<APITag>* bufferGroup) -> RHI::RefCountPtr<Imp_BindingSet> {
+		auto& bindingSet = this->m_InputBindingSets[bufferGroup];
+		if (nullptr == bindingSet)
+			bindingSet = this->CreateInputBindingSet(bufferGroup);
+
+		return bindingSet;
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline void DepthPass<APITag>::SetupView(GeometryPassContext& abstractContext, Imp_CommandList* commandList, const IView* view, const IView* viewPrev) {
+		auto& context{ static_cast<Context&>(abstractContext) };
+
+		DepthPassConstants depthConstants{};
+		depthConstants.MatWorldToClip = view->Get_ViewProjectionMatrix();
+		commandList->WriteBuffer(this->m_DepthCB, &depthConstants, sizeof(depthConstants));
+
+		context.KeyTemplate.Bits.FrontCounterClockwise = view->Is_Mirrored();
+		context.KeyTemplate.Bits.ReverseDepth = view->Is_ReverseDepth();
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline bool DepthPass<APITag>::SetupMaterial(GeometryPassContext& abstractContext, const Material<APITag>* material, RHI::RHIRasterCullMode cullMode, RHI::RHIGraphicsState<APITag>& state) {
+		auto& context{ static_cast<Context&>(abstractContext) };
+
+		PipelineKey key{ context.KeyTemplate };
+		key.Bits.CullMode = cullMode;
+
+		bool const hasBaseOrDiffuseTexture{
+			nullptr != material->BaseOrDiffuseTexture &&
+			nullptr != material->BaseOrDiffuseTexture->Texture &&
+			material->EnableBaseOrDiffuseTexture
+		};
+
+		bool const hasOpacityTexture{
+			nullptr != material->OpacityTexture &&
+			nullptr != material->OpacityTexture->Texture &&
+			material->EnableOpacityTexture
+		};
+
+		state.BindingSetCount = 0;
+		if (material->Domain == MaterialDomain::AlphaTested && (hasBaseOrDiffuseTexture || hasOpacityTexture)) {
+			const auto materialBindingSet{ this->m_MaterialBindings->Get_MaterialBindingSet(material) };
+
+			if (nullptr == materialBindingSet)
+				return false;
+
+			state.BindingSets[state.BindingSetCount++] = this->m_ViewBindingSet;
+			state.BindingSets[state.BindingSetCount++] = materialBindingSet;
+
+			key.Bits.AlphaTested = true;
+		}
+		else if (material->Domain == MaterialDomain::Opaque) {
+			state.BindingSets[state.BindingSetCount++] = this->m_ViewBindingSet;
+
+			key.Bits.AlphaTested = false;
+		}
+		else
+			return false;
+
+		if (!m_UseInputAssembler)
+			state.BindingSets[state.BindingSetCount++] = context.InputBindingSet;
+
+		auto& pipeline = this->m_Pipelines[key.Value];
+
+		if (nullptr == pipeline) {
+			LockGuard lockGuard{ this->m_Mutex };
+
+			if (nullptr == pipeline)
+				pipeline = this->CreateGraphicsPipeline(key, state.FrameBuffer);
+
+			if (nullptr == pipeline)
+				return false;
+		}
+
+		ASSERT(pipeline->Get_FrameBufferInfo() == state.FrameBuffer->Get_Info());
+
+		state.Pipeline = pipeline;
+		return true;
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline void DepthPass<APITag>::SetupInputBuffers(GeometryPassContext& abstractContext, const BufferGroup<APITag>* buffers, RHI::RHIGraphicsState<APITag>& state) {
+		auto& context{ static_cast<Context&>(abstractContext) };
+
+		state.IndexBuffer = RHI::RHIIndexBufferBinding<APITag>{ .Buffer{ buffers->IndexBuffer }, .Format{ RHI::RHIFormat::R32_UINT } };
+
+		state.VertexBufferCount = 0;
+		if (this->m_UseInputAssembler) {
+			state.VertexBuffers[state.VertexBufferCount++] = RHI::RHIVertexBufferBinding<APITag>{ .Buffer{ buffers->VertexBuffer }, .Slot{ 0 }, .Offset{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Position).Offset } };
+			state.VertexBuffers[state.VertexBufferCount++] = RHI::RHIVertexBufferBinding<APITag>{ .Buffer{ buffers->VertexBuffer }, .Slot{ 1 }, .Offset{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord1).Offset } };
+			state.VertexBuffers[state.VertexBufferCount++] = RHI::RHIVertexBufferBinding<APITag>{ .Buffer{ buffers->InstanceBuffer }, .Slot{ 2 }, .Offset{ 0 } };
+		}
+		else {
+			context.InputBindingSet = this->GetOrCreateInputBindingSet(buffers);
+			context.PositionOffset = static_cast<Uint32>(buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Position).Offset);
+			context.TexCoordOffset = static_cast<Uint32>(buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord1).Offset);
+		}
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline void DepthPass<APITag>::SetPushConstants(GeometryPassContext& abstractContext, Imp_CommandList* commandList, RHI::RHIGraphicsState<APITag>& state, RHI::RHIDrawArguments& args) {
+		if (this->m_UseInputAssembler)
+			return;
+
+		auto& context{ static_cast<Context&>(abstractContext) };
+
+		DepthPushConstants constants{
+			.StartInstanceLocation{ args.StartInstanceLocation },
+			.StartVertexLocation{ args.StartVertexLocation },
+			.PositionOffset{ context.PositionOffset },
+			.TexCoordOffset{ context.TexCoordOffset }
+		};
+
+		commandList->SetPushConstants(&constants, sizeof(constants));
+
+		args.StartInstanceLocation = 0;
+		args.StartVertexLocation = 0;
 	}
 
 }

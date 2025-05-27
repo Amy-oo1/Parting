@@ -44,21 +44,19 @@
 #define GBUFFER_BINDING_VIEW_CONSTANTS 2
 #define GBUFFER_BINDING_MATERIAL_SAMPLER 0
 
-struct GBufferFillConstants
-{
-    PlanarViewConstants view;
-    PlanarViewConstants viewPrev;
+struct GBufferFillConstants {
+	PlanarViewConstants		View;
+	PlanarViewConstants		ViewPrev;
 };
 
-struct GBufferPushConstants
-{
-    uint        startInstanceLocation;
-    uint        startVertexLocation;
-    uint        positionOffset;
-    uint        prevPositionOffset;
-    uint        texCoordOffset;
-    uint        normalOffset;
-    uint        tangentOffset;
+struct GBufferPushConstants {
+	Uint32					StartInstanceLocation;
+	Uint32					StartVertexLocation;
+	Uint32					PositionOffset;
+	Uint32					PrevPositionOffset;
+	Uint32					TexCoordOffset;
+	Uint32					NormalOffset;
+	Uint32					TangentOffset;
 };
 
 #endif // GBUFFER_CB_H

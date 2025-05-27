@@ -138,7 +138,7 @@ namespace RHI {
 
 			constexpr RHIGraphicsStateBuilder& Set_Pipeline(Imp_GraphicsPipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
 			constexpr RHIGraphicsStateBuilder& Set_FrameBuffer(Imp_FrameBuffer* framebuffer) { this->m_State.FrameBuffer = framebuffer; return *this; }
-			constexpr RHIGraphicsStateBuilder& Set_Viewport(const RHIViewportState& viewport) { this->m_State.Viewport = viewport; return *this; }
+			constexpr RHIGraphicsStateBuilder& Set_ViewportState(const RHIViewportState& viewport) { this->m_State.Viewport = viewport; return *this; }
 			constexpr RHIGraphicsStateBuilder& Set_ShadingRateState(const RHIVariableRateShadingState& shadingRateState) { this->m_State.ShadingRateState = shadingRateState; return *this; }
 			constexpr RHIGraphicsStateBuilder& Set_BlendConstantColor(const Color& color) { this->m_State.BlendConstantColor = color; return *this; }
 			constexpr RHIGraphicsStateBuilder& Set_DynamicStencilRefValue(Uint8 stencilRefValue) { this->m_State.DynamicStencilRefValue = stencilRefValue; return *this; }
@@ -147,6 +147,12 @@ namespace RHI {
 
 			constexpr RHIGraphicsStateBuilder& AddViewport(const RHIViewport& viewport) { this->m_State.Viewport.Viewports[this->m_State.Viewport.ViewportCount++] = viewport; return *this; }
 			constexpr RHIGraphicsStateBuilder& AddScissorRect(const RHIRect2D& scissor) { this->m_State.Viewport.ScissorRects[this->m_State.Viewport.ScissorCount++] = scissor; return *this; }
+			constexpr RHIGraphicsStateBuilder& AddViewportAndScissorRect(const RHIViewport& viewport) {
+				this->AddViewport(viewport);
+				this->AddScissorRect(BuildScissorRect(viewport));
+
+				return *this;
+			}
 
 			constexpr RHIGraphicsStateBuilder& SubScissorRect(void) { --this->m_State.BindingSetCount; return *this; }
 			constexpr RHIGraphicsStateBuilder& SubViewport(void) { --this->m_State.Viewport.ViewportCount; return *this; }
@@ -268,12 +274,12 @@ namespace RHI {
 		using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
 		public:
-			STDNODISCARD constexpr RHIComputeStateBuilder& Reset(void) { this->m_State = RHIComputeState<APITag>{}; return *this; }
+			constexpr RHIComputeStateBuilder& Reset(void) { this->m_State = RHIComputeState<APITag>{}; return *this; }
 
-			STDNODISCARD constexpr RHIComputeStateBuilder& Set_Pipeline(Imp_ComputePipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
-			STDNODISCARD constexpr RHIComputeStateBuilder& Set_IndirectParams(Imp_Buffer* indirectParams) { this->m_State.IndirectParams = indirectParams; return *this; }
+			constexpr RHIComputeStateBuilder& Set_Pipeline(Imp_ComputePipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
+			constexpr RHIComputeStateBuilder& Set_IndirectParams(Imp_Buffer* indirectParams) { this->m_State.IndirectParams = indirectParams; return *this; }
 
-			STDNODISCARD constexpr RHIComputeStateBuilder& AddBindingSet(Imp_BindingSet* bindingSet) { this->m_State.BindingSets[this->m_State.BindingSetCount++] = bindingSet; return *this; }
+			constexpr RHIComputeStateBuilder& AddBindingSet(Imp_BindingSet* bindingSet) { this->m_State.BindingSets[this->m_State.BindingSetCount++] = bindingSet; return *this; }
 
 			STDNODISCARD constexpr const RHIComputeState<APITag>& Build(void) { return this->m_State; }
 		private:
@@ -334,14 +340,14 @@ namespace RHI {
 		using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
 		public:
-			STDNODISCARD constexpr RHIMeshletStateBuilder& Reset(void) { this->m_State = RHIMeshletState<APITag>{}; return *this; }
+			constexpr RHIMeshletStateBuilder& Reset(void) { this->m_State = RHIMeshletState<APITag>{}; return *this; }
 
-			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_Pipeline(Imp_MeshletPipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
-			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_FrameBuffer(Imp_FrameBuffer* framebuffer) { this->m_State.FrameBuffer = framebuffer; return *this; }
-			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_Viewport(const RHIViewportState& viewport) { this->m_State.Viewport = viewport; return *this; }
-			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_BlendConstantColor(const Color& color) { this->m_State.BlendConstantColor = color; return *this; }
-			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_DynamicStencilRefValue(Uint8 stencilRefValue) { this->m_State.DynamicStencilRefValue = stencilRefValue; return *this; }
-			STDNODISCARD constexpr RHIMeshletStateBuilder& Set_IndirectParams(Imp_Buffer* indirectParams) { this->m_State.IndirectParams = indirectParams; return *this; }
+			constexpr RHIMeshletStateBuilder& Set_Pipeline(Imp_MeshletPipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
+			constexpr RHIMeshletStateBuilder& Set_FrameBuffer(Imp_FrameBuffer* framebuffer) { this->m_State.FrameBuffer = framebuffer; return *this; }
+			constexpr RHIMeshletStateBuilder& Set_ViewportState(const RHIViewportState& viewport) { this->m_State.Viewport = viewport; return *this; }
+			constexpr RHIMeshletStateBuilder& Set_BlendConstantColor(const Color& color) { this->m_State.BlendConstantColor = color; return *this; }
+			constexpr RHIMeshletStateBuilder& Set_DynamicStencilRefValue(Uint8 stencilRefValue) { this->m_State.DynamicStencilRefValue = stencilRefValue; return *this; }
+			constexpr RHIMeshletStateBuilder& Set_IndirectParams(Imp_Buffer* indirectParams) { this->m_State.IndirectParams = indirectParams; return *this; }
 
 			STDNODISCARD constexpr RHIMeshletStateBuilder& AddBindingSet(Imp_BindingSet* bindingSet) { this->m_State.BindingSets[this->m_State.BindingSetCount++] = bindingSet; return *this; }
 

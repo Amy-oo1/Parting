@@ -46,4 +46,16 @@ PARTING_MODULE(DrawStrategy)
 
 namespace Parting {
 
+	template<RHI::APITagConcept APITag>
+	inline void Light<APITag>::FillLightConstants(LightConstants& lightConstants) const {
+		lightConstants.Color = this->LightColor;
+		lightConstants.ShadowCascades = Math::VecI4{ -1 };
+		lightConstants.PerObjectShadows = Math::VecI4{ -1 };
+		lightConstants.ShadowChannel = Math::VecI4{ this->ShadowChannel, -1, -1, -1 };
+		if (nullptr == this->ShadowMap)
+			lightConstants.OutOfBoundsShadow = this->ShadowMap->Is_LitOutOfBounds() ? 1.f : 0.f;
+		else
+			lightConstants.OutOfBoundsShadow = 1.f;
+	}
+
 }

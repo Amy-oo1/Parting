@@ -161,23 +161,40 @@ namespace RHI {
 
 			constexpr RHIGraphicsPipelineDescBuilder& Set_PrimType(RHIPrimitiveType primType) { this->m_Desc.PrimType = primType; return *this; }
 			constexpr RHIGraphicsPipelineDescBuilder& Set_PatchControlPoints(Uint32 patchControlPoints) { this->m_Desc.PatchControlPoints = patchControlPoints; return *this; }
-			constexpr RHIGraphicsPipelineDescBuilder& Set_InputLayout(RefCountPtr<Imp_InputLayout> inputLayout) { this->m_Desc.InputLayout = inputLayout; return *this; }
-			constexpr RHIGraphicsPipelineDescBuilder& Set_VS(Imp_Shader* shader) { this->m_Desc.VS = shader; return *this; }
-			constexpr RHIGraphicsPipelineDescBuilder& Set_HS(Imp_Shader* shader) { this->m_Desc.HS = shader; return *this; }
-			constexpr RHIGraphicsPipelineDescBuilder& Set_DS(Imp_Shader* shader) { this->m_Desc.DS = shader; return *this; }
-			constexpr RHIGraphicsPipelineDescBuilder& Set_GS(Imp_Shader* shader) { this->m_Desc.GS = shader; return *this; }
-			constexpr RHIGraphicsPipelineDescBuilder& Set_PS(Imp_Shader* shader) { this->m_Desc.PS = shader; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_InputLayout(RefCountPtr<Imp_InputLayout> inputLayout) { this->m_Desc.InputLayout = ::MoveTemp(inputLayout); return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_VS(RefCountPtr<Imp_Shader> shader) { this->m_Desc.VS = ::MoveTemp(shader); return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_HS(RefCountPtr<Imp_Shader> shader) { this->m_Desc.HS = ::MoveTemp(shader); return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_DS(RefCountPtr<Imp_Shader> shader) { this->m_Desc.DS = ::MoveTemp(shader); return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_GS(RefCountPtr<Imp_Shader> shader) { this->m_Desc.GS = ::MoveTemp(shader); return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_PS(RefCountPtr<Imp_Shader> shader) { this->m_Desc.PS = ::MoveTemp(shader); return *this; }
 			constexpr RHIGraphicsPipelineDescBuilder& Set_RenderState(const RHIRenderState& renderState) { this->m_Desc.RenderState = renderState; return *this; }
 			constexpr RHIGraphicsPipelineDescBuilder& Set_ShadingRateState(const RHIVariableRateShadingState& shadingRateState) { this->m_Desc.ShadingRateState = shadingRateState; return *this; }
 
-			constexpr RHIGraphicsPipelineDescBuilder& AddBindingLayout(RefCountPtr<Imp_BindingLayout> bindingLayout) { this->m_Desc.BindingLayouts[this->m_Desc.BindingLayoutCount++] = bindingLayout; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& AddBindingLayout(RefCountPtr<Imp_BindingLayout> bindingLayout) { this->m_Desc.BindingLayouts[this->m_Desc.BindingLayoutCount++] = ::MoveTemp(bindingLayout); return *this; }
+			/*constexpr RHIGraphicsPipelineDescBuilder& AddBindingLayout(Imp_BindingLayout* bindingLayout) { this->m_Desc.BindingLayouts[this->m_Desc.BindingLayoutCount++] = bindingLayout; return *this; }*/
 
-			constexpr RHIGraphicsPipelineDescBuilder& Set_CullMode(RHI::RHIRasterCullMode cullMode) { this->m_Desc.RenderState.RasterState.CullMode = cullMode; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_FrontCounterClockwise(bool frontCounterClockwise) { this->m_Desc.RenderState.RasterState.FrontCounterClockwise = frontCounterClockwise; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_CullMode(RHIRasterCullMode cullMode) { this->m_Desc.RenderState.RasterState.CullMode = cullMode; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_AlphaToCoverageEnable(bool enable) { this->m_Desc.RenderState.BlendState.AlphaToCoverageEnable = enable; return *this; }
 
 			constexpr RHIGraphicsPipelineDescBuilder& Set_DepthTestEnable(bool enable) { this->m_Desc.RenderState.DepthStencilState.DepthTestEnable = enable; return *this; }
 			constexpr RHIGraphicsPipelineDescBuilder& Set_StencilEnable(bool enable) { this->m_Desc.RenderState.DepthStencilState.StencilEnable = enable; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_DepthWriteEnable(bool enable) { this->m_Desc.RenderState.DepthStencilState.DepthWriteEnable = enable; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_DepthFunc(RHIComparisonFunc func) { this->m_Desc.RenderState.DepthStencilState.DepthFunc = func; return *this; }
+
+			constexpr RHIGraphicsPipelineDescBuilder& Set_StencilReadMask(Uint8 mask) { this->m_Desc.RenderState.DepthStencilState.StencilReadMask = mask; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_StencilWriteMask(Uint8 mask) { this->m_Desc.RenderState.DepthStencilState.StencilWriteMask = mask; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_StencilRefValue(Uint8 refValue) { this->m_Desc.RenderState.DepthStencilState.StencilRefValue = refValue; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_DynamicStencilRef(Uint8 stencilRefValue) { this->m_Desc.RenderState.DepthStencilState.DynamicStencilRef = stencilRefValue; return *this; }
+
+			constexpr RHIGraphicsPipelineDescBuilder& Set_StencilFrontFacePassOp(RHIStencilOp op) { this->m_Desc.RenderState.DepthStencilState.FrontFaceStencil.PassOp = op; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_StencilBackFaceFailOp(RHIStencilOp op) { this->m_Desc.RenderState.DepthStencilState.BackFaceStencil.PassOp = op; return *this; }
 
 			constexpr RHIGraphicsPipelineDescBuilder& Set_BlendState(Uint32 Index, const RHIBlendState::RHIRenderTarget& renderTarget) { this->m_Desc.RenderState.BlendState.RenderTargets[Index] = renderTarget; return *this; }
+
+			constexpr RHIGraphicsPipelineDescBuilder& Set_DepthBias(Int32 depthBias) { this->m_Desc.RenderState.RasterState.DepthBias = depthBias; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_SlopeScaledDepthBias(float slopeScaledDepthBias) { this->m_Desc.RenderState.RasterState.SlopeScaledDepthBias = slopeScaledDepthBias; return *this; }
+			constexpr RHIGraphicsPipelineDescBuilder& Set_DepthBiasClamp(float depthBiasClamp) { this->m_Desc.RenderState.RasterState.DepthBiasClamp = depthBiasClamp; return *this; }
 
 			STDNODISCARD constexpr const RHIGraphicsPipelineDesc<APITag>& Build(void) { return this->m_Desc; }
 		private:
@@ -196,7 +213,8 @@ namespace RHI {
 			STDNODISCARD const RHIFrameBufferInfo<APITag>& Get_FrameBufferInfo(void)const { return this->Get_Derived()->Imp_Get_FrameBufferInfo(); }
 
 		private:
-			STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
+			STDNODISCARD Derived* Get_Derived(void)noexcept { return static_cast<Derived*>(this); }
+			STDNODISCARD const Derived* Get_Derived(void)const noexcept { return static_cast<const Derived*>(this); }
 		private:
 			const RHIGraphicsPipelineDesc<APITag>& Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return RHIGraphicsPipelineDesc<APITag>{}; }
 			const RHIFrameBufferInfo<APITag>& Imp_Get_FrameBufferInfo(void)const { LOG_ERROR("No Imp"); return RHIFrameBufferInfo<APITag>{}; }

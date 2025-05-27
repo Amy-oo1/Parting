@@ -50,10 +50,12 @@ namespace Math {
 	}
 
 
-	PARTING_EXPORT STDNODISCARD float Floor(float Value) { return std::floor(Value); }
-	PARTING_EXPORT STDNODISCARD float Ceil(float Value) { return std::ceil(Value); }
 
-	inline Int32 Round(float f) { return static_cast<Int32>(Floor(f + 0.5f)); }
+	template<typename Type> STDNODISCARD constexpr Type Floor(Type Value) { return static_cast<Type>(std::floor(Value)); }
+	template<typename Type> STDNODISCARD constexpr Type Ceil(Type Value) { return static_cast<Type>(std::ceil(Value)); }
+	template<typename Type> STDNODISCARD constexpr Type Round(Type Value) { return static_cast<Type>(std::round(Value)); }
+
+
 
 	// Integer rounding to multiples
 	inline Int32 RoundDown(Int32 i, Int32 multiple) { return (i / multiple) * multiple; }
@@ -71,7 +73,7 @@ namespace Math {
 	}
 
 	// Integer division, with rounding up (assuming positive arguments)
-	inline Int32 DivCeil(Int32 dividend, Int32 divisor) { return (dividend + (divisor - 1)) / divisor; }
+	template<typename Type> constexpr Type DivCeil(Type dividend, Type divisor) { return (dividend + (divisor - static_cast<Type>(1))) / divisor; }
 
 	// Base-2 exp and log
 	inline float Exp2f(float x) { return expf(0.693147181f * x); }
@@ -97,21 +99,20 @@ namespace Math {
 		return ++v;
 	}
 
-	PARTING_EXPORT template<typename Type>
-		STDNODISCARD constexpr Type Align(Type size, Type alignment) { return (size + alignment - 1) & ~(alignment - 1); }
+	PARTING_EXPORT template<typename Type> STDNODISCARD constexpr Type Align(Type size, Type alignment) { return (size + alignment - 1) & ~(alignment - 1); }
 
 	inline float Degrees(float rad) { return rad * (180.f / PI_F); }
 	inline float Radians(float deg) { return deg * (PI_F / 180.f); }
 	inline double Degrees(double rad) { return rad * (180.0 / PI_D); }
 	inline double Radians(double deg) { return deg * (PI_D / 180.0); }
 
-	template<typename Type>inline Type Cos(Type red) { return cos(red); }
-	template<typename Type>inline Type Sin(Type red) { return sin(red); }
-	template<typename Type>inline Type Tan(Type red) { return tan(red); }
-	template<typename Type>inline Type ACos(Type red) { return acos(red); }
-	template<typename Type>inline Type ASin(Type red) { return asin(red); }
-	template<typename Type>inline Type ATan(Type red) { return atan(red); }
-	template<typename Type>inline Type ATan2(Type y, Type x) { return atan2(y, x); }
+	template<typename Type> inline Type Cos(Type red) { return cos(red); }
+	template<typename Type> inline Type Sin(Type red) { return sin(red); }
+	template<typename Type> inline Type Tan(Type red) { return tan(red); }
+	template<typename Type> inline Type ACos(Type red) { return acos(red); }
+	template<typename Type> inline Type ASin(Type red) { return asin(red); }
+	template<typename Type> inline Type ATan(Type red) { return atan(red); }
+	template<typename Type> inline Type ATan2(Type y, Type x) { return atan2(y, x); }
 
 
 
@@ -126,7 +127,7 @@ namespace Math {
 	PARTING_EXPORT template <class _Ty> STDNODISCARD constexpr _Ty Min(std::initializer_list<_Ty> list) { return std::min(list); }
 	PARTING_EXPORT template <class _Ty, class _Pr> STDNODISCARD constexpr _Ty Min(std::initializer_list<_Ty> list, _Pr pr) { return std::min(list, pr); }
 
-	template <typename _Ty>	constexpr decltype(auto) Clamp(_Ty Value, _Ty Lower, _Ty Upper) { return std::clamp(Value, Lower, Upper); }
+	template <typename _Ty>	constexpr decltype(auto) Clamp(const _Ty& Value, const _Ty& Lower, const _Ty& Upper) { return Min(Max(Value, Lower), Upper); }//NOTE :Not Use std::clamp
 
 	template<typename _Ty>	constexpr decltype(auto) Saturate(_Ty value) { return Clamp(value, static_cast<_Ty>(0), static_cast<_Ty>(1)); }
 
@@ -155,3 +156,9 @@ STDNODISCARD constexpr bool IsSorted(_FwdIt _First, _FwdIt _Last) { return std::
 
 PARTING_EXPORT template <class _InIt, class _Ty>
 STDNODISCARD constexpr _InIt STDFind(_InIt _First, _InIt _Last, const _Ty& _Val) { return std::find(_First, _Last, _Val); }
+
+template <class _RanIt, class _Pr>
+void Sort(_RanIt _First, _RanIt _Last, _Pr&& _Pred) { std::sort(_First, _Last, std::forward<_Pr>(_Pred)); }
+
+template <class _RanIt>
+void Sort(_RanIt _First, _RanIt _Last) { std::sort(_First, _Last); }

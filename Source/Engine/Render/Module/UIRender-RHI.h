@@ -86,7 +86,7 @@ namespace Parting {
 
 		bool Render(Imp_FrameBuffer* framebuffer);
 
-		void backbufferResizing(void) { this->PSO = nullptr; }
+		void BackBufferResizing(void) { this->PSO.Reset(); }
 
 
 		bool ReallocateBuffer(RHI::RefCountPtr<Imp_Buffer>& buffer, Uint64 requiredSize, Uint64 reallocateSize, bool isIndexBuffer);
@@ -134,7 +134,7 @@ namespace Parting {
 		this->CommandList = device->CreateCommandList();
 
 		this->VS = shaderFactory->CreateShader("Parting/imgui_vertex", "main", nullptr, RHI::RHIShaderType::Vertex);
-		this->Ps = shaderFactory->CreateShader("Parting/imgui_pixel", "main", nullptr, RHI::RHIShaderType::Pixel);
+		this->PS = shaderFactory->CreateShader("Parting/imgui_pixel", "main", nullptr, RHI::RHIShaderType::Pixel);
 
 		if (nullptr == this->VS || nullptr == this->PS) {
 			LOG_ERROR("Failed to create ImGui shaders");
@@ -142,13 +142,18 @@ namespace Parting {
 		}
 
 		// create attribute layout object
+		RHI::RHIVertexAttributeDescBuilder vertexAttribDescBuilder; vertexAttribDescBuilder
+			.Set_ArrayCount(1)
+			.Set_BufferIndex(0)
+			.Set_ElementStride(sizeof(ImDrawVert))
+			.Set_IsInstanced(false);
 		Array<RHI::RHIVertexAttributeDesc, 3> vertexAttribLayout{
-			RHI::RHIVertexAttributeDesc{ "POSITION",	RHI::RHIFormat::RG32_FLOAT,  1, 0, offsetof(ImDrawVert,pos), sizeof(ImDrawVert), false },
-			RHI::RHIVertexAttributeDesc{ "TEXCOORD",	RHI::RHIFormat::RG32_FLOAT,  1, 0, offsetof(ImDrawVert,uv),  sizeof(ImDrawVert), false },
-			RHI::RHIVertexAttributeDesc{ "COLOR",		RHI::RHIFormat::RGBA8_UNORM, 1, 0, offsetof(ImDrawVert,col), sizeof(ImDrawVert), false },
+			RHI::RHIVertexAttributeDesc{ vertexAttribDescBuilder.Set_Attribute(RHI::RHIVertexAttribute::Position).Set_Name("POSITION").Set_Format(RHI::RHIFormat::RG32_FLOAT).Set_Offset(offsetof(ImDrawVert,pos)).Build()},
+			RHI::RHIVertexAttributeDesc{ vertexAttribDescBuilder.Set_Attribute(RHI::RHIVertexAttribute::TexCoord1).Set_Name("TEXCOORD").Set_Format(RHI::RHIFormat::RG32_FLOAT).Set_Offset(offsetof(ImDrawVert,uv)).Build() },
+			RHI::RHIVertexAttributeDesc{ vertexAttribDescBuilder.Set_Attribute(RHI::RHIVertexAttribute::COUNT).Set_Name("COLOR").Set_Format(RHI::RHIFormat::RGBA8_UNORM).Set_Offset(offsetof(ImDrawVert,col)).Build() }
 		};
 
-		this->ShaderAttribLayout = this->Device->CreateInputLayout(vertexAttribLayout.data(), vertexAttribLayout.size(), this->VS.Get());
+		this->ShaderAttribLayout = this->Device->CreateInputLayout(vertexAttribLayout.data(), static_cast<Uint32>(vertexAttribLayout.size()), this->VS.Get());
 
 		// create PSO
 		{
@@ -192,12 +197,8 @@ namespace Parting {
 			this->BasePSODesc.BindingLayouts[this->BasePSODesc.BindingLayoutCount++] = this->BindingLayout;
 		}
 
-		const auto desc = nvrhi::SamplerDesc()
-			.setAllAddressModes(nvrhi::SamplerAddressMode::Wrap)
-			.setAllFilters(true);
-
 		this->FontSampler = this->Device->CreateSampler(RHI::RHISamplerDescBuilder{}
-			.Set_AllFilter(RHI::RHISamplerAddressMode::Wrap)
+			.Set_AddressModeUVW(RHI::RHISamplerAddressMode::Wrap)
 			.Set_AllFilter(true)
 			.Build()
 		);
@@ -216,7 +217,7 @@ namespace Parting {
 
 		unsigned char* pixels;
 		Int32 width, height;
-		if (io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height); nullptr != pixels)
+		if (io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height); nullptr == pixels)
 			return false;
 
 		this->FontTexture = this->Device->CreateTexture(RHI::RHITextureDescBuilder{}
@@ -281,7 +282,7 @@ namespace Parting {
 		if (nullptr == buffer || buffer->Get_Desc().ByteSize < requiredSize) {
 			RHI::RHIBufferDesc desc{
 				.ByteSize{ reallocateSize },
-				.DebugName{ isIndexBuffer ? "ImGui index buffer" : "ImGui vertex buffer" },
+				.DebugName{ isIndexBuffer ? _W("ImGui index buffer") : _W("ImGui vertex buffer") },
 				.IsVertexBuffer{ !isIndexBuffer },
 				.IsIndexBuffer{ isIndexBuffer },
 				.InitialState{ isIndexBuffer ? RHI::RHIResourceState::IndexBuffer : RHI::RHIResourceState::VertexBuffer },
@@ -330,7 +331,7 @@ namespace Parting {
 
 
 		// render command lists
-		for (Int32 VertexOffset = 0, IndexOffset = 0; const auto & drawList : drawData->CmdLists) {
+		for (Uint32 VertexOffset = 0, IndexOffset = 0; const auto & drawList : drawData->CmdLists) {
 			for (const auto& cmd : drawList->CmdBuffer) {
 				if (nullptr != cmd.UserCallback)
 					cmd.UserCallback(drawList, &cmd);
@@ -343,7 +344,7 @@ namespace Parting {
 							});
 
 					this->CommandList->SetGraphicsState(drawStateBuilder.Build());
-					this->CommandList->SetPushConstants(invDisplaySize.data(), sizeof(typename decltype(invDisplaySize)::value_type) * invDisplaySize.size());
+					this->CommandList->SetPushConstants(invDisplaySize.data(), static_cast<Uint32>(sizeof(typename decltype(invDisplaySize)::value_type) * invDisplaySize.size()));
 					this->CommandList->DrawIndexed(RHI::RHIDrawArguments{ .VertexCount{ cmd.ElemCount }, .StartIndexLocation{ IndexOffset }, .StartVertexLocation{ VertexOffset } });
 
 					drawStateBuilder.SubBindingSet().SubScissorRect();

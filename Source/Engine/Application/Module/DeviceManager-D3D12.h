@@ -70,7 +70,7 @@ namespace Parting {
 			ASSERT(nullptr != targetAdapter);
 
 			HRESULT hres{ 0 };
-			unsigned int outputNo = 0;
+			Uint32 outputNo{ 0 };
 			while (D3D12_SUCCESS(hres)) {
 				RHI::RefCountPtr<IDXGIOutput> pOutput;
 				hres = targetAdapter->EnumOutputs(outputNo++, &pOutput);
@@ -80,18 +80,18 @@ namespace Parting {
 					pOutput->GetDesc(&OutputDesc);
 					const RECT desktop = OutputDesc.DesktopCoordinates;
 
-					const int centreX = static_cast<int>(desktop.left) + static_cast<int>(desktop.right - desktop.left) / 2;
-					const int centreY = static_cast<int>(desktop.top) + static_cast<int>(desktop.bottom - desktop.top) / 2;
-					const int winW = rect.right - rect.left;
-					const int winH = rect.bottom - rect.top;
-					const int left = centreX - winW / 2;
-					const int right = left + winW;
-					const int top = centreY - winH / 2;
-					const int bottom = top + winH;
-					rect.left = Math::Max(left, static_cast<int>(desktop.left));
-					rect.right = Math::Min(right, static_cast<int>(desktop.right));
-					rect.bottom = Math::Min(bottom, static_cast<int>(desktop.bottom));
-					rect.top = Math::Max(top, static_cast<int>(desktop.top));
+					const Int32 centreX = static_cast<Int32>(desktop.left) + static_cast<Int32>(desktop.right - desktop.left) / 2;
+					const Int32 centreY = static_cast<Int32>(desktop.top) + static_cast<Int32>(desktop.bottom - desktop.top) / 2;
+					const Int32 winW = rect.right - rect.left;
+					const Int32 winH = rect.bottom - rect.top;
+					const Int32 left = centreX - winW / 2;
+					const Int32 right = left + winW;
+					const Int32 top = centreY - winH / 2;
+					const Int32 bottom = top + winH;
+					rect.left = Math::Max(left, static_cast<Int32>(desktop.left));
+					rect.right = Math::Min(right, static_cast<Int32>(desktop.right));
+					rect.bottom = Math::Min(bottom, static_cast<Int32>(desktop.bottom));
+					rect.top = Math::Max(top, static_cast<Int32>(desktop.top));
 
 					// If there is more than one output, go with the first found.  Multi-monitor support could go here.
 					return true;
@@ -139,11 +139,12 @@ namespace Parting {
 		bool Imp_CreateDevice(void);
 		bool Imp_CreateSwapChain(void);
 		void Imp_ResizeSwapChain(void);
-		Uint32 Imp_Get_BackBufferCount(void);
+		Uint32 Imp_Get_BackBufferCount(void) const;
 		Imp_Device* Imp_Get_Device(void) { return this->m_RHIDevice.Get(); }
 		Imp_Texture* Imp_Get_BackBuffer(Uint32 index) { ASSERT(index < this->m_RHISwapChainBuffers.size());	return this->m_RHISwapChainBuffers[index].Get(); }
-
+		bool Imp_BeginFrame(void);
 		void Imp_DestroyDeviceAndSwapChain(void);
+		bool Imp_Present(void);
 		void Imp_Shutdown(void);
 	};
 
@@ -164,6 +165,7 @@ namespace Parting {
 				.SampleCount { this->m_DeviceParams.SwapChainSampleCount },
 				.SampleQuality { this->m_DeviceParams.SwapChainSampleQuality },
 				.Format { this->m_DeviceParams.SwapChainFormat },
+				.DebugName{ String{ "SwapChainBuffer" } + ::IntegralToString(Index)},
 				.IsRenderTarget { true },
 				.InitialState	{ RHI::RHIResourceState::Present },
 				.KeepInitialState { true },
@@ -193,7 +195,7 @@ namespace Parting {
 		this->m_SwapChainBuffers.clear();
 	}
 
-	inline void D3D12DeviceManager::ReportLiveObjects(void){
+	inline void D3D12DeviceManager::ReportLiveObjects(void) {
 		RHI::RefCountPtr<IDXGIDebug> pDebug;
 		DXGIGetDebugInterface1(0, PARTING_IID_PPV_ARGS(&pDebug));
 
@@ -385,8 +387,34 @@ namespace Parting {
 			LOG_ERROR("Failed to create swapchain buffers");
 	}
 
-	inline Uint32 D3D12DeviceManager::Imp_Get_BackBufferCount(void) {
+	inline Uint32 D3D12DeviceManager::Imp_Get_BackBufferCount(void) const {
 		return this->m_SwapChainDesc.BufferCount;
+	}
+
+	inline bool D3D12DeviceManager::Imp_BeginFrame(void) {
+		DXGI_SWAP_CHAIN_DESC1 newSwapChainDesc;
+		DXGI_SWAP_CHAIN_FULLSCREEN_DESC newFullScreenDesc;
+		if (D3D12_SUCCESS(this->m_SwapChain->GetDesc1(&newSwapChainDesc)) && D3D12_SUCCESS(this->m_SwapChain->GetFullscreenDesc(&newFullScreenDesc))) {
+			if (this->m_FullScreenDesc.Windowed != newFullScreenDesc.Windowed) {
+				this->BackBufferResizing();
+
+				this->m_FullScreenDesc = newFullScreenDesc;
+				this->m_SwapChainDesc = newSwapChainDesc;
+				this->m_DeviceParams.BackBufferWidth = newSwapChainDesc.Width;
+				this->m_DeviceParams.BackBufferHeight = newSwapChainDesc.Height;
+
+				if (newFullScreenDesc.Windowed)
+					glfwSetWindowMonitor(this->m_Window, nullptr, 50, 50, newSwapChainDesc.Width, newSwapChainDesc.Height, 0);
+
+				this->ResizeSwapChain();
+				this->BackBufferResized();
+			}
+
+		}
+
+		D3D12_CHECK(WaitForSingleObject(this->m_FrameFenceEvents[this->m_SwapChain->GetCurrentBackBufferIndex()], 0xFFFFFFFF));
+
+		return true;
 	}
 
 	inline void D3D12DeviceManager::Imp_DestroyDeviceAndSwapChain(void) {
@@ -413,7 +441,27 @@ namespace Parting {
 		this->m_D3D12Device = nullptr;
 	}
 
-	inline void D3D12DeviceManager::Imp_Shutdown(void){
+	inline bool D3D12DeviceManager::Imp_Present(void) {
+		if (!this->m_WindowVisible)
+			return true;
+
+		auto bufferIndex{ this->m_SwapChain->GetCurrentBackBufferIndex() };
+
+
+
+		UINT presentFlags{ 0 };
+		if (!this->m_DeviceParams.VsyncEnabled && this->m_FullScreenDesc.Windowed && this->m_TearingSupported)
+			presentFlags |= DXGI_PRESENT_ALLOW_TEARING;
+
+		HRESULT result{ this->m_SwapChain->Present(this->m_DeviceParams.VsyncEnabled ? 1u : 0u, presentFlags) };
+
+		this->m_FrameFence->SetEventOnCompletion(this->m_FrameCount, this->m_FrameFenceEvents[bufferIndex]);
+		this->m_GraphicsQueue->Signal(this->m_FrameFence, this->m_FrameCount);
+		++this->m_FrameCount;
+		return SUCCEEDED(result);
+	}
+
+	inline void D3D12DeviceManager::Imp_Shutdown(void) {
 		this->m_DXGIAdapter = nullptr;
 		this->m_DXFIFactory6 = nullptr;
 
@@ -421,5 +469,5 @@ namespace Parting {
 			this->ReportLiveObjects();
 	}
 
-	
+
 }

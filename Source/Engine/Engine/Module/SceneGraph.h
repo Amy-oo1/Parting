@@ -355,7 +355,7 @@ namespace Parting {
 	public:
 		STDNODISCARD  virtual Int32 Get_LightType(void) const = 0;
 
-		virtual void FillLightConstants(LightConstants& lightConstants) const {}
+		virtual void FillLightConstants(LightConstants& lightConstants) const;
 		virtual void Store(JSON::Value& node) const { LOG_ERROR("Empty Imp"); }
 
 	};
@@ -382,7 +382,7 @@ namespace Parting {
 	public:
 		STDNODISCARD Int32 Get_LightType(void) const override { return LightType_Directional; }
 
-		void FillLightConstants(LightConstants& lightConstants) const override {}
+		void FillLightConstants(LightConstants& lightConstants) const override;
 
 		void Store(JSON::Value& node) const override {}
 
@@ -780,8 +780,8 @@ namespace Parting {
 
 
 	private:
-		SceneGraphNode<APITag>* m_Current;
-		SceneGraphNode<APITag>* m_Scope;
+		SceneGraphNode<APITag>* m_Current{ nullptr };
+		SceneGraphNode<APITag>* m_Scope{ nullptr };
 		Vector<Uint64> m_ChildIndices;
 
 	};
@@ -1311,7 +1311,7 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline Math::VecD3 Light<APITag>::Get_Direction(void) const {
-		if (auto node{ this->Get_Node() }; nullptr == node)
+		if (auto node{ this->Get_Node() }; nullptr != node)
 			return -Math::Normalize(Math::VecD3{ node->Get_LocalToWorldTransform().m_Linear.Row2 });
 		else
 			return Math::VecD3::Zero();
@@ -1360,6 +1360,17 @@ namespace Parting {
 
 		node->Set_Transform(nullptr, &rotation, &scaling);
 
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline void DirectionalLight<APITag>::FillLightConstants(LightConstants& lightConstants) const {
+		this->Light<APITag>::FillLightConstants(lightConstants);
+
+		lightConstants.LightType = ::LightType_Directional;//TODO :
+		lightConstants.Direction = Math::VecF3{ Math::Normalize(this->Get_Direction()) };
+		float clampedAngularSize{ Math::Clamp(this->AngularSize, 0.f, 90.f) };
+		lightConstants.AngularSizeOrInvRange = Math::Radians(clampedAngularSize);
+		lightConstants.Intensity = this->Irradiance;
 	}
 
 }
