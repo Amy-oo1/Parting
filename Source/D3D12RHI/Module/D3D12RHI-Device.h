@@ -142,18 +142,15 @@ namespace RHI::D3D12 {
 		D3D12_FEATURE_DATA_D3D12_OPTIONS6 m_Options6{};
 		D3D12_FEATURE_DATA_D3D12_OPTIONS7 m_Options7{};
 
-		bool m_NvapiIsInitialized = false;
-		bool m_SinglePassStereoSupported = false;
-		bool m_FastGeometryShaderSupported = false;
+		bool m_SinglePassStereoSupported = false;//TODO Remove
+		bool m_FastGeometryShaderSupported = false;//TODO Remove
 		bool m_MeshletsSupported = false;
 		bool m_VariableRateShadingSupported = false;
-		bool m_OpacityMicromapSupported = false;
-		bool m_LinearSweptSpheresSupported = false;
-		bool m_SpheresSupported = false;
-		bool m_ShaderExecutionReorderingSupported = false;
-		bool m_SamplerFeedbackSupported = false;
-		bool m_AftermathEnabled = false;
-		bool m_HeapDirectlyIndexedEnabled = false;
+		bool m_LinearSweptSpheresSupported = false;//TODO Remove
+		bool m_SpheresSupported = false;//TODO Remove
+		bool m_ShaderExecutionReorderingSupported = false;//TODO Remove
+		bool m_SamplerFeedbackSupported = false;//TODO Remove
+		bool m_HeapDirectlyIndexedEnabled = false;//TODO Remove
 
 
 
@@ -222,7 +219,7 @@ namespace RHI::D3D12 {
 		}{
 
 		this->m_Context.Device = desc.Device;
-		this->m_Context.LogBufferLifetime = desc.LogBufferLifetime;
+		this->m_Context.LogBufferLifetime = desc.LogBufferLifetime;//TODO Remove
 
 		if (nullptr != desc.GraphicsQueue)
 			this->m_Queues[Tounderlying(RHICommandQueue::Graphics)] = MakeUnique<D3D12Queue>(m_Context, desc.GraphicsQueue);
@@ -237,9 +234,9 @@ namespace RHI::D3D12 {
 		this->m_Resources.SamplerHeap.D3D12AllocateResources(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, desc.SamplerHeapSize, true);
 
 		this->m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &this->m_Options, sizeof(this->m_Options));
-		bool hasOptions5{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &this->m_Options5, sizeof(this->m_Options5)) };
-		bool hasOptions6{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &this->m_Options6, sizeof(this->m_Options6)) };
-		bool hasOptions7{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &this->m_Options7, sizeof(this->m_Options7)) };
+		bool hasOptions5{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &this->m_Options5, sizeof(this->m_Options5)) };//TODO
+		bool hasOptions6{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &this->m_Options6, sizeof(this->m_Options6)) };//TODO
+		bool hasOptions7{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &this->m_Options7, sizeof(this->m_Options7)) };//TODO
 
 		if (HRusltSucccess == this->m_Context.Device->QueryInterface(&this->m_Context.Device2) && hasOptions7)
 			this->m_MeshletsSupported = this->m_Options7.MeshShaderTier >= D3D12_MESH_SHADER_TIER_1;
@@ -251,22 +248,22 @@ namespace RHI::D3D12 {
 			this->m_VariableRateShadingSupported = this->m_Options6.VariableShadingRateTier >= D3D12_VARIABLE_SHADING_RATE_TIER_2;
 
 		{
-			D3D12_INDIRECT_ARGUMENT_DESC argDesc = {};
-			D3D12_COMMAND_SIGNATURE_DESC csDesc = {};
+			D3D12_INDIRECT_ARGUMENT_DESC argDesc{};
+			D3D12_COMMAND_SIGNATURE_DESC csDesc{};
 			csDesc.NumArgumentDescs = 1;
 			csDesc.pArgumentDescs = &argDesc;
 
 			csDesc.ByteStride = 16;
 			argDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
-			m_Context.Device->CreateCommandSignature(&csDesc, nullptr, PARTING_IID_PPV_ARGS(&this->m_Context.DrawIndirectSignature));
+			D3D12_CHECK(this->m_Context.Device->CreateCommandSignature(&csDesc, nullptr, PARTING_IID_PPV_ARGS(&this->m_Context.DrawIndirectSignature)));
 
 			csDesc.ByteStride = 20;
 			argDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
-			m_Context.Device->CreateCommandSignature(&csDesc, nullptr, PARTING_IID_PPV_ARGS(&this->m_Context.DrawIndexedIndirectSignature));
+			D3D12_CHECK(this->m_Context.Device->CreateCommandSignature(&csDesc, nullptr, PARTING_IID_PPV_ARGS(&this->m_Context.DrawIndexedIndirectSignature)));
 
 			csDesc.ByteStride = 12;
 			argDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH;
-			m_Context.Device->CreateCommandSignature(&csDesc, nullptr, PARTING_IID_PPV_ARGS(&this->m_Context.DispatchIndirectSignature));
+			D3D12_CHECK(this->m_Context.Device->CreateCommandSignature(&csDesc, nullptr, PARTING_IID_PPV_ARGS(&this->m_Context.DispatchIndirectSignature)));
 		}
 
 		this->m_FenceEvent = CreateEventW(nullptr, false, false, nullptr);
@@ -311,7 +308,7 @@ namespace RHI::D3D12 {
 				rootsig->m_PushConstantByteSize = layout->m_PushConstantByteSize;
 				rootsig->m_RootParameterPushConstants = layout->m_RootParameterPushConstants + rootParameterOffset;
 			}
-
+			//TODO :
 			/*else if (pipelineLayouts[layoutIndex]->getBindlessDesc())
 			{
 				BindlessLayout* layout = checked_cast<BindlessLayout*>(pipelineLayouts[layoutIndex].Get());
@@ -325,8 +322,8 @@ namespace RHI::D3D12 {
 
 		// Build the description structure
 
-		D3D12_VERSIONED_ROOT_SIGNATURE_DESC rsDesc = {};
-		rsDesc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
+		D3D12_VERSIONED_ROOT_SIGNATURE_DESC rsDesc{};
+		rsDesc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;//TODO : Support
 
 		if (allowInputLayout)
 			rsDesc.Desc_1_1.Flags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -380,9 +377,7 @@ namespace RHI::D3D12 {
 
 		D3D12_COMPUTE_PIPELINE_STATE_DESC d3d12desc{
 			.pRootSignature{ pRS->m_RootSignature },
-			.CS{.pShaderBytecode{ desc.CS->m_Bytecode.data() },	.BytecodeLength{ desc.CS->m_Bytecode.size() } },
-			.NodeMask { 1 },
-			.Flags{ D3D12_PIPELINE_STATE_FLAG_NONE }
+			.CS{.pShaderBytecode{ desc.CS->m_Bytecode.data() },	.BytecodeLength{ desc.CS->m_Bytecode.size() } }
 		};
 
 		D3D12_CHECK(this->m_Context.Device->CreateComputePipelineState(&d3d12desc, PARTING_IID_PPV_ARGS(&Re)));
@@ -497,14 +492,14 @@ namespace RHI::D3D12 {
 	RefCountPtr<Texture> Device::Imp_CreateTexture(const RHITextureDesc& d) {
 		auto rd{ Texture::ConvertTextureDesc(d) };
 		D3D12_HEAP_PROPERTIES heapProps{};
-		D3D12_HEAP_FLAGS heapFlags = D3D12_HEAP_FLAG_NONE;
+		D3D12_HEAP_FLAGS heapFlags{ D3D12_HEAP_FLAG_NONE };
 
 		bool isShared{ false };
-		if (RHISharedResourceFlag::None != (d.SharedResourceFlags & RHISharedResourceFlag::Shared)) {
+		if (RHISharedResourceFlag::None != (d.SharedResourceFlags & RHISharedResourceFlag::Shared)) {//TODO 
 			heapFlags |= D3D12_HEAP_FLAG_SHARED;
 			isShared = true;
 		}
-		if (RHISharedResourceFlag::None != (d.SharedResourceFlags & RHISharedResourceFlag::Shared_CrossAdapter)) {
+		if (RHISharedResourceFlag::None != (d.SharedResourceFlags & RHISharedResourceFlag::Shared_CrossAdapter)) {//TODO 
 			rd.Flags |= D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER;
 			heapFlags |= D3D12_HEAP_FLAG_SHARED_CROSS_ADAPTER;
 			isShared = true;
@@ -512,7 +507,7 @@ namespace RHI::D3D12 {
 		if (d.IsTiled)
 			rd.Layout = D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE;
 
-		Texture* texture = new Texture(this->m_Context, this->m_Resources, d, rd);
+		Texture* texture{ new Texture(this->m_Context, this->m_Resources, d, rd) };
 
 		auto clearValue{ d.ClearValue.has_value() ? Texture::ConvertTextureClearValue(d) : D3D12_CLEAR_VALUE{} };
 
@@ -543,7 +538,7 @@ namespace RHI::D3D12 {
 			this->m_Context.Device->CreateSharedHandle(
 				texture->m_Resource,
 				nullptr,
-				PlatformWindowsAccessGenericAll,
+				PlatformWindowsAccessGenericAll,//TODO Trans
 				nullptr,
 				&texture->m_SharedHandle
 			);
@@ -873,7 +868,7 @@ namespace RHI::D3D12 {
 			using enum RHICPUAccessMode;
 		case None:
 			heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
-			initialState = ConvertResourceStates(d.InitialState);
+			initialState = ConvertResourceStates(d.InitialState);//TODO : initialState=D3D12_RESOURCE_STATE_COMMON
 			if (initialState != D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE)
 				initialState = D3D12_RESOURCE_STATE_COMMON;
 			break;
@@ -903,7 +898,8 @@ namespace RHI::D3D12 {
 			&resourceDesc,
 			initialState,
 			nullptr,
-			PARTING_IID_PPV_ARGS(&buffer->m_Resource));
+			PARTING_IID_PPV_ARGS(&buffer->m_Resource)
+		);
 
 		if (isShared)
 			this->m_Context.Device->CreateSharedHandle(
@@ -1006,8 +1002,7 @@ namespace RHI::D3D12 {
 	}
 
 	RefCountPtr<Sampler> Device::Imp_CreateSampler(const RHISamplerDesc& desc) {
-		auto sampler{ new Sampler(this->m_Context, desc) };
-		return RefCountPtr<Sampler>::Create(sampler);
+		return RefCountPtr<Sampler>::Create(new Sampler{ this->m_Context, desc });
 	}
 
 	RefCountPtr<InputLayout> Device::Imp_CreateInputLayout(const RHIVertexAttributeDesc* attributes, Uint32 attributeCount, Shader*) {
@@ -1247,7 +1242,7 @@ namespace RHI::D3D12 {
 
 		ASSERT(nullptr != pPSO);
 
-		ComputePipeline* pso = new ComputePipeline{};
+		ComputePipeline* pso{ new ComputePipeline{} };
 
 		pso->m_Desc = desc;
 		pso->m_RootSignature = pRS;
@@ -1306,7 +1301,7 @@ namespace RHI::D3D12 {
 				continue;
 
 			if (pQueue->UpdateLastCompletedInstance() < pQueue->m_LastSubmittedInstance)
-				D3D12WaitForFence(pQueue->m_Fence, pQueue->m_LastSubmittedInstance, this->m_FenceEvent);
+				D3D12WaitForFence(pQueue->m_Fence, pQueue->m_LastSubmittedInstance, this->m_FenceEvent);//TODO :
 		}
 
 		return true;

@@ -1239,8 +1239,8 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	deviceParams.VsyncEnabled = true;
 	deviceParams.EnablePerMonitorDPI = true;
 	deviceParams.SupportExplicitDisplayScaling = true;
-	deviceParams.EnableDebugRuntime = false;
-	deviceParams.EnableGPUValidation = false;
+	deviceParams.EnableDebugRuntime = true;
+	deviceParams.EnableGPUValidation = true;
 
 	String Title{ "Parting Engine" };
 
@@ -1250,7 +1250,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 
 	{
 		SmaplerUIData UIData;
-		SharedPtr< FeatureSample> sample{ MakeShared< FeatureSample>(deviceManager.get(), UIData, "") };
+		SharedPtr< FeatureSample> sample{ MakeShared<FeatureSample>(deviceManager.get(), UIData, "") };
 		SharedPtr<SamplerUIRender> uiRender{ MakeShared<SamplerUIRender>(deviceManager.get(), sample, UIData) };
 
 		uiRender->Initialize(sample->Get_ShaderFactory());

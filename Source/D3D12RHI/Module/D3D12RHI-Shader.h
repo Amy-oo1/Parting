@@ -78,7 +78,7 @@ namespace RHI::D3D12 {
 
 	};
 
-	class ShaderLibrary final :public RHIShaderLibrary<ShaderLibrary, D3D12Tag> {
+	class ShaderLibrary final :public RHIShaderLibrary<ShaderLibrary, D3D12Tag> {//TODO ReMove
 		friend class RHIResource<ShaderLibrary>;
 		friend class RHIShaderLibrary<ShaderLibrary, D3D12Tag>;
 
@@ -104,8 +104,8 @@ namespace RHI::D3D12 {
 		RefCountPtr<Shader> Imp_Get_Shader(const char* EntryName, RHIShaderType shaderType)const;
 	};
 
-	RefCountPtr<Shader> ShaderLibrary::Imp_Get_Shader(const char* EntryName, RHIShaderType shaderType) const{
+	RefCountPtr<Shader> ShaderLibrary::Imp_Get_Shader(const char* EntryName, RHIShaderType shaderType) const {
 		return RefCountPtr<Shader>::Create(new Shader{ EntryName, shaderType });
 	}
-		
+
 }

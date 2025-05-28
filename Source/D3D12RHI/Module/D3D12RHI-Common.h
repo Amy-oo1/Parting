@@ -92,11 +92,11 @@ namespace RHI::D3D12 {
 		// If enabled and the device has the capability,
 		// create RootSignatures with D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED 
 		// and D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED
-		bool EnableHeapDirectlyIndexed{ false };
+		bool EnableHeapDirectlyIndexed{ false };//TODO :Remove
 
 		// Enable logging the buffer lifetime to IMessageCallback
 		// Useful for debugging resource lifetimes
-		bool LogBufferLifetime{ false };
+		bool LogBufferLifetime{ false };//TODO :Remove
 	};
 
 	PARTING_EXPORT template<typename Derived>
@@ -301,8 +301,8 @@ namespace RHI::D3D12 {
 
 	private:
 		const Context& m_Context;
-		RefCountPtr<ID3D12CommandQueue> m_Queue{ nullptr };
-		RefCountPtr<ID3D12Fence> m_Fence{ nullptr };
+		RefCountPtr<ID3D12CommandQueue> m_Queue;
+		RefCountPtr<ID3D12Fence> m_Fence;
 		Uint64 m_LastSubmittedInstance{ 0 };
 		Uint64 m_LastCompletedInstance{ 0 };
 		Atomic<Uint64> m_RecordingInstance{ 1 };
@@ -451,7 +451,7 @@ namespace RHI::D3D12 {
 		if ((stateBits & ResolveDest) != Unknown) result |= D3D12_RESOURCE_STATE_RESOLVE_DEST;
 		if ((stateBits & ResolveSource) != Unknown) result |= D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
 		if ((stateBits & Present) != Unknown) result |= D3D12_RESOURCE_STATE_PRESENT;
-		if ((stateBits & AccelStructRead) != Unknown) result |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;//Remove ray Accel
+		if ((stateBits & AccelStructRead) != Unknown) result |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;//TODO :Remove ray Accel
 		if ((stateBits & AccelStructWrite) != Unknown) result |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
 		if ((stateBits & AccelStructBuildInput) != Unknown) result |= D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 		if ((stateBits & AccelStructBuildBlas) != Unknown) result |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
@@ -613,7 +613,7 @@ namespace RHI::D3D12 {
 		this->D3D12AllocateResources(this->m_HeapType, NewSize, nullptr != this->m_ShaderVisibleHeap);
 
 		this->m_Context.Device->CopyDescriptorsSimple(
-			NewSize,
+			OldSize,
 			this->m_StartCPUHandle,
 			OldHeap->GetCPUDescriptorHandleForHeapStart(),
 			this->m_HeapType
@@ -621,7 +621,7 @@ namespace RHI::D3D12 {
 
 		if (nullptr != this->m_ShaderVisibleHeap)
 			this->m_Context.Device->CopyDescriptorsSimple(
-				NewSize,
+				OldSize,
 				this->m_StartCPUHandleShaderVisible,
 				OldHeap->GetCPUDescriptorHandleForHeapStart(),
 				this->m_HeapType

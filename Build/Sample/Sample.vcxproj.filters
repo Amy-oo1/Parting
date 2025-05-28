@@ -15,5 +15,16 @@
     <ClCompile Include="..\..\Source\Sample\Src\Sample.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\Sample\Src\Triangle.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Sample\Module\Deferred.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Source\Sample\Include\CubeGeometry.h">
+      <Filter>Include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

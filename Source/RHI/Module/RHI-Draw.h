@@ -154,7 +154,7 @@ namespace RHI {
 				return *this;
 			}
 
-			constexpr RHIGraphicsStateBuilder& SubScissorRect(void) { --this->m_State.BindingSetCount; return *this; }
+			constexpr RHIGraphicsStateBuilder& SubScissorRect(void) { --this->m_State.Viewport.ScissorCount; return *this; }
 			constexpr RHIGraphicsStateBuilder& SubViewport(void) { --this->m_State.Viewport.ViewportCount; return *this; }
 
 			constexpr RHIGraphicsStateBuilder& AddBindingSet(Imp_BindingSet* bindingSet) { this->m_State.BindingSets[this->m_State.BindingSetCount++] = bindingSet; return *this; }

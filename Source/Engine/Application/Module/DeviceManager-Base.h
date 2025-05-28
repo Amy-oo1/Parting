@@ -91,13 +91,13 @@ namespace Parting {
 	struct InstanceParameters {
 		bool EnableDebugRuntime{ false };
 		bool EnableWarningsAsErrors{ false };
-		bool HeadlessDevice{ false };
-		bool LogBufferLifetime{ false };
+		bool HeadlessDevice{ false };//TODO Remove
+		bool LogBufferLifetime{ false };//TODO Remove
 		bool EnablePerMonitorDPI{ false };
 
 		//Dx
 		bool EnableGPUValidation{ false }; // Affects only DX12
-		bool EnableHeapDirectlyIndexed{ false }; // Allows ResourceDescriptorHeap on DX12
+		bool EnableHeapDirectlyIndexed{ false }; // Allows ResourceDescriptorHeap on DX12 //TODO Remove
 	};
 
 	struct DeviceCreationParameters final : public InstanceParameters {
@@ -206,6 +206,8 @@ namespace Parting {
 
 		void AddRenderPassToBack(IRenderPass<APITag>* pRenderPass);
 
+		void RemoveRenderPass(IRenderPass<APITag>* pRenderPass);
+
 		void Shutdown(void);
 
 		void RunMessageLoop(void);
@@ -226,6 +228,10 @@ namespace Parting {
 		STDNODISCARD double Get_AverageFrameTimeSeconds(void) const { return this->m_AverageFrameTime; }
 
 		STDNODISCARD double Get_PreviousFrameTimestamp(void) const { return this->m_PreviousFrameTimestamp; }
+
+		void Set_WindowTitle(const StringView& title);
+
+		void Set_InformativeWindowTitle(const StringView& applicationName, bool includeFramerate = true, const StringView& extraInfo = StringView{});
 
 	protected:
 		void Animate(double elapsedTime);
@@ -248,8 +254,8 @@ namespace Parting {
 		void WindowPosCallback(Int32 x, Int32 y);
 		void WindowCloseCallback(void) { LOG_INFO("TODO"); }
 		void WindowRefreshCallback() { LOG_INFO("TODO"); }
-		void WindowFocusCallback(int focused) { LOG_INFO("TODO"); }
-		void WindowIconifyCallback(int iconified) { LOG_INFO("TODO"); }
+		void WindowFocusCallback(Int32 focused) { LOG_INFO("TODO"); }
+		void WindowIconifyCallback(Int32 iconified) { LOG_INFO("TODO"); }
 		void KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods);
 		void KeyboardCharInput(Uint32 unicode, Int32 mods);
 		void MousePosUpdate(double xpos, double ypos);
@@ -257,18 +263,18 @@ namespace Parting {
 		void MouseScrollUpdate(double xoffset, double yoffset);
 
 	protected:
-		static void ErrorCallback_GLFW(int error, const char* description) { LOG_ERROR("GLFW Error"); }
+		static void ErrorCallback_GLFW(Int32 error, const char* description) { LOG_ERROR("GLFW Error"); }
 		static void WindowPosCallback_GLFW(GLFWwindow* window, Int32 xpos, Int32 ypos) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->WindowPosCallback(xpos, ypos); }
 		static void WindowCloseCallback_GLFW(GLFWwindow* window) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->WindowCloseCallback(); }
 		static void WindowRefreshCallback_GLFW(GLFWwindow* window) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->WindowRefreshCallback(); }
-		static void WindowFocusCallback_GLFW(GLFWwindow* window, int focused) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->WindowFocusCallback(focused); }
-		static void WindowIconifyCallback_GLFW(GLFWwindow* window, int iconified) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->WindowIconifyCallback(iconified); }
-		static void KeyCallback_GLFW(GLFWwindow* window, int key, int scancode, int action, int mods) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->KeyboardUpdate(key, scancode, action, mods); }
-		static void CharModsCallback_GLFW(GLFWwindow* window, unsigned int unicode, int mods) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->KeyboardCharInput(unicode, mods); }
+		static void WindowFocusCallback_GLFW(GLFWwindow* window, Int32 focused) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->WindowFocusCallback(focused); }
+		static void WindowIconifyCallback_GLFW(GLFWwindow* window, Int32 iconified) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->WindowIconifyCallback(iconified); }
+		static void KeyCallback_GLFW(GLFWwindow* window, Int32 key, Int32 scancode, Int32 action, Int32 mods) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->KeyboardUpdate(key, scancode, action, mods); }
+		static void CharModsCallback_GLFW(GLFWwindow* window, Uint32 unicode, Int32 mods) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->KeyboardCharInput(unicode, mods); }
 		static void MousePosCallback_GLFW(GLFWwindow* window, double xpos, double ypos) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->MousePosUpdate(xpos, ypos); }
-		static void MouseButtonCallback_GLFW(GLFWwindow* window, int button, int action, int mods) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->MouseButtonUpdate(button, action, mods); }
+		static void MouseButtonCallback_GLFW(GLFWwindow* window, int button, Int32 action, Int32 mods) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->MouseButtonUpdate(button, action, mods); }
 		static void MouseScrollCallback_GLFW(GLFWwindow* window, double xoffset, double yoffset) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->MouseScrollUpdate(xoffset, yoffset); }
-		static void JoystickConnectionCallback_GLFW(int joyId, int connectDisconnect) {
+		static void JoystickConnectionCallback_GLFW(Int32 joyId, Int32 connectDisconnect) {
 			if (GLFW_CONNECTED == connectDisconnect)
 				JoyStickManager<APITag>::Get()->ConnectJoystick(joyId);
 			if (GLFW_DISCONNECTED == connectDisconnect)
@@ -284,7 +290,7 @@ namespace Parting {
 		Imp_Texture* Get_BackBuffer(Uint32 index) { return this->Get_Derived()->Imp_Get_BackBuffer(index); }
 		bool BeginFrame(void) { return this->Get_Derived()->Imp_BeginFrame(); }
 		bool Present(void) { return this->Get_Derived()->Imp_Present(); }
-		Uint32 Get_CurrentBackBufferIndex(void) { return this->Get_Derived()->Imp_GetCurrentBackBufferIndex(); }
+		Uint32 Get_CurrentBackBufferIndex(void) { return this->Get_Derived()->Imp_Get_CurrentBackBufferIndex(); }
 
 		void DestroyDeviceAndSwapChain(void) { this->Get_Derived()->Imp_DestroyDeviceAndSwapChain(); }
 	protected:
@@ -319,7 +325,7 @@ namespace Parting {
 		Uint32 m_FrameIndex{ 0 };
 		Imp_FrameBuffer* m_CurrentFrameBuffer{ nullptr };
 		RHI::RefCountPtr<Imp_CommandList> m_CommandList;
-			Vector<RHI::RefCountPtr<Imp_FrameBuffer>> m_SwapChainFrameBuffers;
+		Vector<RHI::RefCountPtr<Imp_FrameBuffer>> m_SwapChainFrameBuffers;
 
 		//NOTE :Render
 		bool m_SkipRenderOnFirstFrame{ false };
@@ -351,14 +357,14 @@ namespace Parting {
 		bool Imp_BeginFrame(void) { LOG_ERROR("No Imp"); return false; }
 		bool Imp_Present(void) { LOG_ERROR("No Imp"); return false; }
 		Imp_Texture* Imp_Get_BackBuffer(Uint32 index) { LOG_ERROR("No Imp"); return nullptr; }
-		Uint32 Imp_GetCurrentBackBufferIndex(void) { LOG_ERROR("No Imp"); return 0; }
+		Uint32 Imp_Get_CurrentBackBufferIndex(void) { LOG_ERROR("No Imp"); return 0; }
 	};
 
 	template<RHI::APITagConcept APITag>
 	class IRenderPass {
 		using Imp_FrameBuffer = typename RHI::RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using DeviceManager = typename ManageTypeTraits<APITag>::DeviceManager;
-	protected:
+	public:
 		IRenderPass(DeviceManager* devicemamage) : m_DeviceManager{ devicemamage } {}
 		virtual ~IRenderPass(void) = default;
 
@@ -450,7 +456,7 @@ namespace Parting {
 	template<typename Derived, RHI::APITagConcept APITag>
 	inline bool DeviceManagerBase<Derived, APITag>::CreateWindowDeviceAndSwapChain(const DeviceCreationParameters& params, const char* windowTitle) {
 		this->m_DeviceParams = params;
-		this->m_DeviceParams.HeadlessDevice = false;
+		this->m_DeviceParams.HeadlessDevice = false;//TODO :
 		this->m_RequestedVSync = params.VsyncEnabled;
 
 		if (false == this->CreateInstance(this->m_DeviceParams))
@@ -460,7 +466,7 @@ namespace Parting {
 
 		::glfwDefaultWindowHints();
 
-		bool foundFormat = false;
+		bool foundFormat{ false };
 		for (const auto& info : g_FormatInfos)
 			if (info.Format == params.SwapChainFormat) {
 				glfwWindowHint(GLFW_RED_BITS, info.RedBits);
@@ -505,7 +511,7 @@ namespace Parting {
 				this->m_DeviceParams.RefreshRate
 			);
 		else {
-			int fbWidth{ 0 }, fbHeight{ 0 };
+			Int32 fbWidth{ 0 }, fbHeight{ 0 };
 			::glfwGetFramebufferSize(this->m_Window, &fbWidth, &fbHeight);
 			m_DeviceParams.BackBufferWidth = fbWidth;
 			m_DeviceParams.BackBufferHeight = fbHeight;
@@ -555,13 +561,13 @@ namespace Parting {
 
 	template<typename Derived, RHI::APITagConcept APITag>
 	inline bool DeviceManagerBase<Derived, APITag>::CreateInstance(const InstanceParameters& params) {
-		ASSERT(false == this->m_InstanceCreated);
+		ASSERT(false == this->m_InstanceCreated);//TODO :Debug
 
 		static_cast<InstanceParameters&>(this->m_DeviceParams) = params;
 
-		if (!params.HeadlessDevice) {
+		if (!params.HeadlessDevice) {//TODO :Remove
 			if (!params.EnablePerMonitorDPI)
-				SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);//TODO :wwindowFunc
+				SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);//NOTE : EXTERN_C
 
 			if (false == glfwInit())
 				return false;
@@ -577,7 +583,7 @@ namespace Parting {
 		Int32 height;
 		::glfwGetWindowSize(this->m_Window, &width, &height);
 
-		if (width == 0 || height == 0) {
+		if (0 == width || 0 == height) {
 			// window is minimized
 			this->m_WindowVisible = false;
 			return;
@@ -611,6 +617,12 @@ namespace Parting {
 
 		pRenderPass->BackBufferResizing();
 		pRenderPass->BackBufferResized(this->m_DeviceParams.BackBufferWidth, this->m_DeviceParams.BackBufferHeight, this->m_DeviceParams.SwapChainSampleCount);
+	}
+
+	template<typename Derived, RHI::APITagConcept APITag>
+	inline void DeviceManagerBase<Derived, APITag>::RemoveRenderPass(IRenderPass<APITag>* pRenderPass) {
+		ASSERT(nullptr != pRenderPass);
+		this->m_vRenderPasses.remove(pRenderPass);
 	}
 
 	template<typename Derived, RHI::APITagConcept APITag>
@@ -648,6 +660,41 @@ namespace Parting {
 
 			this->Get_Device()->WaitForIdle();
 		}
+	}
+
+	template<typename Derived, RHI::APITagConcept APITag>
+	inline void DeviceManagerBase<Derived, APITag>::Set_WindowTitle(const StringView& title) {
+		ASSERT(!title.empty());
+		if (title == this->m_WindowTitle)
+			return;
+
+		glfwSetWindowTitle(this->m_Window, title.data());
+
+		this->m_WindowTitle = title;
+	}
+
+	template<typename Derived, RHI::APITagConcept APITag>
+	inline void DeviceManagerBase<Derived, APITag>::Set_InformativeWindowTitle(const StringView& applicationName, bool includeFramerate, const StringView& extraInfo) {
+		StringStream ss;
+		ss << applicationName;
+		ss << " (" << RHI::RHITypeTraits<APITag>::APIName;
+
+		if (this->m_DeviceParams.EnableDebugRuntime)
+			ss << " ,Debug";
+
+		ss << ")";
+
+		const double frameTime{ this->Get_AverageFrameTimeSeconds() };
+		if (includeFramerate && frameTime > 0) {
+			const double fps{ 1.0 / frameTime };
+			const Uint32 precision{ (fps <= 20.0) ? 1u : 0u };
+			ss << " - " << std::fixed << std::setprecision(precision) << fps << " FPS ";
+		}
+
+		if (!extraInfo.empty())
+			ss << extraInfo;
+
+		this->Set_WindowTitle(ss.str());
 	}
 
 	template<typename Derived, RHI::APITagConcept APITag>
@@ -762,7 +809,7 @@ namespace Parting {
 		for (IRenderPass<APITag>* pass : this->m_vRenderPasses)
 			pass->BackBufferResized(this->m_DeviceParams.BackBufferWidth, this->m_DeviceParams.BackBufferHeight, this->m_DeviceParams.SwapChainSampleCount);
 
-		Uint32 backBufferCount{ Get_BackBufferCount() };
+		Uint32 backBufferCount{ this->Get_BackBufferCount() };
 		ASSERT(backBufferCount > 0);
 		this->m_SwapChainFrameBuffers.resize(backBufferCount);
 

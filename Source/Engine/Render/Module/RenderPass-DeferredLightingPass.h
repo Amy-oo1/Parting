@@ -112,7 +112,7 @@ namespace Parting {
 
 		void ResetBindingCache(void);
 
-		void Render(Imp_CommandList* commandList, const ICompositeView& compositeView, const Inputs& inputs, Math::VecF2 randomOffset=Math::VecF2::Zero());
+		void Render(Imp_CommandList* commandList, const ICompositeView& compositeView, const Inputs& inputs, Math::VecF2 randomOffset = Math::VecF2::Zero());
 
 	private:
 		RHI::RefCountPtr<Imp_Device> m_Device;
@@ -144,7 +144,6 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	inline void DeferredLightingPass<APITag>::Init(const SharedPtr<ShaderFactory<APITag>>& shaderFactory) {
 		this->m_ComputeShader = shaderFactory->CreateShader("Parting/Passes/deferred_lighting_cs.hlsl", "main", nullptr, RHI::RHIShaderType::Compute);
-
 
 		RHI::RHISamplerDescBuilder samplerDescBuilder{}; samplerDescBuilder
 			.Set_AddressModeUVW(RHI::RHISamplerAddressMode::Border)

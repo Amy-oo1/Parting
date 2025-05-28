@@ -54,9 +54,9 @@ namespace Parting {
 		using Imp_Device = typename RHI::RHITypeTraits<APITag>::Imp_Device;
 		using Imp_Shader = typename RHI::RHITypeTraits<APITag>::Imp_Shader;
 	public:
-		ShaderFactory(RHI::RefCountPtr<Imp_Device> device, SharedPtr<IFileSystem> fs, const Path& basePath) :
+		ShaderFactory(Imp_Device* device, SharedPtr<IFileSystem> fs, const Path& basePath) :
 			m_Device{ device },
-			m_FS{ fs },
+			m_FS{ ::MoveTemp(fs) },
 			m_BasePath{ basePath } {
 		}
 
@@ -102,7 +102,7 @@ namespace Parting {
 		if (auto pos{ adjustedName.find(".hlsl") };	pos != String::npos)
 			adjustedName.erase(pos, 5);
 
-		if (nullptr != entryName && strcmp(entryName, "main"))
+		if (strcmp(entryName, "main"))
 			adjustedName += "_" + String{ entryName };
 
 		Path shaderFilePath{ this->m_BasePath / (adjustedName + ".bin") };
@@ -143,12 +143,12 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline auto ShaderFactory<APITag>::CreateStaticShader(StaticShader shader, const Vector<ShaderMacro>* pDefines, const RHI::RHIShaderDesc& desc) -> RHI::RefCountPtr<Imp_Shader> {
-		ASSERT(nullptr != shader.pBytecode);
+		ASSERT(nullptr != shader.pBytecode);//TODO : Debug
 		ASSERT(shader.Size > 0);
 
 
 		Vector<ShaderMake::ShaderConstant> constants;
-		if (pDefines)
+		if (nullptr != pDefines)
 			for (const auto& define : *pDefines)
 				constants.push_back(ShaderMake::ShaderConstant{ .name{ define.Name.c_str() }, .value{ define.Definition.c_str() } });
 

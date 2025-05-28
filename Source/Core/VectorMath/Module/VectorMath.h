@@ -89,6 +89,17 @@ namespace Math {
 		m[11] = a.m_Translation.Z;
 	}
 
+	MatF44 PerspProjD3DStyle(float verticalFOV, float aspect, float zNear, float zFar) {
+		float yScale{ 1.0f / Math::Tan(0.5f * verticalFOV) };
+		float xScale{ yScale / aspect };
+		float zScale{ 1.0f / (zFar - zNear) };
+		return MatF44{
+			xScale,				0,					0,							0,
+			0,					yScale,				0,							0,
+			0,					0,					zFar * zScale,				1,
+			0,					0,					-zNear * zFar * zScale,		0
+		};
+	}
 
 	MatF44 PerspProjD3DStyleReverse(float verticalFOV, float aspect, float zNear) {
 		float yScale{ 1.0f / Tan(0.5f * verticalFOV) };

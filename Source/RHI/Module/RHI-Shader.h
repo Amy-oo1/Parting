@@ -95,14 +95,14 @@ namespace RHI {
 		String DebugName;
 		String EntryName{ "main" };
 
-		Int32 HLSLExtensionsUAV{ -1 };
+		Int32 HLSLExtensionsUAV{ -1 };//TODO Remove
 
-		bool UseSpecificShaderExt{ false };
-		Uint32 CustomSemanticCount{ 0 };
-		RHICustomSemantic* pCustomSemantics{ nullptr };
+		bool UseSpecificShaderExt{ false };//TODO Remove
+		Uint32 CustomSemanticCount{ 0 };//TODO Remove
+		RHICustomSemantic* pCustomSemantics{ nullptr };//TODO Remove
 
-		RHIFastGeometryShaderFlag FastGSFlags;
-		Uint32* pCoordinateSwizzling{ nullptr };
+		RHIFastGeometryShaderFlag FastGSFlags;//TODO Remove
+		Uint32* pCoordinateSwizzling{ nullptr };//TODO Remove
 	};
 
 	PARTING_EXPORT class RHIShaderDescBuilder final {

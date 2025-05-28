@@ -232,7 +232,7 @@ namespace RHI {
 	struct RHITextureBindingKey final {
 		RHITextureSubresourceSet SubresourceSet;
 		RHIFormat Format;
-		bool IsReadOnlyDSV;
+		bool IsReadOnlyDSV{ false };
 
 		STDNODISCARD constexpr bool operator==(const RHITextureBindingKey&)const noexcept = default;
 		STDNODISCARD constexpr bool operator!=(const RHITextureBindingKey&)const noexcept = default;

@@ -181,7 +181,8 @@ namespace Parting {
 		Vector<Math::VecF4> MorphTargetData;
 
 		STDNODISCARD bool HasAttribute(RHI::RHIVertexAttribute attr) const { return this->VertexBufferRanges[Tounderlying(attr)].ByteSize != 0; }
-		RHI::RHIBufferRange& Get_VertexBufferRange(RHI::RHIVertexAttribute attr) { return this->VertexBufferRanges[Tounderlying(attr)]; }//NOTE :return no const to w range
+		void Set_VertexBufferRange(RHI::RHIVertexAttribute attr, const RHI::RHIBufferRange& range) { this->VertexBufferRanges[Tounderlying(attr)] = range; }
+		RHI::RHIBufferRange& Get_VertexBufferRange(RHI::RHIVertexAttribute attr) { return this->VertexBufferRanges[Tounderlying(attr)]; }//NOTE :return no const to w range//TODO 
 		STDNODISCARD const RHI::RHIBufferRange& Get_VertexBufferRange(RHI::RHIVertexAttribute attr) const { return this->VertexBufferRanges[Tounderlying(attr)]; }
 	};
 

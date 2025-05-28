@@ -268,13 +268,10 @@ namespace RHI {
 			if (transitionNecessary || uavNecessary)
 				this->m_TextureBarriers.emplace_back(RHITextureBarrier<APITag>{
 				.Texture{ texture },
-					.MipLevel{ 0 },
-					.ArraySlice{ 0 },
 					.EntireTexture{ true },
 					.StateBefore{ tracking->State },
 					.StateAfter{ state }
-			}
-				);
+			});
 
 			tracking->State = state;
 
@@ -391,7 +388,7 @@ namespace RHI {
 	inline void RHICommandListResourceStateTracker<APITag>::KeepBufferInitialStates(void) {
 		for (auto& [buffer, tracking] : this->m_BufferStates)
 			if (buffer->DescRef.KeepInitialState &&
-				RHIResourceState::Unknown != buffer->PermanentState &&
+				RHIResourceState::Unknown == buffer->PermanentState &&
 				!buffer->DescRef.IsVolatile &&
 				!tracking->PermanentTransition)
 				this->RequireBufferState(buffer, buffer->DescRef.InitialState);
@@ -401,7 +398,7 @@ namespace RHI {
 	inline void RHICommandListResourceStateTracker<APITag>::KeepTextureInitialStates(void) {
 		for (auto& [texture, tracking] : this->m_TextureStates)
 			if (texture->DescRef.KeepInitialState &&
-				RHIResourceState::Unknown != texture->PermanentState &&
+				RHIResourceState::Unknown == texture->PermanentState &&
 				!tracking->PermanentTransition)
 				this->RequireTextureState(texture, g_AllSubResourceSet, texture->DescRef.InitialState);
 	}

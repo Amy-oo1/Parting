@@ -707,6 +707,8 @@ namespace Parting {
 	   // If the node is already attached to this or other graph, a deep copy of the subgraph is made first.
 		SharedPtr<SceneGraphNode<APITag>> Attach(const SharedPtr<SceneGraphNode<APITag>>& parent, const SharedPtr<SceneGraphNode<APITag>>& child);
 
+		// Creates a node holding the provided leaf and attaches it to the parent.
+		SharedPtr<SceneGraphNode<APITag>> AttachLeafNode(const SharedPtr<SceneGraphNode<APITag>>& parent, const SharedPtr<SceneGraphLeaf<APITag>>& leaf);
 
 		// Removes the node and its subgraph from the graph.
 		// When preserveOrder is 'false', the order of node's siblings may be changed during this operation to improve performance.
@@ -985,6 +987,16 @@ namespace Parting {
 		attachedChild->PropagateDirtyFlags(SceneGraphNode<APITag>::DirtyFlags::SubgraphStructure | (child->m_Dirty & SceneGraphNode<APITag>::DirtyFlags::SubgraphMask));
 
 		return attachedChild;
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline SharedPtr<SceneGraphNode<APITag>> SceneGraph<APITag>::AttachLeafNode(const SharedPtr<SceneGraphNode<APITag>>& parent, const SharedPtr<SceneGraphLeaf<APITag>>& leaf) {
+		auto node{ MakeShared<SceneGraphNode<APITag>>() };
+		if (nullptr != leaf->Get_Node())
+			node->Set_Leaf(leaf->Clone());
+		else
+			node->Set_Leaf(leaf);
+		return this->Attach(parent, node);
 	}
 
 	template<RHI::APITagConcept APITag>

@@ -60,8 +60,8 @@ struct InstanceData {
 	//     foreach(Geo) index++
 	Uint32 NumGeometries;
 
-	Math::Mat<float, 3, 4> Transform;
-	Math::Mat<float, 3, 4> PrevTransform;
+	Math::MatF34 Transform;
+	Math::MatF34 PrevTransform;
 
 	/*bool IsCurveDOTS() { return (flags & InstanceFlags_CurveDisjointOrthogonalTriangleStrips) != 0; }*/
 };

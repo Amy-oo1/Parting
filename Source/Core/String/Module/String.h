@@ -20,11 +20,14 @@ PARTING_IMPORT std;
 PARTING_EXPORT using String = std::string;
 PARTING_EXPORT using MString = std::pmr::string;
 PARTING_EXPORT using StringView = std::string_view;
+PARTING_EXPORT using StringStream = std::stringstream;
+
 
 //NOTE :In Platform used in wchar_t ,and it self define 16(windows) or 32(linux) bit
 PARTING_EXPORT using WString = std::wstring;
 PARTING_EXPORT using MWString = std::pmr::wstring;
 PARTING_EXPORT using WStringView = std::wstring_view;
+PARTING_EXPORT using WStringStream = std::wstringstream;
 
 PARTING_EXPORT using u8String = std::u8string;
 PARTING_EXPORT using Mu8String = std::pmr::u8string;

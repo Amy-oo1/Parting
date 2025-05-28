@@ -124,7 +124,7 @@ namespace Parting {
 		RHI::RefCountPtr<IDXGISwapChain3>			m_SwapChain;
 
 
-		RHI::RefCountPtr<Imp_Device>				m_RHIDevice;//TODO this pace to uncon ,meybe can
+		RHI::RefCountPtr<Imp_Device>				m_RHIDevice;
 		Vector<RHI::RefCountPtr<ID3D12Resource>>	m_SwapChainBuffers;
 		Vector<RHI::RefCountPtr<Imp_Texture>>		m_RHISwapChainBuffers;
 		RHI::RefCountPtr<ID3D12Fence>				m_FrameFence;
@@ -142,6 +142,7 @@ namespace Parting {
 		Uint32 Imp_Get_BackBufferCount(void) const;
 		Imp_Device* Imp_Get_Device(void) { return this->m_RHIDevice.Get(); }
 		Imp_Texture* Imp_Get_BackBuffer(Uint32 index) { ASSERT(index < this->m_RHISwapChainBuffers.size());	return this->m_RHISwapChainBuffers[index].Get(); }
+		Uint32 Imp_Get_CurrentBackBufferIndex(void);
 		bool Imp_BeginFrame(void);
 		void Imp_DestroyDeviceAndSwapChain(void);
 		bool Imp_Present(void);
@@ -259,21 +260,16 @@ namespace Parting {
 			pInfoQueue->AddStorageFilterEntries(&filter);
 		}
 
-		D3D12_COMMAND_QUEUE_DESC queueDes{
-			.Type { D3D12_COMMAND_LIST_TYPE_DIRECT },
-			.Priority { D3D12_COMMAND_QUEUE_PRIORITY_NORMAL },
-			.Flags { D3D12_COMMAND_QUEUE_FLAG_NONE },
-			.NodeMask { 1 },
-		};
-		D3D12_CHECK(this->m_D3D12Device->CreateCommandQueue(&queueDes, IID_PPV_ARGS(&m_GraphicsQueue)));
-		if (m_DeviceParams.EnableComputeQueue) {
+		D3D12_COMMAND_QUEUE_DESC queueDes{ .Type { D3D12_COMMAND_LIST_TYPE_DIRECT } };
+		D3D12_CHECK(this->m_D3D12Device->CreateCommandQueue(&queueDes, PARTING_IID_PPV_ARGS(&this->m_GraphicsQueue)));
+		if (this->m_DeviceParams.EnableComputeQueue) {
 			queueDes.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
-			D3D12_CHECK(this->m_D3D12Device->CreateCommandQueue(&queueDes, IID_PPV_ARGS(&m_GraphicsQueue)));
+			D3D12_CHECK(this->m_D3D12Device->CreateCommandQueue(&queueDes, PARTING_IID_PPV_ARGS(&this->m_GraphicsQueue)));
 		}
 
-		if (m_DeviceParams.EnableCopyQueue) {
+		if (this->m_DeviceParams.EnableCopyQueue) {
 			queueDes.Type = D3D12_COMMAND_LIST_TYPE_COPY;
-			D3D12_CHECK(this->m_D3D12Device->CreateCommandQueue(&queueDes, IID_PPV_ARGS(&m_GraphicsQueue)));
+			D3D12_CHECK(this->m_D3D12Device->CreateCommandQueue(&queueDes, PARTING_IID_PPV_ARGS(&this->m_GraphicsQueue)));
 		}
 
 
@@ -284,8 +280,8 @@ namespace Parting {
 			.CopyQueue { this->m_CopyQueue },
 		};
 
-		deviceDesc.LogBufferLifetime = this->m_DeviceParams.LogBufferLifetime;
-		deviceDesc.EnableHeapDirectlyIndexed = this->m_DeviceParams.EnableHeapDirectlyIndexed;
+		deviceDesc.LogBufferLifetime = this->m_DeviceParams.LogBufferLifetime;//TODO :Remove
+		deviceDesc.EnableHeapDirectlyIndexed = this->m_DeviceParams.EnableHeapDirectlyIndexed;//TODO :Remove
 
 		this->m_RHIDevice = RHI::RefCountPtr<RHI::D3D12::Device>::Create(new RHI::D3D12::Device{ deviceDesc });
 
@@ -299,8 +295,8 @@ namespace Parting {
 			: (this->m_DeviceParams.StartMaximized ? (WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_MAXIMIZE) : (WS_OVERLAPPEDWINDOW | WS_VISIBLE))
 		};
 
-		RECT rect{ 0, 0, static_cast<LONG>(this->m_DeviceParams.BackBufferWidth), static_cast<LONG>(this->m_DeviceParams.BackBufferHeight) };
-		AdjustWindowRect(&rect, windowStyle, FALSE);
+		RECT rect{ 0, 0, static_cast<long>(this->m_DeviceParams.BackBufferWidth), static_cast<long>(this->m_DeviceParams.BackBufferHeight) };
+		AdjustWindowRect(&rect, windowStyle, 0);
 
 		if (D3D12DeviceManager::MoveWindowOntoAdapter(this->m_DXGIAdapter, rect))
 			glfwSetWindowPos(this->m_Window, rect.left, rect.top);
@@ -312,7 +308,6 @@ namespace Parting {
 		Int32 width{ clientRect.right - clientRect.left };
 		Int32 height{ clientRect.bottom - clientRect.top };
 
-		this->m_SwapChainDesc = DXGI_SWAP_CHAIN_DESC1{};
 		this->m_SwapChainDesc.Width = width;
 		this->m_SwapChainDesc.Height = height;
 		this->m_SwapChainDesc.SampleDesc.Count = this->m_DeviceParams.SwapChainSampleCount;
@@ -325,7 +320,7 @@ namespace Parting {
 		// Special processing for sRGB swap chain formats.
 		// DXGI will not create a swap chain with an sRGB format, but its contents will be interpreted as sRGB.
 		// So we need to use a non-sRGB format here, but store the true sRGB format for later framebuffer creation.
-		switch (m_DeviceParams.SwapChainFormat) {
+		switch (this->m_DeviceParams.SwapChainFormat) {
 			using enum RHI::RHIFormat;
 		case SRGBA8_UNORM:this->m_SwapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; break;
 		case SBGRA8_UNORM:this->m_SwapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; break;
@@ -334,7 +329,7 @@ namespace Parting {
 
 		RHI::RefCountPtr<IDXGIFactory5> pDxgiFactory5;
 		if (D3D12_SUCCESS(this->m_DXFIFactory6->QueryInterface(PARTING_IID_PPV_ARGS(&pDxgiFactory5)))) {
-			BOOL supported = 0;
+			Int32 supported{ 0 };
 			if (D3D12_SUCCESS(pDxgiFactory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &supported, sizeof(supported))))
 				this->m_TearingSupported = (supported != 0);
 		}
@@ -342,7 +337,6 @@ namespace Parting {
 		if (this->m_TearingSupported)
 			this->m_SwapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
-		this->m_FullScreenDesc = DXGI_SWAP_CHAIN_FULLSCREEN_DESC{};
 		this->m_FullScreenDesc.RefreshRate.Numerator = this->m_DeviceParams.RefreshRate;
 		this->m_FullScreenDesc.RefreshRate.Denominator = 1;
 		this->m_FullScreenDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
@@ -354,12 +348,12 @@ namespace Parting {
 
 		D3D12_CHECK(pSwapChain1->QueryInterface(PARTING_IID_PPV_ARGS(&this->m_SwapChain)));
 
-		if (false == CreateRenderTargets())
+		if (false == this->CreateRenderTargets())
 			return false;
 
 		D3D12_CHECK(this->m_D3D12Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, PARTING_IID_PPV_ARGS(&this->m_FrameFence)));
 
-		this->m_FrameFenceEvents.resize(this->m_FrameCount);
+		this->m_FrameFenceEvents.resize(this->m_SwapChainDesc.BufferCount);
 		for (auto& event : this->m_FrameFenceEvents)
 			event = CreateEventW(nullptr, false, true, nullptr);
 
@@ -389,6 +383,10 @@ namespace Parting {
 
 	inline Uint32 D3D12DeviceManager::Imp_Get_BackBufferCount(void) const {
 		return this->m_SwapChainDesc.BufferCount;
+	}
+
+	inline Uint32 D3D12DeviceManager::Imp_Get_CurrentBackBufferIndex(void) {
+		return this->m_SwapChain->GetCurrentBackBufferIndex();
 	}
 
 	inline bool D3D12DeviceManager::Imp_BeginFrame(void) {

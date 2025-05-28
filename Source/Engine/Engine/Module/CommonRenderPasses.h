@@ -117,31 +117,31 @@ namespace Parting {
 	public:
 		CommonRenderPasses(RHI::RefCountPtr<Imp_Device> device, SharedPtr<ShaderFactory<APITag>> shaderFactory) : m_Device{ device } {
 			{
-				Vector<ShaderMacro> VSMacros;
-				VSMacros.emplace_back(ShaderMacro{ .Name{ "QUAD_Z" }, .Definition{ "0" } });
+				Vector<ShaderMacro> VSMacros{
+					ShaderMacro{.Name{ String{ "QUAD_Z" } }, .Definition{ String{ "1" } } },
+				};
 				this->m_FullscreenVS = shaderFactory->CreateShader("Parting/fullscreen_vs", "main", &VSMacros, RHI::RHIShaderType::Vertex);
 
-				VSMacros.back().Definition = "1";
+				VSMacros.back().Definition = String{ "1" };
 				this->m_FullscreenAtOneVS = shaderFactory->CreateShader("Parting/fullscreen_vs", "main", &VSMacros, RHI::RHIShaderType::Vertex);
 			}
 
 			this->m_RectVS = shaderFactory->CreateShader("Parting/rect_vs", "main", nullptr, RHI::RHIShaderType::Vertex);
 
 			{
-				Vector<ShaderMacro> blitMacros;
-				blitMacros.emplace_back(ShaderMacro{ .Name{ "TEXTURE_ARRAY" }, .Definition{ "0" } });
-
+				Vector<ShaderMacro> blitMacros{
+					ShaderMacro{.Name{ String{ "TEXTURE_ARRAY" } }, .Definition{ String{ "0" } } },
+				};
 				this->m_BLITPS = shaderFactory->CreateShader("Parting/blit_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
 				this->m_SharpenPS = shaderFactory->CreateShader("Parting/sharpen_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
 
-				blitMacros.back().Definition = "1";
+				blitMacros.back().Definition = String{ "1" };
 				this->m_BLITArrayPS = shaderFactory->CreateShader("Parting/blit_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
 				this->m_SharpenArrayPS = shaderFactory->CreateShader("Parting/sharpen_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
-
 			}
 
 			{
-				RHI::RHISamplerDescBuilder samplerDescBuilder;
+				RHI::RHISamplerDescBuilder samplerDescBuilder{};
 
 				samplerDescBuilder.Set_AddressModeUVW(RHI::RHISamplerAddressMode::Clamp);
 				this->m_PointClampSampler = this->m_Device->CreateSampler(samplerDescBuilder.Set_AllFilter(false).Build());
@@ -166,7 +166,6 @@ namespace Parting {
 				this->m_BlackTexture2DArray = this->m_Device->CreateTexture(textureDescBuilder.Set_Dimension(RHI::RHITextureDimension::Texture2DArray).Build());
 				this->m_WhiteTexture2DArray = this->m_Device->CreateTexture(textureDescBuilder.Set_Dimension(RHI::RHITextureDimension::Texture2DArray).Build());
 				this->m_BlackCubeMapArray = this->m_Device->CreateTexture(textureDescBuilder.Set_Dimension(RHI::RHITextureDimension::TextureCubeArray).Build());
-
 			}
 
 			constexpr Uint32 blackImage{ 0xff000000 };
@@ -185,9 +184,9 @@ namespace Parting {
 			commandList->BeginTrackingTextureState(this->m_WhiteTexture2DArray, RHI::g_AllSubResourceSet, RHI::RHIResourceState::Common);
 			commandList->BeginTrackingTextureState(this->m_BlackTexture3D, RHI::g_AllSubResourceSet, RHI::RHIResourceState::Common);
 
-			commandList->WriteTexture(this->m_BlackTexture, 0, 0, &blackImage, 0);
-			commandList->WriteTexture(this->m_GrayTexture, 0, 0, &grayImage, 0);
-			commandList->WriteTexture(this->m_WhiteTexture, 0, 0, &whiteImage, 0);
+			commandList->WriteTexture(this->m_BlackTexture, 0, 0, &blackImage, 0);//TODO :Check
+			commandList->WriteTexture(this->m_GrayTexture, 0, 0, &grayImage, 0);//TODO :Check
+			commandList->WriteTexture(this->m_WhiteTexture, 0, 0, &whiteImage, 0);//TODO :Check
 
 			for (Uint32 arraySlice = 0; arraySlice < 6; ++arraySlice) {
 				commandList->WriteTexture(this->m_BlackTexture2DArray, arraySlice, 0, &blackImage, 0);
@@ -206,7 +205,7 @@ namespace Parting {
 			commandList->CommitBarriers();
 
 			commandList->Close();
-			m_Device->ExecuteCommandList(commandList);
+			this->m_Device->ExecuteCommandList(commandList);
 
 			this->m_BLITBindingLayout = this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 				.Set_Visibility(RHI::RHIShaderType::All)
@@ -215,9 +214,6 @@ namespace Parting {
 				.AddBinding(RHI::RHIBindingLayoutItem::Sampler(0))
 				.Build()
 			);
-
-
-
 		}
 		~CommonRenderPasses(void) = default;
 

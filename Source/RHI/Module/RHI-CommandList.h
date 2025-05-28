@@ -90,7 +90,7 @@ namespace RHI {
 
 	PARTING_EXPORT STDNODISCARD constexpr Uint64 MakeVersion(Uint64 id, RHICommandQueue queue, bool submitted) {
 		Uint64 result{ (id & c_VersionIDMask) | (static_cast<Uint64>(queue) << c_VersionQueueShift) };
-		if (submitted) 
+		if (submitted)
 			result |= c_VersionSubmittedFlag;
 
 		return result;
@@ -139,25 +139,25 @@ namespace RHI {
 
 
 	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
-	class RHICommandList :public RHIResource<Derived> {
+		class RHICommandList :public RHIResource<Derived> {
 		friend class RHIResource<Derived>;
 
-	protected:
-		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
-		using Imp_StagingTexture = typename RHITypeTraits<APITag>::Imp_StagingTexture;
-		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
-		using Imp_Sampler = typename RHITypeTraits<APITag>::Imp_Sampler;
-		using Imp_SamplerFeedbackTexture = typename RHITypeTraits<APITag>::Imp_SamplerFeedbackTexture;
-		using Imp_FrameBuffer = typename RHITypeTraits<APITag>::Imp_FrameBuffer;
-		using Imp_TimerQuery = typename RHITypeTraits<APITag>::Imp_TimerQuery;
-		using Imp_EventQuery = typename RHITypeTraits<APITag>::Imp_EventQuery;
-		using Imp_Heap = typename RHITypeTraits<APITag>::Imp_Heap;
-		using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
-		using Imp_GraphicsPipeline = typename RHITypeTraits<APITag>::Imp_GraphicsPipeline;
-		using Imp_ComputePipeline = typename RHITypeTraits<APITag>::Imp_ComputePipeline;
-		using Imp_MeshletPipeline = typename RHITypeTraits<APITag>::Imp_MeshletPipeline;
-		using Imp_Device = typename RHITypeTraits<APITag>::Imp_Device;
-		//TODO :using Imp_DescriptorSet = typename RHITypeTraits<APITag>::Imp_DescriptorSet;
+		protected:
+			using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
+			using Imp_StagingTexture = typename RHITypeTraits<APITag>::Imp_StagingTexture;
+			using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
+			using Imp_Sampler = typename RHITypeTraits<APITag>::Imp_Sampler;
+			using Imp_SamplerFeedbackTexture = typename RHITypeTraits<APITag>::Imp_SamplerFeedbackTexture;
+			using Imp_FrameBuffer = typename RHITypeTraits<APITag>::Imp_FrameBuffer;
+			using Imp_TimerQuery = typename RHITypeTraits<APITag>::Imp_TimerQuery;
+			using Imp_EventQuery = typename RHITypeTraits<APITag>::Imp_EventQuery;
+			using Imp_Heap = typename RHITypeTraits<APITag>::Imp_Heap;
+			using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
+			using Imp_GraphicsPipeline = typename RHITypeTraits<APITag>::Imp_GraphicsPipeline;
+			using Imp_ComputePipeline = typename RHITypeTraits<APITag>::Imp_ComputePipeline;
+			using Imp_MeshletPipeline = typename RHITypeTraits<APITag>::Imp_MeshletPipeline;
+			using Imp_Device = typename RHITypeTraits<APITag>::Imp_Device;
+			//TODO :using Imp_DescriptorSet = typename RHITypeTraits<APITag>::Imp_DescriptorSet;
 		protected:
 			RHICommandList(void) = default;
 			PARTING_VIRTUAL ~RHICommandList(void) = default;
@@ -176,11 +176,11 @@ namespace RHI {
 
 			void ClearState(void) { this->Get_Derived()->Imp_ClearState(); }
 
-			void ClearTextureFloat(Imp_Texture* texture, const RHITextureSubresourceSet& subresources, const Color& color) { this->Get_Derived()->Imp_ClearTextureFloat(texture, subresources, color); }
+			void ClearTextureFloat(Imp_Texture* texture, RHITextureSubresourceSet subresources, const Color& color) { this->Get_Derived()->Imp_ClearTextureFloat(texture, subresources, color); }
 
-			void ClearDepthStencilTexture(Imp_Texture* texture, const RHITextureSubresourceSet& subresources, Optional<float> depth, Optional<Uint8> stencil) { this->Get_Derived()->Imp_ClearDepthStencilTexture(texture, subresources, depth, stencil); }
+			void ClearDepthStencilTexture(Imp_Texture* texture, RHITextureSubresourceSet subresources, Optional<float> depth, Optional<Uint8> stencil) { this->Get_Derived()->Imp_ClearDepthStencilTexture(texture, subresources, depth, stencil); }
 
-			void ClearTextureUInt(Imp_Texture* texture, const RHITextureSubresourceSet& subresources, Uint32 clearColor) { this->Get_Derived()->Imp_ClearTextureUInt(texture, subresources, clearColor); }
+			void ClearTextureUInt(Imp_Texture* texture, RHITextureSubresourceSet subresources, Uint32 clearColor) { this->Get_Derived()->Imp_ClearTextureUInt(texture, subresources, clearColor); }
 
 			void CopyTexture(Imp_Texture* des, RHITextureSlice desSlice, Imp_Texture* src, RHITextureSlice srcSlice) { this->Get_Derived()->Imp_CopyTexture(des, desSlice, src, srcSlice); }
 
@@ -273,9 +273,9 @@ namespace RHI {
 			void Imp_Open(void) { LOG_ERROR("No Imp"); }
 			void Imp_Close(void) { LOG_ERROR("No Imp"); }
 			void Imp_ClearState(void) { LOG_ERROR("No Imp"); }
-			void Imp_ClearTextureFloat(Imp_Texture*, const RHITextureSubresourceSet&, const Color&) { LOG_ERROR("No Imp"); }
-			void Imp_ClearDepthStencilTexture(Imp_Texture*, const RHITextureSubresourceSet&, Optional<float>, Optional<Uint8>) { LOG_ERROR("No Imp"); }
-			void Imp_ClearTextureUInt(Imp_Texture*, const RHITextureSubresourceSet&, Uint32) { LOG_ERROR("No Imp"); }
+			void Imp_ClearTextureFloat(Imp_Texture*, RHITextureSubresourceSet, const Color&) { LOG_ERROR("No Imp"); }
+			void Imp_ClearDepthStencilTexture(Imp_Texture*, RHITextureSubresourceSet, Optional<float>, Optional<Uint8>) { LOG_ERROR("No Imp"); }
+			void Imp_ClearTextureUInt(Imp_Texture*, RHITextureSubresourceSet, Uint32) { LOG_ERROR("No Imp"); }
 			void Imp_CopyTexture(Imp_Texture*, RHITextureSlice, Imp_Texture*, RHITextureSlice) { LOG_ERROR("No Imp"); }
 			void Imp_CopyTexture(Imp_Texture*, RHITextureSlice, Imp_StagingTexture*, RHITextureSlice) { LOG_ERROR("No Imp"); }
 			void Imp_CopyTexture(Imp_StagingTexture*, RHITextureSlice, Imp_Texture*, RHITextureSlice) { LOG_ERROR("No Imp"); }

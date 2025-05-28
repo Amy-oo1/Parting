@@ -124,7 +124,7 @@ namespace Parting {
 		using Imp_FrameBuffer = typename RHI::RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using Imp_CommandList = typename RHI::RHITypeTraits<APITag>::Imp_CommandList;
 	public:
-		TextureCache(RHI::RefCountPtr<Imp_Device> device, SharedPtr<IFileSystem> fs, SharedPtr<DescriptorTableManager<APITag>> descriptorTableManager) :
+		TextureCache(RHI::RefCountPtr<Imp_Device> device, SharedPtr<IFileSystem> fs, SharedPtr<DescriptorTableManager<APITag>> descriptorTableManager) ://TODO :Remnove
 			m_Device{ device },
 			m_FS{ fs },
 			m_DescriptorTableManager{ descriptorTableManager }
@@ -153,6 +153,8 @@ namespace Parting {
 
 		SharedPtr<LoadedTexture<APITag>> LoadTextureFromMemoryDeferred(const SharedPtr<IBlob>& data, const String& name, const String& mimeType, bool sRGB);
 
+		SharedPtr<LoadedTexture<APITag>> LoadTextureFromFile(const Path& path, bool sRGB, CommonRenderPasses<APITag>* passes, Imp_CommandList* commandList);
+
 		SharedPtr<LoadedTexture<APITag>> LoadTextureFromFileAsync(const Path& path, bool sRGB, tf::Executor& executor);
 
 		SharedPtr<LoadedTexture<APITag>> LoadTextureFromFileDeferred(const Path& path, bool sRGB);
@@ -180,7 +182,7 @@ namespace Parting {
 		Uint32 m_TexturesFinalized{ 0 };
 		Mutex m_TexturesToFinalizeMutex;
 
-		Uint32 m_MaxTextureSize{ 0 };
+		Uint32 m_MaxTextureSize{ 0 };//NOTE : Limit Texture Size
 
 		bool m_GenerateMipmaps{ true };
 
@@ -459,6 +461,29 @@ namespace Parting {
 	}
 
 	template<RHI::APITagConcept APITag>
+	inline SharedPtr<LoadedTexture<APITag>> TextureCache<APITag>::LoadTextureFromFile(const Path& path, bool sRGB, CommonRenderPasses<APITag>* passes, Imp_CommandList* commandList) {
+		SharedPtr<TextureData<APITag>> texture;
+
+		if (this->FindTextureInCache(path, texture))
+			return texture;
+
+		texture->ForceSRGB = sRGB;
+		texture->FilePath = path.generic_string();
+
+		auto fileData{ this->ReadTextureFile(path) };
+		if (nullptr != fileData)
+			if (this->FillTextureData(fileData, texture, path.extension().generic_string(), "")) {
+				this->TextureLoaded(texture);
+
+				this->FinalizeTexture(texture, passes, commandList);
+			}
+
+		++m_TexturesLoaded;
+
+		return texture;
+	}
+
+	template<RHI::APITagConcept APITag>
 	inline SharedPtr<LoadedTexture<APITag>> TextureCache<APITag>::LoadTextureFromFileAsync(const Path& path, bool sRGB, tf::Executor& executor) {
 		return nullptr;
 	}
@@ -533,8 +558,7 @@ namespace Parting {
 			Int32
 				width{ 0 },
 				height{ 0 },
-				originalChannels{ 0 },
-				channels{ 0 };
+				originalChannels{ 0 };
 
 			if (!stbi_info_from_memory(static_cast<const stbi_uc*>(fileData->Get_Data()), static_cast<Int32>(fileData->Get_Size()), &width, &height, &originalChannels)) {
 				LOG_ERROR("Couldn't process image header for texture "/*texture->path.c_str()*/);
@@ -543,13 +567,15 @@ namespace Parting {
 
 			bool is_hdr{ static_cast<bool>(stbi_is_hdr_from_memory(static_cast<const stbi_uc*>(fileData->Get_Data()),static_cast<Int32>(fileData->Get_Size()))) };
 
+			Int32 channels{ 0 };
+
 			if (originalChannels == 3)
 				channels = 4;
 			else
 				channels = originalChannels;
 
-			unsigned char* bitmap;
-			Int32 bytesPerPixel = channels * (is_hdr ? 4 : 1);
+			unsigned char* bitmap{ nullptr };
+			Int32 bytesPerPixel{ channels * (is_hdr ? 4 : 1) };
 
 			if (is_hdr) {
 				float* floatmap{ stbi_loadf_from_memory(static_cast<const stbi_uc*>(fileData->Get_Data()), static_cast<Int32>(fileData->Get_Size()),&width, &height, &originalChannels, channels) };

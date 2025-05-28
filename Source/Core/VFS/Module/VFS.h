@@ -364,10 +364,10 @@ private:
 
 		for (const auto& [mountpath, mountFS] : this->m_MountPoints) {
 			if (spath.find_first_of(mountpath, 0) == 0 && ((spath.length() == mountpath.length()) || (spath[mountpath.length()] == '/'))) {
-				if (pRelativePath)
+				if (nullptr != pRelativePath)
 					*pRelativePath = (spath.length() == mountpath.length()) ? "" : spath.substr(mountpath.size() + 1);
 
-				if (ppFS)
+				if (nullptr != ppFS)
 					*ppFS = mountFS.get();
 
 				return true;

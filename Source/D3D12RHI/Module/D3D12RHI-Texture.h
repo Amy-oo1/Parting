@@ -71,7 +71,7 @@ namespace RHI::D3D12 {
 		friend class CommandList;
 		friend class Device;
 	public:
-		Texture(const Context& context, D3D12DeviceResources& resource, RHITextureDesc desc, const D3D12_RESOURCE_DESC& d3d12resourcedesc) :
+		Texture(const Context& context, D3D12DeviceResources& resource, const RHITextureDesc& desc, const D3D12_RESOURCE_DESC& d3d12resourcedesc) :
 			RHITexture<Texture>{},
 			m_Context{ context },
 			m_DeviceResourcesRef{ resource },
@@ -112,7 +112,7 @@ namespace RHI::D3D12 {
 
 		RefCountPtr<Heap> m_Heap;
 
-		RHITextureBindingMap<D3D12DescriptorIndex> m_RenderTargetViews{ 0, g_TextureBindingKeyHash };
+		RHITextureBindingMap<D3D12DescriptorIndex> m_RenderTargetViews{ 0, g_TextureBindingKeyHash };//TODO :function to class 
 		RHITextureBindingMap<D3D12DescriptorIndex> m_DepthStencilViews{ 0, g_TextureBindingKeyHash };
 		RHITextureBindingMap<D3D12DescriptorIndex> m_CustomSRVs{ 0, g_TextureBindingKeyHash };
 		RHITextureBindingMap<D3D12DescriptorIndex> m_CustomUAVs{ 0, g_TextureBindingKeyHash };
@@ -144,6 +144,7 @@ namespace RHI::D3D12 {
 
 	inline void Texture::PostCreate(void) {
 		//TODO :set Name;
+		this->m_Resource->SetName(WString{ this->m_Desc.DebugName.begin(),this->m_Desc.DebugName.end() }.c_str());
 
 		if (this->m_Desc.IsUAV)
 			this->m_ClearMipLevelUAVs.resize(this->m_Desc.MipLevelCount, g_InvalidDescriptorIndex);
@@ -456,7 +457,7 @@ namespace RHI::D3D12 {
 
 		case Texture3D:
 			desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
-			desc.DepthOrArraySize = UINT16(d.Extent.Depth);
+			desc.DepthOrArraySize = static_cast<UINT16>(d.Extent.Depth);
 			break;
 
 		case Unknown:default:
@@ -484,7 +485,7 @@ namespace RHI::D3D12 {
 		const auto& formatMapping{ Get_DXGIFormatMapping(d.Format) };
 		const auto& formatInfo{ Get_RHIFormatInfo(d.Format) };
 
-		D3D12_CLEAR_VALUE clearValue = {};
+		D3D12_CLEAR_VALUE clearValue{};
 		clearValue.Format = formatMapping.RTVFormat;
 		if (formatInfo.HasDepth || formatInfo.HasStencil) {
 			clearValue.DepthStencil.Depth = d.ClearValue->R;
@@ -515,11 +516,7 @@ namespace RHI::D3D12 {
 	inline RHIObject Texture::Imp_GetNativeView(RHIObjectType objectType, RHIFormat format, RHITextureSubresourceSet subresources, RHITextureDimension dimension, bool isReadOnlyDSV) {
 		switch (objectType) {
 		case RHIObjectType::D3D12_ShaderResourceViewGpuDescripror: {
-			RHITextureBindingKey key{
-				.SubresourceSet { subresources },
-				.Format { format },
-				.IsReadOnlyDSV { isReadOnlyDSV }
-			};
+			RHITextureBindingKey key{ .SubresourceSet { subresources },.Format { format } };
 
 			D3D12DescriptorIndex descriptorIndex;
 			if (auto found{ this->m_CustomSRVs.find(key) }; found == this->m_CustomSRVs.end()) {
@@ -535,13 +532,8 @@ namespace RHI::D3D12 {
 
 			return RHIObject{ .Integer { this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_GPUHandle(descriptorIndex).ptr } };
 		}
-
 		case RHIObjectType::D3D12_UnorderedAccessViewGpuDescripror: {
-			RHITextureBindingKey key{
-				.SubresourceSet { subresources },
-				.Format { format },
-				.IsReadOnlyDSV { isReadOnlyDSV }
-			};
+			RHITextureBindingKey key{ .SubresourceSet { subresources },.Format { format } };
 
 			D3D12DescriptorIndex descriptorIndex;
 			if (auto found{ this->m_CustomSRVs.find(key) }; found == this->m_CustomSRVs.end()) {
@@ -558,14 +550,10 @@ namespace RHI::D3D12 {
 			return RHIObject{ .Integer { this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_GPUHandle(descriptorIndex).ptr } };
 		}
 		case RHIObjectType::D3D12_RenderTargetViewDescriptor: {
-			RHITextureBindingKey key{
-				.SubresourceSet { subresources },
-				.Format { format },
-				.IsReadOnlyDSV { isReadOnlyDSV }
-			};
+			RHITextureBindingKey key{ .SubresourceSet { subresources },.Format { format } };
 
 			D3D12DescriptorIndex descriptorIndex;
-			if (auto found{ this->m_CustomSRVs.find(key) }; found == this->m_CustomSRVs.end()) {
+			if (auto found{ this->m_RenderTargetViews.find(key) }; found == this->m_RenderTargetViews.end()) {
 				descriptorIndex = this->m_DeviceResourcesRef.RenderTargetViewHeap.AllocateDescriptor();
 				this->m_RenderTargetViews[key] = descriptorIndex;
 
@@ -577,16 +565,11 @@ namespace RHI::D3D12 {
 
 			return RHIObject{ this->m_DeviceResourcesRef.RenderTargetViewHeap.Get_CPUHandle(descriptorIndex).ptr };
 		}
-
 		case RHIObjectType::D3D12_DepthStencilViewDescriptor: {
-			RHITextureBindingKey key{
-				.SubresourceSet { subresources },
-				.Format { format },
-				.IsReadOnlyDSV { isReadOnlyDSV }
-			};
+			RHITextureBindingKey key{ .SubresourceSet { subresources }, .Format { format }, .IsReadOnlyDSV { isReadOnlyDSV } };
 
 			D3D12DescriptorIndex descriptorIndex;
-			if (auto found{ this->m_CustomSRVs.find(key) }; found == this->m_CustomSRVs.end()) {
+			if (auto found{ this->m_DepthStencilViews.find(key) }; found == this->m_DepthStencilViews.end()) {
 				descriptorIndex = this->m_DeviceResourcesRef.DepthStencilViewHeap.AllocateDescriptor();
 				this->m_DepthStencilViews[key] = descriptorIndex;
 
@@ -598,7 +581,6 @@ namespace RHI::D3D12 {
 
 			return RHIObject{ .Integer{ this->m_DeviceResourcesRef.DepthStencilViewHeap.Get_CPUHandle(descriptorIndex).ptr } };
 		}
-
 		default:
 			ASSERT(false);
 			return	RHIObject{ .Pointer {nullptr} };

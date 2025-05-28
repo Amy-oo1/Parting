@@ -52,7 +52,7 @@ namespace Parting {
 		lightConstants.ShadowCascades = Math::VecI4{ -1 };
 		lightConstants.PerObjectShadows = Math::VecI4{ -1 };
 		lightConstants.ShadowChannel = Math::VecI4{ this->ShadowChannel, -1, -1, -1 };
-		if (nullptr == this->ShadowMap)
+		if (nullptr != this->ShadowMap)
 			lightConstants.OutOfBoundsShadow = this->ShadowMap->Is_LitOutOfBounds() ? 1.f : 0.f;
 		else
 			lightConstants.OutOfBoundsShadow = 1.f;

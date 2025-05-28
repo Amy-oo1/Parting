@@ -45,7 +45,7 @@ PARTING_EXPORT using FileOffset_T = _off_t;
 constexpr UINT PlatformWindowsAccessGenericRead{ GENERIC_READ };
 constexpr UINT PlatformWindowsAccessGenericWrite{ GENERIC_WRITE };
 constexpr UINT PlatformWindowsAccessGenericExecute{ GENERIC_EXECUTE };
-constexpr UINT PlatformWindowsAccessGenericAll{ GENERIC_ALL };
+constexpr UINT PlatformWindowsAccessGenericAll{ GENERIC_ALL };//TODO :Trans
 
 std::filesystem::path Get_CatallogDirectory(void) {
 	char path[MAX_PATH] = {};

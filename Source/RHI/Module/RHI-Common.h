@@ -132,7 +132,7 @@ namespace RHI {
 		CopySource = 0x00001000,
 		ResolveDest = 0x00002000,
 		ResolveSource = 0x00004000,
-		Present = 0x00008000,
+		Present = 0x00008000,//TODO
 		AccelStructRead = 0x00010000,
 		AccelStructWrite = 0x00020000,
 		AccelStructBuildInput = 0x00040000,

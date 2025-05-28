@@ -132,7 +132,7 @@ namespace RHI {
 		STDNODISCARD constexpr bool operator!=(const RHIFrameBufferInfo<APITag>& other) const { return !(*this == other); }
 
 		STDNODISCARD static RHIFrameBufferInfo<APITag> Build(const RHIFrameBufferDesc<APITag>& desc) {
-			RHIFrameBufferInfo<APITag> Re;
+			RHIFrameBufferInfo<APITag> Re;//TODO : Forget....
 
 			for (Uint32 Index = 0; Index < desc.ColorAttachmentCount; ++Index) {
 				const auto& Attachment{ desc.ColorAttachments[Index] };
