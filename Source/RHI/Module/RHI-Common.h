@@ -132,43 +132,27 @@ namespace RHI {
 		CopySource = 0x00001000,
 		ResolveDest = 0x00002000,
 		ResolveSource = 0x00004000,
-		Present = 0x00008000,//TODO
-		AccelStructRead = 0x00010000,
-		AccelStructWrite = 0x00020000,
-		AccelStructBuildInput = 0x00040000,
-		AccelStructBuildBlas = 0x00080000,
-		ShadingRateSurface = 0x00100000,
-		OpacityMicromapWrite = 0x00200000,
-		OpacityMicromapBuildInput = 0x00400000,
+		Present = 0x00008000,
+		ShadingRateSurface = 0x00100000
 	};
 	EXPORT_ENUM_CLASS_OPERATORS(RHIResourceState);
 
 	PARTING_EXPORT enum class RHISharedResourceFlag : Uint32 {
 		None = 0,
 
-		// D3D11: adds D3D11_RESOURCE_MISC_SHARED
 		// D3D12: adds D3D12_HEAP_FLAG_SHARED
 		// Vulkan: adds vk::ExternalMemoryImageCreateInfo and vk::ExportMemoryAllocateInfo/vk::ExternalMemoryBufferCreateInfo
 		Shared = 0x01,
 
-		// D3D11: adds (D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX | D3D11_RESOURCE_MISC_SHARED_NTHANDLE)
-		// D3D12, Vulkan: ignored
-		Shared_NTHandle = 0x02,
-
 		// D3D12: adds D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER and D3D12_HEAP_FLAG_SHARED_CROSS_ADAPTER
-		// D3D11, Vulkan: ignored
-		Shared_CrossAdapter = 0x04,
+		// Vulkan: ignored
+		Shared_CrossAdapter = 0x02,
 	};
 	EXPORT_ENUM_CLASS_OPERATORS(RHISharedResourceFlag);
 
 	PARTING_EXPORT enum class RHIFeature : Uint8 {
 		DeferredCommandLists,
 		SinglePassStereo,
-		RayTracingAccelStruct,
-		RayTracingPipeline,
-		RayTracingOpacityMicromap,
-		RayTracingClusters,
-		RayQuery,
 		ShaderExecutionReordering,
 		Spheres,
 		LinearSweptSpheres,
@@ -185,27 +169,6 @@ namespace RHI {
 
 	PARTING_EXPORT struct RHIVariableRateShadingFeatureInfo {
 		Uint32 ShadingRateImageTileSize;
-	};
-
-	PARTING_EXPORT enum class RHIMessageSeverity : Uint8 {
-		Info,
-		Warning,
-		Error,
-		Fatal
-	};
-
-	PARTING_EXPORT template<typename Derived>
-		class RHIMessageCallback :public NonCopyAndMoveAble {
-		protected:
-			RHIMessageCallback(void) = default;
-			PARTING_VIRTUAL ~RHIMessageCallback(void) = default;
-
-		public:
-			void Message(RHIMessageSeverity severity, const char* message) { this->Get_Derived()->Imp_Message(severity, message); }
-		private:
-			STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
-		private:
-			void Imp_Message(RHIMessageSeverity severity, const char* message) { LOG_ERROR("No Imp"); }
 	};
 
 	PARTING_EXPORT template<typename Derived>
@@ -227,7 +190,6 @@ namespace RHI {
 	PARTING_EXPORT template<APITagConcept APITag>
 		using RHIShaderBindingResources = Variant<
 		RefCountPtr<typename ShaderBindingResourceType<APITag>::Imp_Texture>,
-		RefCountPtr<typename ShaderBindingResourceType<APITag>::Imp_SamplerFeedbackTexture>,
 		RefCountPtr<typename ShaderBindingResourceType<APITag>::Imp_Buffer>,
 		RefCountPtr<typename ShaderBindingResourceType<APITag>::Imp_Sampler>,
 		Nullptr_T

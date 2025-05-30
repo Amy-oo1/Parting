@@ -210,8 +210,8 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	inline auto DepthPass<APITag>::CreateVertexShader(ShaderFactory<APITag>& shaderFactory, const CreateParameters& params) -> RHI::RefCountPtr<Imp_Shader> {
 		return shaderFactory.CreateShader(
-			"Parting/Passes/depth_vs.hlsl",
-			params.UseInputAssembler ? "input_assembler" : "buffer_loads",
+			String{ "Parting/Passes/depth_vs.hlsl" },
+			String{ params.UseInputAssembler ? "input_assembler" : "buffer_loads" },
 			nullptr,
 			RHI::RHIShaderType::Vertex
 		);

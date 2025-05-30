@@ -254,7 +254,7 @@ namespace Parting {
 		GBufferFillConstants gbufferConstants{};
 		view->FillPlanarViewConstants(gbufferConstants.View);
 		viewPrev->FillPlanarViewConstants(gbufferConstants.ViewPrev);
-		commandList->WriteBuffer(this->m_GBufferCB, &gbufferConstants, sizeof(GBufferFillConstants));
+		commandList->WriteBuffer(this->m_GBufferCB, &gbufferConstants, sizeof(decltype(gbufferConstants)));
 
 		context.KeyTemplate.Bits.FrontCounterClockwise = view->Is_Mirrored();
 		context.KeyTemplate.Bits.ReverseDepth = view->Is_ReverseDepth();
@@ -361,16 +361,16 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline auto GBufferFillPass<APITag>::CreateVertexShader(ShaderFactory<APITag>& shaderFactory, const CreateParameters& params) -> RHI::RefCountPtr<Imp_Shader> {
-		char const* sourceFileName{ "Parting/Passes/gbuffer_vs.hlsl" };
+		const String sourceFileName{ "Parting/Passes/gbuffer_vs.hlsl" };
 
 		Vector<ShaderMacro> VertexShaderMacros{
 			ShaderMacro{.Name{ String{ "MOTION_VECTORS" } }, .Definition{ String{ params.EnableMotionVectors ? "1" : "0" } } }
 		};
 
 		if (params.UseInputAssembler)
-			return shaderFactory.CreateShader(sourceFileName, "input_assembler", &VertexShaderMacros, RHI::RHIShaderType::Vertex);
+			return shaderFactory.CreateShader(sourceFileName, String{ "input_assembler" }, &VertexShaderMacros, RHI::RHIShaderType::Vertex);
 		else
-			return shaderFactory.CreateShader(sourceFileName, "buffer_loads", &VertexShaderMacros, RHI::RHIShaderType::Vertex);
+			return shaderFactory.CreateShader(sourceFileName, String{ "buffer_loads" }, &VertexShaderMacros, RHI::RHIShaderType::Vertex);
 	}
 
 	template<RHI::APITagConcept APITag>
@@ -407,7 +407,7 @@ namespace Parting {
 			ShaderMacro{.Name{ String{ "ALPHA_TESTED" } }, .Definition{ String{ alphaTested ? "1" : "0" } } }
 		};
 
-		return shaderFactory.CreateShader("Parting/Passes/gbuffer_ps.hlsl", "main", &PixelShaderMacros, RHI::RHIShaderType::Pixel);
+		return shaderFactory.CreateShader(String{ "Parting/Passes/gbuffer_ps.hlsl" }, String{ "main" }, &PixelShaderMacros, RHI::RHIShaderType::Pixel);
 	}
 
 	template<RHI::APITagConcept APITag>
@@ -426,7 +426,7 @@ namespace Parting {
 			if (params.EnableMotionVectors)
 				inputDescs.emplace_back(BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::PrevTransform, "PREV_TRANSFORM", 6));
 
-			return this->m_Device->CreateInputLayout(inputDescs.data(), static_cast<Uint32>(inputDescs.size()), vertexShader);
+			return this->m_Device->CreateInputLayout(inputDescs.data(), static_cast<Uint32>(inputDescs.size()));
 		}
 
 		return nullptr;
@@ -545,6 +545,9 @@ namespace Parting {
 		this->m_EnableMotionVectors = params.EnableMotionVectors;
 		this->m_UseInputAssembler = params.UseInputAssembler;
 
+		this->m_EnableDepthWrite = params.EnableDepthWrite;
+		this->m_StencilWriteMask = params.StencilWriteMask;
+
 		this->m_SupportedViewTypes = ViewType::PLANAR;
 		if (params.EnableSinglePassCubemap)
 			this->m_SupportedViewTypes |= ViewType::CUBEMAP;
@@ -571,9 +574,6 @@ namespace Parting {
 
 
 		Tie(this->m_ViewBindingLayout, this->m_ViewBindingSet) = this->CreateViewBindings(params);
-
-		this->m_EnableDepthWrite = params.EnableDepthWrite;
-		this->m_StencilWriteMask = params.StencilWriteMask;
 
 		this->m_InputBindingLayout = this->CreateInputBindingLayout();
 	}

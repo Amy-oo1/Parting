@@ -54,9 +54,7 @@ PARTING_EXPORT using HashAnsiStringView = std::hash<std::string_view>;
 PARTING_EXPORT using HashU8StringView = std::hash<std::u8string_view>;
 PARTING_EXPORT using HashWStringView = std::hash<std::wstring_view>;
 
-//TODO Set More
-
-PARTING_EXPORT constexpr Uint64 HashCombine(Uint64 seed, Uint64 value) { //TODO good ?
+PARTING_EXPORT constexpr Uint64 HashCombine(Uint64 seed, Uint64 value) {
 	return seed ^ (value + 0x9e3779b9 + (seed << 6) + (seed >> 2));
 }
 

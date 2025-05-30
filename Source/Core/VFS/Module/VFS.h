@@ -57,8 +57,6 @@ public:
 public:
 	STDNODISCARD virtual const void* Get_Data(void) const = 0;
 	STDNODISCARD virtual Uint64 Get_Size(void) const = 0;
-
-	static bool Is_Empty(const IBlob* blob) { return blob == nullptr || blob->Get_Data() == nullptr || blob->Get_Size() == 0; }
 };
 
 // Specific blob implementation that owns the data and frees it when deleted.
@@ -73,7 +71,7 @@ public:
 		ASSERT(0 != this->m_Size);
 	}
 	~Blob(void) override {
-		if (nullptr == this->m_Data) {
+		if (nullptr != this->m_Data) {
 			free(this->m_Data);
 			this->m_Data = nullptr;
 		}
@@ -141,7 +139,7 @@ public:
 
 		char* data{ static_cast<char*>(malloc(size)) };
 
-		if (data == nullptr) {
+		if (nullptr == data) {
 			// out of memory
 			ASSERT(false);
 			return nullptr;
@@ -156,7 +154,7 @@ public:
 			return nullptr;
 		}
 
-		return std::make_shared<Blob>(data, size);
+		return MakeShared<Blob>(data, size);
 	}
 
 	bool WriteFile(const Path& name, const void* data, Uint64 size) override {
@@ -239,7 +237,7 @@ class RelativeFileSystem final : public IFileSystem {
 public:
 	RelativeFileSystem(SharedPtr<IFileSystem> fs, const Path& basePath) :
 		IFileSystem{},
-		m_UnderlyingFS{ fs },
+		m_UnderlyingFS{ ::MoveTemp(fs) },
 		m_BasePath{ basePath } {
 
 		ASSERT(nullptr != this->m_UnderlyingFS);
@@ -274,7 +272,7 @@ private:
 // Does not have any file systems by default, all of them must be mounted first.
 class RootFileSystem : public IFileSystem {
 public:
-	void Mount(const Path& path, std::shared_ptr<IFileSystem> fs) {
+	void Mount(const Path& path, const SharedPtr<IFileSystem>& fs) {
 		if (this->FindMountPoint(path, nullptr, nullptr)) {
 			LOG_ERROR("Cannot mount a filesystem at : there is another FS that includes this path"/*path.c_str()*/);
 			return;

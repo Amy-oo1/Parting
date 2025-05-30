@@ -40,22 +40,18 @@ namespace RHI {
 
 		class Texture;
 		class StagingTexture;
-		class SamplerFeedbackTexture;
 
 		class Sampler;
 
 		class InputLayout;
 
 		class Shader;
-		class ShaderLibrary;
 
 		class FrameBuffer;
 
 		class BindingLayout;
-		class BindLessLayout;
 
 		class BindingSet;
-		class DescriptorTable;
 
 		class GraphicsPipeline;
 		class ComputePipeline;
@@ -71,8 +67,6 @@ namespace RHI {
 		static constexpr auto APIName{ "D3D12" };
 		static constexpr auto ShaderType{ "HLSL" };
 
-		using Imp_MessageCallback = D3D12::MessageCallback;
-
 		using Imp_EventQuery = D3D12::EventQuery;
 		using Imp_TimerQuery = D3D12::TimerQuery;
 
@@ -82,22 +76,18 @@ namespace RHI {
 
 		using Imp_Texture = D3D12::Texture;
 		using Imp_StagingTexture = D3D12::StagingTexture;
-		using Imp_SamplerFeedbackTexture = D3D12::SamplerFeedbackTexture;
 
 		using Imp_Sampler = D3D12::Sampler;
 
 		using Imp_InputLayout = D3D12::InputLayout;
 
 		using Imp_Shader = D3D12::Shader;
-		using Imp_ShaderLibrary = D3D12::ShaderLibrary;
 
 		using Imp_FrameBuffer = D3D12::FrameBuffer;
 
 		using Imp_BindingLayout = D3D12::BindingLayout;
-		using Imp_BindLessLayout = D3D12::BindLessLayout;
 
 		using Imp_BindingSet = D3D12::BindingSet;
-		using Imp_DescriptorTable = D3D12::DescriptorTable;
 
 		using Imp_GraphicsPipeline = D3D12::GraphicsPipeline;
 		using Imp_ComputePipeline = D3D12::ComputePipeline;
@@ -106,8 +96,6 @@ namespace RHI {
 		using Imp_CommandList = D3D12::CommandList;
 
 		using Imp_Device = D3D12::Device;
-
-
 	};
 }
 

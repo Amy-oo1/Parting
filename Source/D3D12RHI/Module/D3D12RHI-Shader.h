@@ -49,13 +49,10 @@ namespace RHI::D3D12 {
 		friend class RHIResource<Shader>;
 		friend class RHIShader<Shader>;
 
-		friend class ShaderLibrary;
 		friend class Device;
 	public:
-		Shader(void) = default;
-		Shader(const char* entryName, RHIShaderType shaderType) {
-			this->m_Desc.ShaderType = shaderType;
-			this->m_Desc.EntryName = entryName;
+		explicit Shader(const RHIShaderDesc& desc) :
+			m_Desc{ desc } {
 		}
 
 		~Shader(void) = default;
@@ -75,37 +72,5 @@ namespace RHI::D3D12 {
 			if (ppbytecode) *ppbytecode = this->m_Bytecode.data();
 			if (psize) *psize = this->m_Bytecode.size();
 		}
-
 	};
-
-	class ShaderLibrary final :public RHIShaderLibrary<ShaderLibrary, D3D12Tag> {//TODO ReMove
-		friend class RHIResource<ShaderLibrary>;
-		friend class RHIShaderLibrary<ShaderLibrary, D3D12Tag>;
-
-		friend class Shader;
-		friend class Device;
-	public:
-		ShaderLibrary(void) = default;
-		~ShaderLibrary(void) = default;
-	public:
-
-	private:
-		Vector<char> m_Bytecode;
-	private:
-
-	private:
-		RHIObject Imp_GetNativeObject(RHIObjectType)const noexcept { LOG_ERROR("Imp But Empty");  return RHIObject{}; };
-
-		void Imp_Get_Bytecode(const void** ppbytecode, Uint64* psize)const {
-			if (ppbytecode) *ppbytecode = this->m_Bytecode.data();
-			if (psize) *psize = this->m_Bytecode.size();
-		}
-
-		RefCountPtr<Shader> Imp_Get_Shader(const char* EntryName, RHIShaderType shaderType)const;
-	};
-
-	RefCountPtr<Shader> ShaderLibrary::Imp_Get_Shader(const char* EntryName, RHIShaderType shaderType) const {
-		return RefCountPtr<Shader>::Create(new Shader{ EntryName, shaderType });
-	}
-
 }

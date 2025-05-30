@@ -156,7 +156,7 @@ namespace Parting {
 			};
 
 		while (const DrawItem<APITag>* item = drawStrategy.Get_NextItem()) {
-			if (item->Material == nullptr)
+			if (nullptr == item->Material)
 				continue;
 
 			bool newBuffers{ item->Buffers != lastBuffers };

@@ -293,7 +293,7 @@ public:
 		if (sceneName.empty() && this->m_SceneFilesAvailable.empty())
 			LOG_ERROR("No scene files found in " /*this->m_SceneDir.c_str()*/);
 
-		this->m_TextureCache = MakeShared<Parting::TextureCache<CurrentAPI>>(this->m_DeviceManager->Get_Device(), this->m_NativeFs, nullptr);
+		this->m_TextureCache = MakeShared<Parting::TextureCache<CurrentAPI>>(this->m_DeviceManager->Get_Device(), this->m_NativeFs);
 
 		this->m_ShaderFactory = MakeShared<Parting::ShaderFactory<CurrentAPI>>(this->m_DeviceManager->Get_Device(), this->m_RootFs, "/Shaders");
 		this->m_CommonPasses = MakeShared<Parting::CommonRenderPasses<CurrentAPI>>(this->m_DeviceManager->Get_Device(), this->m_ShaderFactory);
@@ -362,7 +362,7 @@ public:
 	bool LoadScene(SharedPtr<IFileSystem> fs, const Path& sceneFileName) override {
 		//TODO :add Time Show
 
-		this->m_Scene = MakeUnique<Parting::Scene<CurrentAPI>>(this->m_DeviceManager->Get_Device(), *this->m_ShaderFactory, fs, this->m_TextureCache, nullptr, nullptr);
+		this->m_Scene = MakeUnique<Parting::Scene<CurrentAPI>>(this->m_DeviceManager->Get_Device(), *this->m_ShaderFactory, fs, this->m_TextureCache);
 
 		//TODO add time cast info
 

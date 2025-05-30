@@ -115,29 +115,29 @@ namespace Parting {
 		};
 
 	public:
-		CommonRenderPasses(RHI::RefCountPtr<Imp_Device> device, SharedPtr<ShaderFactory<APITag>> shaderFactory) : m_Device{ device } {
+		CommonRenderPasses(Imp_Device* device, SharedPtr<ShaderFactory<APITag>> shaderFactory) :m_Device{ device } {
 			{
 				Vector<ShaderMacro> VSMacros{
 					ShaderMacro{.Name{ String{ "QUAD_Z" } }, .Definition{ String{ "1" } } },
 				};
-				this->m_FullscreenVS = shaderFactory->CreateShader("Parting/fullscreen_vs", "main", &VSMacros, RHI::RHIShaderType::Vertex);
+				this->m_FullscreenVS = shaderFactory->CreateShader(String{ "Parting/fullscreen_vs" }, String{ "main" }, &VSMacros, RHI::RHIShaderType::Vertex);
 
 				VSMacros.back().Definition = String{ "1" };
-				this->m_FullscreenAtOneVS = shaderFactory->CreateShader("Parting/fullscreen_vs", "main", &VSMacros, RHI::RHIShaderType::Vertex);
+				this->m_FullscreenAtOneVS = shaderFactory->CreateShader(String{ "Parting/fullscreen_vs" }, String{ "main" }, &VSMacros, RHI::RHIShaderType::Vertex);
 			}
 
-			this->m_RectVS = shaderFactory->CreateShader("Parting/rect_vs", "main", nullptr, RHI::RHIShaderType::Vertex);
+			this->m_RectVS = shaderFactory->CreateShader(String{ "Parting/rect_vs" }, String{ "main" }, nullptr, RHI::RHIShaderType::Vertex);
 
 			{
 				Vector<ShaderMacro> blitMacros{
 					ShaderMacro{.Name{ String{ "TEXTURE_ARRAY" } }, .Definition{ String{ "0" } } },
 				};
-				this->m_BLITPS = shaderFactory->CreateShader("Parting/blit_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
-				this->m_SharpenPS = shaderFactory->CreateShader("Parting/sharpen_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
+				this->m_BLITPS = shaderFactory->CreateShader(String{ "Parting/blit_ps" }, String{ "main" }, &blitMacros, RHI::RHIShaderType::Pixel);
+				this->m_SharpenPS = shaderFactory->CreateShader(String{ "Parting/sharpen_ps" }, String{ "main" }, &blitMacros, RHI::RHIShaderType::Pixel);
 
 				blitMacros.back().Definition = String{ "1" };
-				this->m_BLITArrayPS = shaderFactory->CreateShader("Parting/blit_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
-				this->m_SharpenArrayPS = shaderFactory->CreateShader("Parting/sharpen_ps", "main", &blitMacros, RHI::RHIShaderType::Pixel);
+				this->m_BLITArrayPS = shaderFactory->CreateShader(String{ "Parting/blit_ps" }, String{ "main" }, &blitMacros, RHI::RHIShaderType::Pixel);
+				this->m_SharpenArrayPS = shaderFactory->CreateShader(String{ "Parting/sharpen_ps" }, String{ "main" }, &blitMacros, RHI::RHIShaderType::Pixel);
 			}
 
 			{

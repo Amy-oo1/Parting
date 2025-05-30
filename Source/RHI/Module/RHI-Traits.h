@@ -45,10 +45,6 @@ namespace RHI {
 	PARTING_EXPORT template<typename Derived>
 	class RHIStagingTexture;
 
-	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
-	class RHISamplerFeedbackTexture;
-
-
 	//NOTE 4 :Sampler
 	PARTING_EXPORT template<typename Derived>
 	class RHISampler;
@@ -61,9 +57,6 @@ namespace RHI {
 	PARTING_EXPORT template<typename Derived>
 	class RHIShader;
 
-	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
-	class RHIShaderLibrary;
-
 	//NOTE 7:FrameBuffer
 	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
 	class RHIFrameBuffer;
@@ -72,14 +65,8 @@ namespace RHI {
 	PARTING_EXPORT template<typename Derived>
 	class RHIBindingLayout;
 
-	PARTING_EXPORT template<typename Derived>
-	class RHIBindlessLayout;
-
 	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
 	class RHIBindingSet;
-
-	PARTING_EXPORT template<typename Derived>
-	class RHIDescriptorTable;
 
 	//NOTE 9:Pipeline
 	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
@@ -106,31 +93,11 @@ namespace RHI {
 	PARTING_EXPORT template<typename APITag>
 	struct RHITypeTraits;
 
-	template<APITagConcept APITag>
-	struct TextureType final {
-		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
-		using Imp_SamplerFeedbackTexture = typename RHITypeTraits<APITag>::Imp_SamplerFeedbackTexture;
-	};
-
 
 	PARTING_EXPORT template<APITagConcept APITag>
 	struct ShaderBindingResourceType final {
 		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
-		using Imp_SamplerFeedbackTexture = typename RHITypeTraits<APITag>::Imp_SamplerFeedbackTexture;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
 		using Imp_Sampler = typename RHITypeTraits<APITag>::Imp_Sampler;
 	};
-
-	PARTING_EXPORT template<APITagConcept APITag>
-	struct BindLayoutType final {
-		using Imp_BindingLayout = typename RHITypeTraits<APITag>::Imp_BindingLayout;
-		using Imp_BindlessLayout = typename RHITypeTraits<APITag>::Imp_BindlessLayout;
-	};
-
-	PARTING_EXPORT template<APITagConcept APITag>
-		struct ShaderBindingType final {
-		using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
-		using Imp_DescriptorTable = typename RHITypeTraits<APITag>::Imp_DescriptorTable;
-	};
-
 }

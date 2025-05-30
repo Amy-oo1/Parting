@@ -66,13 +66,13 @@ struct MaterialConstants
 	float			TransmissionFactor;
 
 
-	Int32			BaseOrDiffuseTextureIndex;
-	Int32			MetalRoughOrSpecularTextureIndex;
-	Int32			EmissiveTextureIndex;
-	Int32			NormalTextureIndex;
-	Int32			OcclusionTextureIndex;
-	Int32			TransmissionTextureIndex;
-	Int32			OpacityTextureIndex;
+	Int32			BaseOrDiffuseTextureIndex{ -1 };//TODO :Remove
+	Int32			MetalRoughOrSpecularTextureIndex{ -1 };
+	Int32			EmissiveTextureIndex{ -1 };
+	Int32			NormalTextureIndex{ -1 };
+	Int32			OcclusionTextureIndex{ -1 };
+	Int32			TransmissionTextureIndex{ -1 };
+	Int32			OpacityTextureIndex{ -1 };
 
 
 	Math::VecF2		NormalTextureTransformScale;

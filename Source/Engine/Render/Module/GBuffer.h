@@ -91,6 +91,10 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline void GBufferRenderTargets<APITag>::Init(Imp_Device* device, Math::VecU2 size, Uint32 sampleCount, bool enableMotionVectors, bool useReverseProjection) {
+		this->m_Size = size;
+		this->m_SampleCount = sampleCount;
+		this->m_UseReverseProjection = useReverseProjection;
+		
 		RHI::RHITextureDescBuilder descBuilder{}; descBuilder
 			.Set_Width(size.X).Set_Height(size.Y)
 			.Set_SampleCount(sampleCount)
@@ -168,10 +172,6 @@ namespace Parting {
 			this->GBufferFrameBuffer->RenderTargets.push_back(this->MotionVectors);
 
 		this->GBufferFrameBuffer->DepthStencil = this->Depth;
-
-		this->m_Size = size;
-		this->m_SampleCount = sampleCount;
-		this->m_UseReverseProjection = useReverseProjection;
 	}
 
 	template<RHI::APITagConcept APITag>

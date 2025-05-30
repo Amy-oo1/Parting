@@ -95,21 +95,14 @@ namespace RHI::D3D12 {
 			m_Device{ device },
 			m_Queue{ queue },
 			m_Desc{ params },
-			m_UploadManager{ context, queue, params.UploadChunkSize, 0, false },
-			m_DxrScratchManager{ context, queue, params.ScratchChunkSize, params.ScratchMaxMemory, true }
+			m_UploadManager{ context, queue, params.UploadChunkSize }
 		{}
 
 		~CommandList(void) = default;
 
 	public:
 		bool AllocateUploadBuffer(Uint64 size, void** pCpuAddress, D3D12_GPU_VIRTUAL_ADDRESS* pGpuAddress) {
-			return this->m_UploadManager.SuballocateBuffer(size, nullptr, nullptr, nullptr, pCpuAddress, pGpuAddress,
-				this->m_RecordingVersion, g_D3D12ConstantBufferDataPlacementAlignment);
-		}
-
-		bool AllocateDxrScratchBuffer(Uint64 size, void** pCpuAddress, D3D12_GPU_VIRTUAL_ADDRESS* pGpuAddress) {
-			return m_DxrScratchManager.SuballocateBuffer(size, m_ActiveCommandList->CommandList, nullptr, nullptr, pCpuAddress, pGpuAddress,
-				this->m_RecordingVersion, g_D3D12ConstantBufferDataPlacementAlignment);
+			return this->m_UploadManager.SuballocateBuffer(size, nullptr, nullptr, pCpuAddress, pGpuAddress, this->m_RecordingVersion, g_D3D12ConstantBufferDataPlacementAlignment);
 		}
 
 		D3D12_GPU_VIRTUAL_ADDRESS Get_BufferGPUVirtualAddress(Buffer* buffer) {//TODO Remove
@@ -159,7 +152,6 @@ namespace RHI::D3D12 {
 		RHICommandListParameters m_Desc;
 
 		UploadManager m_UploadManager;
-		UploadManager m_DxrScratchManager;
 		RHICommandListResourceStateTracker<D3D12Tag> m_StateTracker;
 		bool m_EnableAutomaticBarriers{ true };
 
@@ -208,9 +200,6 @@ namespace RHI::D3D12 {
 		void Imp_WriteBuffer(Buffer* buffer, const void* data, Uint64 dataSize, Uint64 destOffsetBytes);
 		void Imp_ClearBufferUInt(Buffer* buffer, Uint32 clearvalue);
 		void Imp_CopyBuffer(Buffer* des, Uint64 desOffset, Buffer* src, Uint64 srcOffset, Uint64 dataSizeBytes);
-		void Imp_ClearSamplerFeedbackTexture(SamplerFeedbackTexture* texture);
-		void Imp_DecodeSamplerFeedbackTexture(Buffer* buffer, SamplerFeedbackTexture* texture, RHIFormat format);
-		void Imp_SetSamplerFeedbackTextureState(SamplerFeedbackTexture* texture, RHIResourceState state);
 		void Imp_SetPushConstants(const void* data, Uint32 ByteSize);
 		void Imp_SetGraphicsState(const RHIGraphicsState<D3D12Tag>& pipeline);
 		void Imp_Draw(const RHIDrawArguments& args);
@@ -279,7 +268,6 @@ namespace RHI::D3D12 {
 
 		Uint64 submittedVersion{ MakeVersion(instance->SubmittedInstance, m_Desc.QueueType, true) };
 		this->m_UploadManager.SubmitChunks(this->m_RecordingVersion, submittedVersion);
-		this->m_DxrScratchManager.SubmitChunks(this->m_RecordingVersion, submittedVersion);
 		this->m_RecordingVersion = 0;
 
 		return instance;
@@ -299,11 +287,11 @@ namespace RHI::D3D12 {
 		case Count:default:ASSERT(false); return nullptr;
 		}
 
-		this->m_Context.Device->CreateCommandAllocator(d3dCommandListType, PARTING_IID_PPV_ARGS(&commandList->Allocator));
-		this->m_Context.Device->CreateCommandList(1, d3dCommandListType, commandList->Allocator, nullptr, PARTING_IID_PPV_ARGS(&commandList->CommandList));
+		D3D12_CHECK(this->m_Context.Device->CreateCommandAllocator(d3dCommandListType, PARTING_IID_PPV_ARGS(&commandList->Allocator)));
+		D3D12_CHECK(this->m_Context.Device->CreateCommandList(1, d3dCommandListType, commandList->Allocator, nullptr, PARTING_IID_PPV_ARGS(&commandList->CommandList)));
 
-		commandList->CommandList->QueryInterface(PARTING_IID_PPV_ARGS(&commandList->CommandList4));
-		commandList->CommandList->QueryInterface(PARTING_IID_PPV_ARGS(&commandList->CommandList6));
+		D3D12_CHECK(commandList->CommandList->QueryInterface(PARTING_IID_PPV_ARGS(&commandList->CommandList4)));
+		D3D12_CHECK(commandList->CommandList->QueryInterface(PARTING_IID_PPV_ARGS(&commandList->CommandList6)));
 
 		return commandList;
 	}
@@ -398,11 +386,9 @@ namespace RHI::D3D12 {
 
 				const bool updateThisSet{ (bindingUpdateMask & (1 << bindingSetIndex)) != 0 };
 
-				auto& [Layout, rootParameterOffset] { rootSignature->m_BindLayouts[bindingSetIndex] };
-				auto bindinglayout{ Get<RefCountPtr<BindingLayout>>(Layout).Get() };
+				auto& [bindinglayout, rootParameterOffset] { rootSignature->m_BindLayouts[bindingSetIndex] };
 
-				//TODO : BingdSet and DescriptorTable
-				ASSERT(bindinglayout == bindingSet->Get_Layout()); // validation layer handles this
+				ASSERT(bindinglayout == bindingSet->Get_Layout());
 
 				// Bind the volatile constant buffers
 				for (Uint32 volatileCbIndex = 0; volatileCbIndex < bindingSet->m_VolatileCBCount; ++volatileCbIndex) {
@@ -490,8 +476,7 @@ namespace RHI::D3D12 {
 
 				const bool updateThisSet{ (bindingUpdateMask & (1 << bindingSetIndex)) != 0 };
 
-				auto& [Layout, rootParameterOffset] = rootSignature->m_BindLayouts[bindingSetIndex];
-				auto bindinglayout{ Get<RefCountPtr<BindingLayout>>(Layout).Get() };
+				auto& [bindinglayout, rootParameterOffset] = rootSignature->m_BindLayouts[bindingSetIndex];
 
 				ASSERT(bindinglayout == bindingSet->Get_Layout()); // validation layer handles this
 
@@ -732,7 +717,7 @@ namespace RHI::D3D12 {
 		}
 	}
 
-	inline void CommandList::Imp_ClearTextureUInt(Texture* texture, RHITextureSubresourceSet subresources, Uint32 clearColor) {//TODO :const&
+	inline void CommandList::Imp_ClearTextureUInt(Texture* texture, RHITextureSubresourceSet subresources, Uint32 clearColor) {
 		subresources = subresources.Resolve(texture->m_Desc, false);
 
 		this->m_Instance->ReferencedResources.push_back(texture);
@@ -942,17 +927,16 @@ namespace RHI::D3D12 {
 
 		Uint32 subresource{ CalcSubresource(mipLevel, arraySlice, 0, dest->m_Desc.MipLevelCount, dest->m_Desc.ArrayCount) };
 
-		const auto& resourceDesc{ dest->m_Resource->GetDesc() };
 		D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
 		Uint32 numRows;
 		Uint64 rowSizeInBytes;
 		Uint64 totalBytes;
-		this->m_Context.Device->GetCopyableFootprints(&resourceDesc, subresource, 1, 0, &footprint, &numRows, &rowSizeInBytes, &totalBytes);
+		this->m_Context.Device->GetCopyableFootprints(&dest->m_ResourceDesc, subresource, 1, 0, &footprint, &numRows, &rowSizeInBytes, &totalBytes);
 
 		void* cpuVA;
 		ID3D12Resource* uploadBuffer;
 		Uint64 offsetInUploadBuffer;
-		if (!this->m_UploadManager.SuballocateBuffer(totalBytes, nullptr, &uploadBuffer, &offsetInUploadBuffer, &cpuVA, nullptr, this->m_RecordingVersion, g_D3D12TextureDataPlacementAlignment)) {
+		if (!this->m_UploadManager.SuballocateBuffer(totalBytes, &uploadBuffer, &offsetInUploadBuffer, &cpuVA, nullptr, this->m_RecordingVersion, g_D3D12TextureDataPlacementAlignment)) {
 			LOG_ERROR("Failed to allocate upload buffer for texture copy");
 
 			return;
@@ -1020,7 +1004,7 @@ namespace RHI::D3D12 {
 		D3D12_GPU_VIRTUAL_ADDRESS gpuVA;
 		ID3D12Resource* uploadBuffer;
 		Uint64 offsetInUploadBuffer;
-		if (!this->m_UploadManager.SuballocateBuffer(dataSize, nullptr, &uploadBuffer, &offsetInUploadBuffer, &cpuVA, &gpuVA, this->m_RecordingVersion, g_D3D12ConstantBufferDataPlacementAlignment)) {
+		if (!this->m_UploadManager.SuballocateBuffer(dataSize, &uploadBuffer, &offsetInUploadBuffer, &cpuVA, &gpuVA, this->m_RecordingVersion, g_D3D12ConstantBufferDataPlacementAlignment)) {
 			LOG_ERROR("Failed to allocate upload buffer for buffer copy");
 
 			return;
@@ -1094,48 +1078,6 @@ namespace RHI::D3D12 {
 			this->m_Instance->ReferencedResources.push_back(dest);
 
 		this->m_ActiveCommandList->CommandList->CopyBufferRegion(dest->m_Resource, destOffsetBytes, src->m_Resource, srcOffsetBytes, dataSizeBytes);
-	}
-
-	inline void CommandList::Imp_ClearSamplerFeedbackTexture(SamplerFeedbackTexture* texture) {
-		D3D12DescriptorIndex& descriptorIndex{ texture->m_ClearDescriptorIndex };
-		if (g_InvalidDescriptorIndex == descriptorIndex) {
-			descriptorIndex = this->m_DeviceResourcesRef.ShaderResourceViewHeap.AllocateDescriptor();
-			texture->CreateUAV(this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_CPUHandle(descriptorIndex));
-			this->m_DeviceResourcesRef.ShaderResourceViewHeap.CopyToShaderVisibleHeap(descriptorIndex);
-		}
-
-		this->CommitDescriptorHeaps();
-
-		const Uint32 clearValue[4]{ 0xFF, 0xFF, 0xFF, 0xFF };
-		this->m_ActiveCommandList->CommandList->ClearUnorderedAccessViewUint(
-			this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_GPUHandle(descriptorIndex),
-			this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_CPUHandle(descriptorIndex),
-			texture->m_Resource,
-			clearValue,
-			0, nullptr
-		);
-	}
-
-	inline void CommandList::Imp_DecodeSamplerFeedbackTexture(Buffer* buffer, SamplerFeedbackTexture* texture, RHIFormat format) {
-		if (this->m_EnableAutomaticBarriers) {
-			this->m_StateTracker.RequireBufferState(&buffer->m_StateExtension, RHIResourceState::ResolveDest);
-			this->m_StateTracker.RequireTextureState(&texture->m_TextureStateExtension, g_AllSubResourceSet, RHIResourceState::ResolveSource);
-		}
-		this->CommitBarriers();
-
-		const auto& formatMapping{ Get_DXGIFormatMapping(format) };
-
-		this->m_ActiveCommandList->CommandList4->ResolveSubresourceRegion(
-			buffer->m_Resource,
-			0, 0, 0,
-			texture->m_Resource, 0, nullptr,
-			formatMapping.SRVFormat,
-			D3D12_RESOLVE_MODE_DECODE_SAMPLER_FEEDBACK
-		);
-	}
-
-	inline void CommandList::Imp_SetSamplerFeedbackTextureState(SamplerFeedbackTexture* texture, RHIResourceState state) {
-		this->m_StateTracker.RequireTextureState(&texture->m_TextureStateExtension, g_AllSubResourceSet, RHIResourceState::ResolveSource);
 	}
 
 	inline void CommandList::Imp_SetPushConstants(const void* data, Uint32 ByteSize) {
@@ -1605,10 +1547,7 @@ namespace RHI::D3D12 {
 			switch (binding.Type) {
 				using enum RHIResourceType;
 			case Texture_SRV:
-				if (nullptr != GetIf<RefCountPtr<Texture>>(&binding.ResourcePtr))
-					this->m_StateTracker.RequireTextureState(&Get<RefCountPtr<Texture>>(binding.ResourcePtr)->m_StateExtension, binding.Subresources, RHIResourceState::ShaderResource);
-				else
-					this->m_StateTracker.RequireTextureState(&Get<RefCountPtr<SamplerFeedbackTexture>>(binding.ResourcePtr)->m_PairdTexture->m_StateExtension, binding.Subresources, RHIResourceState::ShaderResource);//TODO :
+				this->m_StateTracker.RequireTextureState(&Get<RefCountPtr<Texture>>(binding.ResourcePtr)->m_StateExtension, binding.Subresources, RHIResourceState::ShaderResource);
 				break;
 
 			case Texture_UAV:
@@ -1709,25 +1648,16 @@ namespace RHI::D3D12 {
 
 		// Convert the texture barriers into D3D equivalents
 		for (const auto& barrier : textureBarriers) {
-			const Texture* ParentTexture{ nullptr };
-			ID3D12Resource* resource{ nullptr };
-
-			if (barrier.Texture->IsSamplerFeedback)//TODO :Remove bool use getif
-				resource = Get<SamplerFeedbackTexture*>(barrier.Texture->ParentTextureRef)->m_Resource.Get();
-			else {
-				ParentTexture = Get<Texture*>(barrier.Texture->ParentTextureRef);
-				resource = ParentTexture->m_Resource.Get();
-			}
+			const Texture* ParentTexture{ barrier.Texture->ParentTextureRef };
 
 			D3D12_RESOURCE_BARRIER d3dbarrier{};
 			const D3D12_RESOURCE_STATES stateBefore{ ConvertResourceStates(barrier.StateBefore) };
 			const D3D12_RESOURCE_STATES stateAfter{ ConvertResourceStates(barrier.StateAfter) };
-			if (stateBefore != stateAfter)
-			{
+			if (stateBefore != stateAfter) {
 				d3dbarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 				d3dbarrier.Transition.StateBefore = stateBefore;
 				d3dbarrier.Transition.StateAfter = stateAfter;
-				d3dbarrier.Transition.pResource = resource;
+				d3dbarrier.Transition.pResource = ParentTexture->m_Resource.Get();
 				if (barrier.EntireTexture) {
 					d3dbarrier.Transition.Subresource = g_D3D12ResourceBarrierAllSubresource;
 					this->m_D3DBarriers.push_back(d3dbarrier);
@@ -1738,10 +1668,9 @@ namespace RHI::D3D12 {
 						m_D3DBarriers.push_back(d3dbarrier);
 					}
 			}
-			else if (stateAfter & D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
-			{
+			else if (stateAfter & D3D12_RESOURCE_STATE_UNORDERED_ACCESS) {
 				d3dbarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-				d3dbarrier.UAV.pResource = resource;
+				d3dbarrier.UAV.pResource = ParentTexture->m_Resource.Get();
 				m_D3DBarriers.push_back(d3dbarrier);
 			}
 		}
@@ -1763,17 +1692,9 @@ namespace RHI::D3D12 {
 				d3dbarrier.Transition.StateAfter = stateAfter;
 				d3dbarrier.Transition.pResource = buffer->m_Resource;
 				d3dbarrier.Transition.Subresource = g_D3D12ResourceBarrierAllSubresource;
-				m_D3DBarriers.push_back(d3dbarrier);
+				this->m_D3DBarriers.push_back(d3dbarrier);
 			}
-			else if ((RHIResourceState::AccelStructWrite == barrier.StateBefore && (barrier.StateAfter & (RHIResourceState::AccelStructRead | RHIResourceState::AccelStructBuildBlas)) != RHIResourceState::Unknown) ||
-				(RHIResourceState::AccelStructWrite == barrier.StateAfter && (barrier.StateBefore & (RHIResourceState::AccelStructRead | RHIResourceState::AccelStructBuildBlas)) != RHIResourceState::Unknown) ||
-				(RHIResourceState::OpacityMicromapWrite == barrier.StateBefore && (barrier.StateAfter & (RHIResourceState::AccelStructBuildInput)) != RHIResourceState::Unknown) ||
-				(stateAfter & D3D12_RESOURCE_STATE_UNORDERED_ACCESS) != D3D12_RESOURCE_STATE_COMMON) {
-				d3dbarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-				d3dbarrier.UAV.pResource = buffer->m_Resource;
-				m_D3DBarriers.push_back(d3dbarrier);
-			}
-		}//also has a bug ... TODO
+		}
 
 		if (this->m_D3DBarriers.size() > 0)
 			this->m_ActiveCommandList->CommandList->ResourceBarrier(static_cast<Uint32>(this->m_D3DBarriers.size()), this->m_D3DBarriers.data());

@@ -68,7 +68,6 @@ namespace Parting {
 		using Imp_BindingLayout = typename RHI::RHITypeTraits<APITag>::Imp_BindingLayout;
 		using Imp_BindingSet = typename RHI::RHITypeTraits<APITag>::Imp_BindingSet;
 		using Imp_Texture = typename RHI::RHITypeTraits<APITag>::Imp_Texture;
-		using Imp_SamplerFeedbackTexture = typename RHI::RHITypeTraits<APITag>::Imp_SamplerFeedbackTexture;
 		using Imp_Sampler = typename RHI::RHITypeTraits<APITag>::Imp_Sampler;
 	public:
 		MaterialBindingCache(

@@ -143,7 +143,7 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline void DeferredLightingPass<APITag>::Init(const SharedPtr<ShaderFactory<APITag>>& shaderFactory) {
-		this->m_ComputeShader = shaderFactory->CreateShader("Parting/Passes/deferred_lighting_cs.hlsl", "main", nullptr, RHI::RHIShaderType::Compute);
+		this->m_ComputeShader = shaderFactory->CreateShader(String{ "Parting/Passes/deferred_lighting_cs.hlsl" }, String{ "main" }, nullptr, RHI::RHIShaderType::Compute);
 
 		RHI::RHISamplerDescBuilder samplerDescBuilder{}; samplerDescBuilder
 			.Set_AddressModeUVW(RHI::RHISamplerAddressMode::Border)

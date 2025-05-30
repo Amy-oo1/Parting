@@ -351,7 +351,7 @@ namespace Parting {
 		D3D12_CHECK(this->m_D3D12Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, PARTING_IID_PPV_ARGS(&this->m_FrameFence)));
 
 		this->m_FrameFenceEvents.reserve(this->m_SwapChainDesc.BufferCount);
-		for (auto& event : this->m_FrameFenceEvents)
+		for (Uint32 Index = 0; Index < this->m_SwapChainDesc.BufferCount; ++Index)
 			this->m_FrameFenceEvents.emplace_back(CreateEventW(nullptr, false, true, nullptr));
 
 		return true;

@@ -56,8 +56,6 @@ PARTING_IMPORT Utility;
 #include "Engine/Render/Module/SceneTypes.h"
 #include "Engine/Engine/Module/CommonRenderPasses.h"
 
-#include "Engine/Engine/Module/DescriptorTableManager.h"
-
 #endif // PARTING_MODULE_BUILD
 
 namespace Parting {
@@ -124,10 +122,9 @@ namespace Parting {
 		using Imp_FrameBuffer = typename RHI::RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using Imp_CommandList = typename RHI::RHITypeTraits<APITag>::Imp_CommandList;
 	public:
-		TextureCache(RHI::RefCountPtr<Imp_Device> device, SharedPtr<IFileSystem> fs, SharedPtr<DescriptorTableManager<APITag>> descriptorTableManager) ://TODO :Remnove
+		TextureCache(Imp_Device* device, SharedPtr<IFileSystem> fs) :
 			m_Device{ device },
-			m_FS{ fs },
-			m_DescriptorTableManager{ descriptorTableManager }
+			m_FS{ ::MoveTemp(fs) }
 		{
 		}
 		~TextureCache(void) = default;
@@ -173,7 +170,6 @@ namespace Parting {
 		RHI::RefCountPtr<Imp_CommandList> m_CommandList;
 
 		SharedPtr<IFileSystem> m_FS;
-		SharedPtr<DescriptorTableManager<APITag>> m_DescriptorTableManager;
 
 		UnorderedMap<String, SharedPtr<TextureData<APITag>>> m_LoadedTextures;
 		mutable SharedMutex m_LoadedTexturesMutex;
@@ -188,8 +184,6 @@ namespace Parting {
 
 		Atomic<Uint32> m_TexturesRequested{ 0 };
 		Atomic<Uint32> m_TexturesLoaded{ 0 };
-
-
 	};
 
 
@@ -342,10 +336,6 @@ namespace Parting {
 
 		commandList->BeginTrackingTextureState(texture->Texture, RHI::g_AllSubResourceSet, RHI::RHIResourceState::Common);
 
-		if (nullptr != this->m_DescriptorTableManager)
-			/*texture->BindlessDescriptor = this->m_DescriptorTableManager->CreateDescriptorHandle(nvrhi::BindingSetItem::Texture_SRV(0, texture->texture));*/
-			ASSERT(false);
-
 		if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
 			RHI::RHITextureDesc tempTextureDesc{
 				.Extent{.Width{ originalWidth }, .Height{ originalHeight }, .Depth{ textureDesc.Extent.Depth } },
@@ -383,12 +373,8 @@ namespace Parting {
 		texture->Data.reset();
 
 		for (Uint32 mipLevel = texture->MipLevelCount; mipLevel < textureDesc.MipLevelCount; ++mipLevel) {
-			RHI::RHIFrameBufferAttachment<APITag> MipLevelAttachment{
-				.Texture{ texture->Texture },
-				.Subresources{.BaseMipLevel{ mipLevel }}
-			};
 			RHI::RefCountPtr<Imp_FrameBuffer> framebuffer{ this->m_Device->CreateFrameBuffer(RHI::RHIFrameBufferDescBuilder<APITag>{}
-				.AddColorAttachment(MipLevelAttachment)
+				.AddColorAttachment(RHI::RHIFrameBufferAttachment<APITag>{.Texture{ texture->Texture }, .Subresources{.BaseMipLevel{ mipLevel } } })
 				.Build()
 			) };
 
@@ -567,21 +553,16 @@ namespace Parting {
 
 			bool is_hdr{ static_cast<bool>(stbi_is_hdr_from_memory(static_cast<const stbi_uc*>(fileData->Get_Data()),static_cast<Int32>(fileData->Get_Size()))) };
 
-			Int32 channels{ 0 };
+			Int32 channels{ originalChannels };
 
 			if (originalChannels == 3)
 				channels = 4;
-			else
-				channels = originalChannels;
 
-			unsigned char* bitmap{ nullptr };
 			Int32 bytesPerPixel{ channels * (is_hdr ? 4 : 1) };
 
-			if (is_hdr) {
-				float* floatmap{ stbi_loadf_from_memory(static_cast<const stbi_uc*>(fileData->Get_Data()), static_cast<Int32>(fileData->Get_Size()),&width, &height, &originalChannels, channels) };
-
-				bitmap = reinterpret_cast<unsigned char*>(floatmap);
-			}
+			unsigned char* bitmap;
+			if (is_hdr)
+				bitmap = reinterpret_cast<unsigned char*>(stbi_loadf_from_memory(static_cast<const stbi_uc*>(fileData->Get_Data()), static_cast<Int32>(fileData->Get_Size()), &width, &height, &originalChannels, channels));
 			else
 				bitmap = stbi_load_from_memory(static_cast<const stbi_uc*>(fileData->Get_Data()), static_cast<Int32>(fileData->Get_Size()), &width, &height, &originalChannels, channels);
 

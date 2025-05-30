@@ -34,9 +34,6 @@ PARTING_SUBMODE_IMPORT(Optional)
 
 #endif // PARTING_MODULE_BUILD
 
-constexpr int Alignment{ 64 };//TODO :
-
-//TODO :Remove ti form here
 PARTING_EXPORT template<typename Type>
 class Queue_SPMC final :public MoveAbleOnly {
 private:
@@ -128,8 +125,8 @@ private:
 	SynchronizedPoolResource m_PoolResource{ nullptr };
 	PolymorphicAllocator<Node> m_Alloctor;
 
-	alignas(Alignment) volatile Atomic<Node*> m_Head;
-	alignas(Alignment) Atomic<Node*> m_Tail;
+	alignas(64) volatile Atomic<Node*> m_Head;
+	alignas(64) Atomic<Node*> m_Tail;
 };
 
 PARTING_EXPORT template<typename _Ty>

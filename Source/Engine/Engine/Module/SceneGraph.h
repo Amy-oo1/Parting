@@ -71,18 +71,6 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	class SceneGraphNode;
 
-
-
-	template<RHI::APITagConcept APITag>
-	class SceneTypeFactory final {
-	public:
-		SceneTypeFactory(void) = default;
-		~SceneTypeFactory(void) = default;
-
-	private:
-
-	};
-
 	template<RHI::APITagConcept APITag>
 	class SceneGraphLeaf :public NonCopyAndMoveAble {
 		friend class SceneGraph<APITag>;
@@ -222,7 +210,6 @@ namespace Parting {
 	private:
 		SharedPtr<MeshInfo<APITag>> m_PrototypeMesh;
 		Uint32 m_LastUpdateFrameIndex{ 0 };
-		SharedPtr<SceneTypeFactory<APITag>> m_SceneTypeFactory;
 
 	public:
 		STDNODISCARD const SharedPtr<MeshInfo<APITag>>& Get_PrototypeMesh(void) const { return this->m_PrototypeMesh; }
@@ -633,7 +620,6 @@ namespace Parting {
 			if (it->second == 0)
 				ASSERT(false); // zero-reference entries should not be possible; might indicate concurrency issues
 
-
 			--it->second;
 
 			if (it->second == 0) {
@@ -644,10 +630,10 @@ namespace Parting {
 		}
 
 		//NOTE :std name
-		STDNODISCARD ConstIterator begin() const { return ConstIterator{ this->m_Map.cbegin() }; }
-		STDNODISCARD ConstIterator end() const { return ConstIterator{ this->m_Map.cend() }; }
-		STDNODISCARD bool empty() const { return this->m_Map.empty(); }
-		STDNODISCARD Uint64 size() const { return this->m_Map.size(); }
+		STDNODISCARD ConstIterator begin(void) const { return ConstIterator{ this->m_Map.cbegin() }; }
+		STDNODISCARD ConstIterator end(void) const { return ConstIterator{ this->m_Map.cend() }; }
+		STDNODISCARD bool empty(void) const { return this->m_Map.empty(); }
+		STDNODISCARD Uint64 size(void) const { return this->m_Map.size(); }
 
 	private:
 		UnorderedMap<SharedPtr<Type>, Uint32> m_Map;
