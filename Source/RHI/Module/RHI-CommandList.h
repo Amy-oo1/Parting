@@ -103,18 +103,8 @@ namespace RHI {
 	PARTING_EXPORT STDNODISCARD constexpr bool VersionGetSubmitted(Uint64 version) { return (version & c_VersionSubmittedFlag) != 0; }
 
 	PARTING_EXPORT struct RHICommandListParameters final {
-		// A command list with enableImmediateExecution = true maps to the immediate context on DX11.
-		// Two immediate command lists cannot be open at the same time, which is checked by the validation layer.
-		bool EnableImmediateExecution{ true };
-
 		// Minimum size of memory chunks created to upload data to the device on DX12.
 		Uint64 UploadChunkSize{ 64 * 1024 };
-
-		// Minimum size of memory chunks created for AS build scratch buffers.
-		Uint64 ScratchChunkSize{ 64 * 1024 };
-
-		// Maximum total memory size used for all AS build scratch buffers owned by this command list.
-		Uint64 ScratchMaxMemory{ 1024 * 1024 * 1024 };
 
 		// Type of the queue that this command list is to be executed on.
 		// COPY and COMPUTE queues have limited subsets of methods available.
@@ -147,7 +137,6 @@ namespace RHI {
 			using Imp_StagingTexture = typename RHITypeTraits<APITag>::Imp_StagingTexture;
 			using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
 			using Imp_Sampler = typename RHITypeTraits<APITag>::Imp_Sampler;
-			using Imp_SamplerFeedbackTexture = typename RHITypeTraits<APITag>::Imp_SamplerFeedbackTexture;
 			using Imp_FrameBuffer = typename RHITypeTraits<APITag>::Imp_FrameBuffer;
 			using Imp_TimerQuery = typename RHITypeTraits<APITag>::Imp_TimerQuery;
 			using Imp_EventQuery = typename RHITypeTraits<APITag>::Imp_EventQuery;
@@ -197,12 +186,6 @@ namespace RHI {
 			void ClearBufferUInt(Imp_Buffer* buffer, Uint32 clearvalue) { this->Get_Derived()->Imp_ClearBufferUInt(buffer, clearvalue); }
 
 			void CopyBuffer(Imp_Buffer* des, Uint64 desOffset, Imp_Buffer* src, Uint64 srcOffset, Uint64 dataSizeBytes) { this->Get_Derived()->Imp_CopyBuffer(des, desOffset, src, srcOffset, dataSizeBytes); }
-
-			void ClearSamplerFeedbackTexture(Imp_SamplerFeedbackTexture* texture) { this->Get_Derived()->Imp_ClearSamplerFeedbackTexture(texture); }
-
-			void DecodeSamplerFeedbackTexture(Imp_Buffer* buffer, Imp_SamplerFeedbackTexture* texture, RHIFormat format) { this->Get_Derived()->Imp_DecodeSamplerFeedbackTexture(buffer, texture, format); }
-
-			void SetSamplerFeedbackTextureState(Imp_SamplerFeedbackTexture* texture, RHIResourceState state) { this->Get_Derived()->Imp_SetSamplerFeedbackTextureState(texture, state); }
 
 			void SetPushConstants(const void* data, Uint32 ByteSize) { this->Get_Derived()->Imp_SetPushConstants(data, ByteSize); }
 
@@ -284,9 +267,6 @@ namespace RHI {
 			void Imp_WriteBuffer(Imp_Buffer*, const void*, Uint64, Uint64) { LOG_ERROR("No Imp"); }
 			void Imp_ClearBufferUInt(Imp_Buffer*, Uint32) { LOG_ERROR("No Imp"); }
 			void Imp_CopyBuffer(Imp_Buffer*, Uint64, Imp_Buffer*, Uint64, Uint64) { LOG_ERROR("No Imp"); }
-			void Imp_ClearSamplerFeedbackTexture(Imp_SamplerFeedbackTexture*) { LOG_ERROR("No Imp"); }
-			void Imp_DecodeSamplerFeedbackTexture(Imp_Buffer*, Imp_SamplerFeedbackTexture*, RHIFormat) { LOG_ERROR("No Imp"); }
-			void Imp_SetSamplerFeedbackTextureState(Imp_SamplerFeedbackTexture*, RHIResourceState) { LOG_ERROR("No Imp"); }
 			void Imp_SetPushConstants(const void*, Uint32) { LOG_ERROR("No Imp"); }
 			void Imp_SetGraphicsState(const RHIGraphicsState<APITag>&) { LOG_ERROR("No Imp"); }
 			void Imp_Draw(const RHIDrawArguments&) { LOG_ERROR("No Imp"); }

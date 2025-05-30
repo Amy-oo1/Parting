@@ -45,7 +45,7 @@ namespace Parting {
 
 	struct StaticShader final {
 		const void* pBytecode{ nullptr };
-		Uint64 Size = 0;
+		Uint64 Size{ 0 };
 	};
 
 
@@ -63,10 +63,10 @@ namespace Parting {
 		~ShaderFactory(void) = default;
 
 	public:
-		SharedPtr<IBlob> Get_Bytecode(const char* FileName, const char* EntryName);
+		SharedPtr<IBlob> Get_Bytecode(const String& FileName, String EntryName);
 
 		// Creates a shader from binary file.
-		auto CreateShader(const char* fileName, const char* entryName, const Vector<ShaderMacro>* pDefines, RHI::RHIShaderType type) -> RHI::RefCountPtr<Imp_Shader>;
+		auto CreateShader(const String& fileName, const String& entryName, const Vector<ShaderMacro>* pDefines, RHI::RHIShaderType type) -> RHI::RefCountPtr<Imp_Shader>;
 
 
 		// Creates a shader from the bytecode array.
@@ -90,19 +90,19 @@ namespace Parting {
 
 
 	template<RHI::APITagConcept APITag>
-	inline SharedPtr<IBlob> ShaderFactory<APITag>::Get_Bytecode(const char* fileName, const char* entryName) {
-		ASSERT(nullptr != m_FS);
-		if (nullptr == entryName) {
+	inline SharedPtr<IBlob> ShaderFactory<APITag>::Get_Bytecode(const String& fileName, String entryName) {
+		ASSERT(nullptr != this->m_FS);
+		if (entryName.empty()) {
 			LOG_ERROR("Shader entry name is null");
 
-			entryName = "main";
+			entryName = String{ "main" };
 		}
 
 		String adjustedName{ fileName };
 		if (auto pos{ adjustedName.find(".hlsl") };	pos != String::npos)
 			adjustedName.erase(pos, 5);
 
-		if (strcmp(entryName, "main"))
+		if (entryName != String{ "main" })
 			adjustedName += "_" + String{ entryName };
 
 		Path shaderFilePath{ this->m_BasePath / (adjustedName + ".bin") };
@@ -123,21 +123,19 @@ namespace Parting {
 	}
 
 	template<RHI::APITagConcept APITag>
-	inline auto ShaderFactory<APITag>::CreateShader(const char* fileName, const char* entryName, const Vector<ShaderMacro>* pDefines, RHI::RHIShaderType type) -> RHI::RefCountPtr<Imp_Shader> {
+	inline auto ShaderFactory<APITag>::CreateShader(const String& fileName, const String& entryName, const Vector<ShaderMacro>* pDefines, RHI::RHIShaderType type) -> RHI::RefCountPtr<Imp_Shader> {
 		SharedPtr<IBlob> byteCode{ this->Get_Bytecode(fileName, entryName) };
 
 		if (nullptr == byteCode)
-			return nullptr;
+		return nullptr;
 
 		RHI::RHIShaderDesc desc{
 			.ShaderType {type},
-			.DebugName{ String{ fileName } },
+			.DebugName{ fileName },
 			.EntryName { entryName },
 		};
-		/*if (descCopy.debugName.empty())
-			descCopy.debugName = fileName;*/
 
-			//TODO :  i do not know this TODO should,maybe i forget ,oooo Cache 
+		//TODO :  i do not know this TODO should,maybe i forget ,oooo Cache 
 		return this->CreateStaticShader(StaticShader{ .pBytecode { byteCode->Get_Data() }, .Size{ byteCode->Get_Size() } }, pDefines, desc);
 	}
 

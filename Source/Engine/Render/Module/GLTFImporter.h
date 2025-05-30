@@ -77,9 +77,9 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	class GLTFImporter final {
 	public:
-		GLTFImporter(SharedPtr<IFileSystem> fs, SharedPtr<SceneTypeFactory<APITag>> sceneTypeFactory) :
-			m_FS{ MoveTemp(fs) },
-			m_SceneTypeFactory{ MoveTemp(sceneTypeFactory) } {
+		explicit GLTFImporter(SharedPtr<IFileSystem> fs) :
+			m_FS{ MoveTemp(fs) } {
+
 		}
 		~GLTFImporter(void) = default;
 	public:
@@ -90,8 +90,6 @@ namespace Parting {
 
 	private:
 		SharedPtr<IFileSystem> m_FS;
-		SharedPtr<SceneTypeFactory<APITag>> m_SceneTypeFactory;
-
 	};
 
 

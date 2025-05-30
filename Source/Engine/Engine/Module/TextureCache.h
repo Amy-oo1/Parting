@@ -124,12 +124,10 @@ namespace Parting {
 		using Imp_FrameBuffer = typename RHI::RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using Imp_CommandList = typename RHI::RHITypeTraits<APITag>::Imp_CommandList;
 	public:
-		TextureCache(RHI::RefCountPtr<Imp_Device> device, SharedPtr<IFileSystem> fs, SharedPtr<DescriptorTableManager<APITag>> descriptorTableManager) ://TODO :Remnove
+		TextureCache(Imp_Device* device, SharedPtr<IFileSystem> fs) :
 			m_Device{ device },
-			m_FS{ fs },
-			m_DescriptorTableManager{ descriptorTableManager }
-		{
-		}
+			m_FS{ ::MoveTemp(fs) }
+		{}
 		~TextureCache(void) = default;
 
 
@@ -173,7 +171,6 @@ namespace Parting {
 		RHI::RefCountPtr<Imp_CommandList> m_CommandList;
 
 		SharedPtr<IFileSystem> m_FS;
-		SharedPtr<DescriptorTableManager<APITag>> m_DescriptorTableManager;
 
 		UnorderedMap<String, SharedPtr<TextureData<APITag>>> m_LoadedTextures;
 		mutable SharedMutex m_LoadedTexturesMutex;
@@ -188,8 +185,6 @@ namespace Parting {
 
 		Atomic<Uint32> m_TexturesRequested{ 0 };
 		Atomic<Uint32> m_TexturesLoaded{ 0 };
-
-
 	};
 
 
@@ -341,10 +336,6 @@ namespace Parting {
 		texture->Texture = m_Device->CreateTexture(textureDesc);
 
 		commandList->BeginTrackingTextureState(texture->Texture, RHI::g_AllSubResourceSet, RHI::RHIResourceState::Common);
-
-		if (nullptr != this->m_DescriptorTableManager)
-			/*texture->BindlessDescriptor = this->m_DescriptorTableManager->CreateDescriptorHandle(nvrhi::BindingSetItem::Texture_SRV(0, texture->texture));*/
-			ASSERT(false);
 
 		if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
 			RHI::RHITextureDesc tempTextureDesc{

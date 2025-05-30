@@ -158,7 +158,6 @@
     <ClInclude Include="..\..\Source\Engine\Application\Module\GLFWWrapper.h" />
     <ClInclude Include="..\..\Source\Engine\Engine\Module\BindingCache.h" />
     <ClInclude Include="..\..\Source\Engine\Engine\Module\CommonRenderPasses.h" />
-    <ClInclude Include="..\..\Source\Engine\Engine\Module\DescriptorTableManager.h" />
     <ClInclude Include="..\..\Source\Engine\Engine\Module\FrameBufferFactory.h" />
     <ClInclude Include="..\..\Source\Engine\Engine\Module\SceneGraph.h" />
     <ClInclude Include="..\..\Source\Engine\Engine\Module\ShaderFactory.h" />

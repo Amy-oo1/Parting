@@ -71,18 +71,6 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	class SceneGraphNode;
 
-
-
-	template<RHI::APITagConcept APITag>
-	class SceneTypeFactory final {
-	public:
-		SceneTypeFactory(void) = default;
-		~SceneTypeFactory(void) = default;
-
-	private:
-
-	};
-
 	template<RHI::APITagConcept APITag>
 	class SceneGraphLeaf :public NonCopyAndMoveAble {
 		friend class SceneGraph<APITag>;
@@ -222,7 +210,6 @@ namespace Parting {
 	private:
 		SharedPtr<MeshInfo<APITag>> m_PrototypeMesh;
 		Uint32 m_LastUpdateFrameIndex{ 0 };
-		SharedPtr<SceneTypeFactory<APITag>> m_SceneTypeFactory;
 
 	public:
 		STDNODISCARD const SharedPtr<MeshInfo<APITag>>& Get_PrototypeMesh(void) const { return this->m_PrototypeMesh; }

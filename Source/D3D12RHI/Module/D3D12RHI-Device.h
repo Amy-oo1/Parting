@@ -163,8 +163,6 @@ namespace RHI::D3D12 {
 		void Imp_UnmapStagingTexture(StagingTexture* texture);
 		void Imp_Get_TextureTiling(Texture* texture, Uint32* TileCount, RHIPackedMipDesc* desc, RHITileShape* tileshadpe, Uint32* SubresourceTilingCount, RHISubresourceTiling* SubresourceTilings);
 		void Imp_UpdateTextureTileMappings(Texture* texture, const RHITextureTilesMapping<D3D12Tag>* TileMappings, Uint32 TileMappingCount, RHICommandQueue executionQueue);
-		RefCountPtr<SamplerFeedbackTexture> Imp_CreateSamplerFeedbackTexture(Texture* texture, const RHISamplerFeedbackTextureDesc& desc);
-		RefCountPtr<SamplerFeedbackTexture> Imp_CreateSamplerFeedbackForNativeTexture(RHIObjectType type, RHIObject texture, Texture* pairedtexture);
 		RefCountPtr<Buffer> Imp_CreateBuffer(const RHIBufferDesc& desc);
 		void* Imp_MapBuffer(Buffer* buffer, RHICPUAccessMode CPUaccess);
 		void Imp_UnmapBuffer(Buffer* buffer);
@@ -172,7 +170,6 @@ namespace RHI::D3D12 {
 		bool Imp_BindBufferMemory(Buffer* buffer, Heap* heap, Uint64 offset);
 		RefCountPtr<Shader> Imp_CreateShader(const RHIShaderDesc& desc, const void* binary, Uint64 binarySize);
 		RefCountPtr<Shader> Imp_CreateShaderSpecialization(Shader* baseshader, const RHIShaderSpecialization* Constants, Uint32 ConstantCount) { LOG_ERROR("Imp But Empty"); return nullptr; }
-		RefCountPtr<ShaderLibrary> Imp_CreateShaderLibrary(const void* binary, Uint64 binarySize);
 		RefCountPtr<Sampler> Imp_CreateSampler(const RHISamplerDesc& desc);
 		RefCountPtr<InputLayout> Imp_CreateInputLayout(const RHIVertexAttributeDesc* attributes, Uint32 attributeCount, Shader*);
 		RefCountPtr<EventQuery> Imp_CreateEventQuery(void);
@@ -286,20 +283,9 @@ namespace RHI::D3D12 {
 				rootsig->m_PushConstantByteSize = layout->m_PushConstantByteSize;
 				rootsig->m_RootParameterPushConstants = layout->m_RootParameterPushConstants + rootParameterOffset;
 			}
-			//TODO :
-			/*else if (pipelineLayouts[layoutIndex]->getBindlessDesc())
-			{
-				BindlessLayout* layout = checked_cast<BindlessLayout*>(pipelineLayouts[layoutIndex].Get());
-				RootParameterIndex rootParameterOffset = RootParameterIndex(rootParameters.size());
-
-				rootsig->pipelineLayouts.push_back(std::make_pair(layout, rootParameterOffset));
-
-				rootParameters.push_back(layout->rootParameter);
-			}*/
 		}
 
 		// Build the description structure
-
 		D3D12_VERSIONED_ROOT_SIGNATURE_DESC rsDesc{};
 		rsDesc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;//TODO : Support
 
@@ -316,8 +302,7 @@ namespace RHI::D3D12 {
 		// Serialize the root signature
 
 		RefCountPtr<ID3DBlob> rsBlob;
-		RefCountPtr<ID3DBlob> errorBlob;
-		D3D12_CHECK(D3D12SerializeVersionedRootSignature(&rsDesc, &rsBlob, &errorBlob));
+		D3D12_CHECK(D3D12SerializeVersionedRootSignature(&rsDesc, &rsBlob, nullptr));
 
 		D3D12_CHECK(this->m_Context.Device->CreateRootSignature(0, rsBlob->GetBufferPointer(), rsBlob->GetBufferSize(), PARTING_IID_PPV_ARGS(&rootsig->m_RootSignature)));
 
@@ -489,34 +474,35 @@ namespace RHI::D3D12 {
 		if (d.IsVirtual)
 			return RefCountPtr<Texture>::Create(texture);// The resource is created in BindTextureMemory
 
-		if (d.IsTiled)
-			this->m_Context.Device->CreateReservedResource(
+		if (d.IsTiled) {
+			D3D12_CHECK(this->m_Context.Device->CreateReservedResource(
 				&texture->m_ResourceDesc,
 				ConvertResourceStates(d.InitialState),
 				d.ClearValue.has_value() ? &clearValue : nullptr,
 				PARTING_IID_PPV_ARGS(&texture->m_Resource)
-			);
+			));
+		}
 		else {
 			heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
 
-			this->m_Context.Device->CreateCommittedResource(
+			D3D12_CHECK(this->m_Context.Device->CreateCommittedResource(
 				&heapProps,
 				heapFlags,
 				&texture->m_ResourceDesc,
 				ConvertResourceStates(d.InitialState),
 				d.ClearValue.has_value() ? &clearValue : nullptr,
 				PARTING_IID_PPV_ARGS(&texture->m_Resource)
-			);
+			));
 		}
 
 		if (isShared) {
-			this->m_Context.Device->CreateSharedHandle(
+			D3D12_CHECK(this->m_Context.Device->CreateSharedHandle(
 				texture->m_Resource,
 				nullptr,
 				PlatformWindowsAccessGenericAll,//TODO Trans
 				nullptr,
 				&texture->m_SharedHandle
-			);
+			));
 		}
 
 		texture->PostCreate();
@@ -734,69 +720,6 @@ namespace RHI::D3D12 {
 		}
 	}
 
-	RefCountPtr<SamplerFeedbackTexture> Device::Imp_CreateSamplerFeedbackTexture(Texture* texPair, const RHISamplerFeedbackTextureDesc& desc) {
-		auto descPair{ texPair->m_Desc };
-		D3D12_RESOURCE_DESC rdPair{ texPair->m_ResourceDesc };
-
-		D3D12_RESOURCE_DESC1 rdFeedback = {};
-		memcpy(&rdFeedback, &rdPair, sizeof(D3D12_RESOURCE_DESC));
-		D3D12_HEAP_PROPERTIES heapPropsDefault = {};
-		heapPropsDefault.Type = D3D12_HEAP_TYPE_DEFAULT;
-		rdFeedback.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-		rdFeedback.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		switch (desc.SamplerFeedbackFormat) {
-			using enum RHISamplerFeedbackFormat;
-		case MinMipOpaque:rdFeedback.Format = DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE; break;
-		case MipRegionUsedOpaque:rdFeedback.Format = DXGI_FORMAT_SAMPLER_FEEDBACK_MIP_REGION_USED_OPAQUE; break;
-		}
-		rdFeedback.SamplerFeedbackMipRegion = D3D12_MIP_REGION{ desc.SamplerFeedbackMipRegionX, desc.SamplerFeedbackMipRegionY, desc.SamplerFeedbackMipRegionZ };
-
-		RHITextureDesc textureDesc = texPair->Get_Desc();
-		textureDesc.InitialState = desc.InitialState;
-		textureDesc.KeepInitialState = desc.KeepInitialState;
-
-		SamplerFeedbackTexture* texture = new SamplerFeedbackTexture(this->m_Context, this->m_Resources, desc, textureDesc, texPair);
-
-		this->m_Context.Device8->CreateCommittedResource2(
-			&heapPropsDefault,
-			D3D12_HEAP_FLAG_NONE,
-			&rdFeedback,
-			ConvertResourceStates(desc.InitialState),
-			nullptr, // clear value
-			nullptr,
-			IID_PPV_ARGS(&texture->m_Resource)
-		);
-
-		return RefCountPtr<SamplerFeedbackTexture>::Create(texture);
-
-	}
-
-	RefCountPtr<SamplerFeedbackTexture> Device::Imp_CreateSamplerFeedbackForNativeTexture(RHIObjectType objectType, RHIObject _texture, Texture* pairedtexture) {
-		if (_texture.Pointer == nullptr)
-			return nullptr;
-
-		if (RHIObjectType::D3D12_Resource != objectType)
-			return nullptr;
-
-		ID3D12Resource2* pResource = static_cast<ID3D12Resource2*>(_texture.Pointer);
-
-		D3D12_RESOURCE_DESC1 rdFeedback = pResource->GetDesc1();
-		RHISamplerFeedbackTextureDesc desc = {};
-		desc.SamplerFeedbackFormat = rdFeedback.Format == DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE ? RHISamplerFeedbackFormat::MinMipOpaque : RHISamplerFeedbackFormat::MipRegionUsedOpaque;
-		desc.SamplerFeedbackMipRegionX = rdFeedback.SamplerFeedbackMipRegion.Width;
-		desc.SamplerFeedbackMipRegionY = rdFeedback.SamplerFeedbackMipRegion.Height;
-		desc.SamplerFeedbackMipRegionZ = rdFeedback.SamplerFeedbackMipRegion.Depth;
-
-		auto textureDesc{ pairedtexture->Get_Desc() };
-		textureDesc.InitialState = RHIResourceState::Unknown;
-		textureDesc.KeepInitialState = false;
-
-		SamplerFeedbackTexture* texture = new SamplerFeedbackTexture(m_Context, m_Resources, desc, textureDesc, pairedtexture);
-		texture->m_Resource = pResource;
-
-		return RefCountPtr<SamplerFeedbackTexture>::Create(texture);
-	}
-
 	RefCountPtr<Buffer> Device::Imp_CreateBuffer(const RHIBufferDesc& d) {
 		auto desc{ d };
 		if (desc.IsConstantBuffer)
@@ -814,7 +737,7 @@ namespace RHI::D3D12 {
 		resourceDesc.MipLevels = 1;
 		resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
 		resourceDesc.SampleDesc.Count = 1;
-		resourceDesc.SampleDesc.Quality = 0;
+		/*resourceDesc.SampleDesc.Quality = 0;*/
 		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
@@ -843,9 +766,7 @@ namespace RHI::D3D12 {
 			using enum RHICPUAccessMode;
 		case None:
 			heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
-			initialState = ConvertResourceStates(d.InitialState);//TODO : initialState=D3D12_RESOURCE_STATE_COMMON
-			if (initialState != D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE)
-				initialState = D3D12_RESOURCE_STATE_COMMON;
+			initialState = D3D12_RESOURCE_STATE_COMMON;
 			break;
 
 		case Read:
@@ -867,23 +788,23 @@ namespace RHI::D3D12 {
 			initialState = D3D12_RESOURCE_STATE_COMMON;
 		}
 
-		this->m_Context.Device->CreateCommittedResource(
+		D3D12_CHECK(this->m_Context.Device->CreateCommittedResource(
 			&heapProps,
 			heapFlags,
 			&resourceDesc,
 			initialState,
 			nullptr,
 			PARTING_IID_PPV_ARGS(&buffer->m_Resource)
-		);
+		));
 
 		if (isShared)
-			this->m_Context.Device->CreateSharedHandle(
+			D3D12_CHECK(this->m_Context.Device->CreateSharedHandle(
 				buffer->m_Resource,
 				nullptr,
 				PlatformWindowsAccessGenericAll,
 				nullptr,
 				&buffer->m_SharedHandle
-			);
+			));
 
 		buffer->PostCreate();
 
@@ -904,7 +825,7 @@ namespace RHI::D3D12 {
 			range = D3D12_RANGE{ .Begin { 0 }, .End { 0 } };
 
 		void* mappedBuffer;
-		buffer->m_Resource->Map(0, &range, &mappedBuffer);
+		D3D12_CHECK(buffer->m_Resource->Map(0, &range, &mappedBuffer));
 
 		return mappedBuffer;
 	}
@@ -949,31 +870,12 @@ namespace RHI::D3D12 {
 		ASSERT(0 != binarySize);
 		ASSERT(nullptr != binary);
 
-		Shader* shader{ new Shader{} };
+		Shader* shader{ new Shader{ desc } };
 		shader->m_Bytecode.resize(binarySize);
 		shader->m_Desc = desc;
 		memcpy(shader->m_Bytecode.data(), binary, binarySize);
 
-		if (0 != desc.CustomSemanticCount || 0 != desc.pCoordinateSwizzling || (RHIFastGeometryShaderFlag::None != desc.FastGSFlags) || desc.HLSLExtensionsUAV >= 0) {
-			ASSERT(false);
-			delete shader;
-
-			// NVAPI is unavailable
-			return nullptr;
-		}
-
 		return RefCountPtr<Shader>::Create(shader);
-
-
-	}
-
-	RefCountPtr<ShaderLibrary> Device::Imp_CreateShaderLibrary(const void* binary, Uint64 binarySize) {
-		auto shaderLibrary{ new ShaderLibrary{} };
-
-		shaderLibrary->m_Bytecode.resize(binarySize);
-		memcpy(shaderLibrary->m_Bytecode.data(), binary, binarySize);
-
-		return RefCountPtr<ShaderLibrary>::Create(shaderLibrary);
 	}
 
 	RefCountPtr<Sampler> Device::Imp_CreateSampler(const RHISamplerDesc& desc) {
@@ -1255,7 +1157,7 @@ namespace RHI::D3D12 {
 
 		pQueue->m_Queue->ExecuteCommandLists(static_cast<Uint32>(this->m_CommandListsToExecute.size()), this->m_CommandListsToExecute.data());
 		++pQueue->m_LastSubmittedInstance;
-		pQueue->m_Queue->Signal(pQueue->m_Fence, pQueue->m_LastSubmittedInstance);
+		D3D12_CHECK(pQueue->m_Queue->Signal(pQueue->m_Fence, pQueue->m_LastSubmittedInstance));
 
 		for (Uint64 Index = 0; Index < numCommandLists; ++Index) {
 			auto instance{ commandLists[Index]->Executed(pQueue) };

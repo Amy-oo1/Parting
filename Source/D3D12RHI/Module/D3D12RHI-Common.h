@@ -163,7 +163,7 @@ namespace RHI::D3D12 {
 		Mutex m_Mutex{};
 		RefCountPtr<ID3D12DescriptorHeap> m_Heap;
 		RefCountPtr<ID3D12DescriptorHeap> m_ShaderVisibleHeap;
-		D3D12_DESCRIPTOR_HEAP_TYPE m_HeapType;
+		D3D12_DESCRIPTOR_HEAP_TYPE m_HeapType{};
 		D3D12_CPU_DESCRIPTOR_HANDLE m_StartCPUHandle{ 0 };
 		D3D12_CPU_DESCRIPTOR_HANDLE m_StartCPUHandleShaderVisible{ 0 };
 		D3D12_GPU_DESCRIPTOR_HANDLE m_StartGPUHandleShaderVisible{ 0 };
@@ -234,18 +234,12 @@ namespace RHI::D3D12 {
 	public:
 		using D3D12RootParameterIndex = Uint32;
 
-		using BingLayOutVariant = Variant<
-			RefCountPtr<BindingLayout>,
-			RefCountPtr<BindLessLayout>,
-			Nullptr_T
-		>;
-
 	private:
 		D3D12DeviceResources& m_DeviceResourcesRef;
 
 		Uint64 m_Hash{ 0 };//TODO :
 
-		Array<Pair<BingLayOutVariant, D3D12RootParameterIndex>, g_MaxBindingLayoutCount> m_BindLayouts;
+		Array<Pair<RefCountPtr<BindingLayout>, D3D12RootParameterIndex>, g_MaxBindingLayoutCount> m_BindLayouts;
 		RemoveCV<decltype(g_MaxBindingLayoutCount)>::type m_BindLayoutCount{ 0 };
 
 		RefCountPtr<ID3D12RootSignature> m_RootSignature;
@@ -303,13 +297,12 @@ namespace RHI::D3D12 {
 	public:
 		static constexpr Uint64 c_SizeAlignment{ 4096 }; // GPU page size
 
-		RefCountPtr<ID3D12Resource> D3D12Buffer{ nullptr };
+		RefCountPtr<ID3D12Resource> D3D12Buffer;
 		Uint64 Version{ 0 };
 		Uint64 BufferSize{ 0 };
 		Uint64 WritePointer{ 0 };
 		void* CPUVirtualAddress{ nullptr };
 		D3D12_GPU_VIRTUAL_ADDRESS GPUVirtualAddress;
-		Uint32 Identifier{ 0 };
 
 		~BufferChunk(void) {
 			if (nullptr != this->D3D12Buffer && nullptr != this->CPUVirtualAddress) {
@@ -321,28 +314,17 @@ namespace RHI::D3D12 {
 
 	class UploadManager final {
 	public:
-		UploadManager(const Context& Context, D3D12Queue* Queue, Uint64 DefaultChunkSize, Uint64 MemoryLimit, bool IsScratchBuffer) :
+		UploadManager(const Context& Context, D3D12Queue* Queue, Uint64 DefaultChunkSize) :
 			m_Context{ Context },
 			m_Queue{ Queue },
-			m_DefaultChunkSize{ DefaultChunkSize },
-			m_MemoryLimit{ MemoryLimit },
-			m_IsScratchBuffer{ IsScratchBuffer }
+			m_DefaultChunkSize{ DefaultChunkSize }
 		{
 		}
 
 		~UploadManager(void) = default;
 
 	public:
-		bool SuballocateBuffer(
-			Uint64 size,
-			ID3D12GraphicsCommandList* pCommandList,
-			ID3D12Resource** pBuffer,
-			Uint64* pOffset,
-			void** pCpuVA,
-			D3D12_GPU_VIRTUAL_ADDRESS* pGpuVA,
-			Uint64 currentVersion,
-			Uint32 alignment
-		);
+		bool SuballocateBuffer(Uint64 size, ID3D12Resource** pBuffer, Uint64* pOffset, void** pCpuVA, D3D12_GPU_VIRTUAL_ADDRESS* pGpuVA, Uint64 currentVersion, Uint32 alignment);
 
 		void SubmitChunks(Uint64 currentVersion, Uint64 submittedVersion);
 
@@ -353,9 +335,7 @@ namespace RHI::D3D12 {
 		const Context& m_Context;
 		D3D12Queue* m_Queue{ nullptr };
 		Uint64 m_DefaultChunkSize{ 0 };
-		Uint64 m_MemoryLimit{ 0 };
 		Uint64 m_AllocatedMemory{ 0 };
-		bool m_IsScratchBuffer{ false };
 
 		List<SharedPtr<BufferChunk>> m_ChunkPool;
 		SharedPtr<BufferChunk> m_CurrentChunk;
@@ -377,16 +357,11 @@ namespace RHI::D3D12 {
 			RefCountPtr<Sampler>,
 			RefCountPtr<FrameBuffer>,
 			RefCountPtr<BindingLayout>,
-			RefCountPtr<BindLessLayout>,
 			RefCountPtr<BindingSet>,
 			RefCountPtr<GraphicsPipeline>,
 			RefCountPtr<ComputePipeline>,
 			RefCountPtr<MeshletPipeline>,
 
-			/*	RefCountPtr<Shader>,*/
-				/*RefCountPtr<StagingTexture>,
-				RefCountPtr<Buffer>,
-				RefCountPtr<TimerQuery>,*/
 			Nullptr_T
 		>;
 
@@ -440,13 +415,7 @@ namespace RHI::D3D12 {
 		if ((stateBits & ResolveDest) != Unknown) result |= D3D12_RESOURCE_STATE_RESOLVE_DEST;
 		if ((stateBits & ResolveSource) != Unknown) result |= D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
 		if ((stateBits & Present) != Unknown) result |= D3D12_RESOURCE_STATE_PRESENT;
-		if ((stateBits & AccelStructRead) != Unknown) result |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;//TODO :Remove ray Accel
-		if ((stateBits & AccelStructWrite) != Unknown) result |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
-		if ((stateBits & AccelStructBuildInput) != Unknown) result |= D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-		if ((stateBits & AccelStructBuildBlas) != Unknown) result |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
 		if ((stateBits & ShadingRateSurface) != Unknown) result |= D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE;
-		if ((stateBits & OpacityMicromapBuildInput) != Unknown) result |= D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-		if ((stateBits & OpacityMicromapWrite) != Unknown) result |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
 
 		return result;
 	}
@@ -709,7 +678,7 @@ namespace RHI::D3D12 {
 
 		ByteSize = Math::Align(ByteSize, BufferChunk::c_SizeAlignment);
 
-		D3D12_HEAP_PROPERTIES HeapDesc{ .Type{ this->m_IsScratchBuffer ? D3D12_HEAP_TYPE_DEFAULT : D3D12_HEAP_TYPE_UPLOAD } };
+		constexpr D3D12_HEAP_PROPERTIES HeapDesc{ .Type{ D3D12_HEAP_TYPE_UPLOAD } };
 
 		D3D12_RESOURCE_DESC BufferDesc{
 			.Dimension{ D3D12_RESOURCE_DIMENSION_BUFFER },
@@ -718,32 +687,27 @@ namespace RHI::D3D12 {
 			.DepthOrArraySize{ 1 },
 			.MipLevels{ 1 },
 			.SampleDesc{.Count{ 1 } },
-			.Layout{ D3D12_TEXTURE_LAYOUT_ROW_MAJOR },
-			.Flags{ this->m_IsScratchBuffer ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAG_NONE }
+			.Layout{ D3D12_TEXTURE_LAYOUT_ROW_MAJOR }
 		};
 
-		this->m_Context.Device->CreateCommittedResource(
+		D3D12_CHECK(this->m_Context.Device->CreateCommittedResource(
 			&HeapDesc,
 			D3D12_HEAP_FLAG_NONE,
 			&BufferDesc,
-			this->m_IsScratchBuffer ? D3D12_RESOURCE_STATE_COMMON : D3D12_RESOURCE_STATE_GENERIC_READ,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			PARTING_IID_PPV_ARGS(&Re->D3D12Buffer)
-		);
+		));
 
-		if (!this->m_IsScratchBuffer)
-			Re->D3D12Buffer->Map(0, nullptr, &Re->CPUVirtualAddress);
+		D3D12_CHECK(Re->D3D12Buffer->Map(0, nullptr, &Re->CPUVirtualAddress));
 
 		Re->BufferSize = ByteSize;
 		Re->GPUVirtualAddress = Re->D3D12Buffer->GetGPUVirtualAddress();
-		Re->Identifier = static_cast<Uint32>(this->m_ChunkPool.size());
 
 		return Re;
 	}
 
-	bool UploadManager::SuballocateBuffer(Uint64 size, ID3D12GraphicsCommandList* pCommandList, ID3D12Resource** pBuffer, Uint64* pOffset, void** pCpuVA, D3D12_GPU_VIRTUAL_ADDRESS* pGpuVA, Uint64 currentVersion, Uint32 alignment) {
-		ASSERT(!this->m_IsScratchBuffer || pCommandList);// ScratchBuffer must be used with a command list
-
+	bool UploadManager::SuballocateBuffer(Uint64 size, ID3D12Resource** pBuffer, Uint64* pOffset, void** pCpuVA, D3D12_GPU_VIRTUAL_ADDRESS* pGpuVA, Uint64 currentVersion, Uint32 alignment) {
 		SharedPtr<BufferChunk> chunkToRetire{ nullptr };
 
 		if (nullptr != this->m_CurrentChunk) {
@@ -787,54 +751,8 @@ namespace RHI::D3D12 {
 		if (nullptr != chunkToRetire)
 			this->m_ChunkPool.push_back(chunkToRetire);
 
-		if (nullptr == this->m_CurrentChunk) {
-			Uint64 sizeToAllocate{ Math::Align(Math::Max(size, this->m_DefaultChunkSize), BufferChunk::c_SizeAlignment) };
-
-			if ((this->m_MemoryLimit > 0) && (this->m_AllocatedMemory + sizeToAllocate > this->m_MemoryLimit)) {
-				if (this->m_IsScratchBuffer) {
-					SharedPtr<BufferChunk> bestChunk{ nullptr };
-					for (const auto& candidateChunk : this->m_ChunkPool) {
-						if (candidateChunk->BufferSize >= sizeToAllocate) {
-							if (nullptr == bestChunk) {
-								bestChunk = candidateChunk;
-
-								continue;
-							}
-
-							bool candidateSubmitted{ VersionGetSubmitted(candidateChunk->Version) };
-							bool bestSubmitted{ VersionGetSubmitted(bestChunk->Version) };
-							Uint64 candidateInstance{ VersionGetInstance(candidateChunk->Version) };
-							Uint64 bestInstance{ VersionGetInstance(bestChunk->Version) };
-
-							// Compare chunks: submitted is better than current, old is better than new, large is better than small
-							if ((candidateSubmitted && !bestSubmitted) ||
-								(candidateSubmitted == bestSubmitted && candidateInstance < bestInstance) ||
-								(candidateSubmitted == bestSubmitted && candidateInstance == bestInstance && candidateChunk->BufferSize > bestChunk->BufferSize))
-								bestChunk = candidateChunk;
-						}
-					}
-
-					if (nullptr == bestChunk)
-						return false;
-
-
-					this->m_ChunkPool.erase(STDFind(this->m_ChunkPool.begin(), this->m_ChunkPool.end(), bestChunk));
-					this->m_CurrentChunk = bestChunk;
-
-					// Place a UAV barrier on the chunk.
-					D3D12_RESOURCE_BARRIER barrier{
-						.Type { D3D12_RESOURCE_BARRIER_TYPE_UAV },
-						.Flags { D3D12_RESOURCE_BARRIER_FLAG_NONE },
-						.UAV {.pResource { this->m_CurrentChunk->D3D12Buffer.Get() } }
-					};
-					pCommandList->ResourceBarrier(1, &barrier);
-				}
-				else
-					return false;
-			}
-			else
-				this->m_CurrentChunk = this->CreateChunk(sizeToAllocate);
-		}
+		if (nullptr == this->m_CurrentChunk)
+			this->m_CurrentChunk = this->CreateChunk(Math::Align(Math::Max(size, this->m_DefaultChunkSize), BufferChunk::c_SizeAlignment));
 
 		this->m_CurrentChunk->Version = currentVersion;
 		this->m_CurrentChunk->WritePointer = size;

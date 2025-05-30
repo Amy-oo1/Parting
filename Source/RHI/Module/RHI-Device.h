@@ -81,25 +81,21 @@ namespace RHI {
 	class RHIDevice :public RHIResource<Derived> {
 		friend class RHIResource<Derived>;
 
-		using Imp_MessageCallback = typename RHITypeTraits<APITag>::Imp_MessageCallback;
 		using Imp_Heap = typename RHITypeTraits<APITag>::Imp_Heap;
 		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
 		using Imp_StagingTexture = typename RHITypeTraits<APITag>::Imp_StagingTexture;
 		using Imp_Sampler = typename RHITypeTraits<APITag>::Imp_Sampler;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
-		using Imp_SamplerFeedbackTexture = typename RHITypeTraits<APITag>::Imp_SamplerFeedbackTexture;
 		using Imp_FrameBuffer = typename RHITypeTraits<APITag>::Imp_FrameBuffer;
 		using Imp_TimerQuery = typename RHITypeTraits<APITag>::Imp_TimerQuery;
 		using Imp_EventQuery = typename RHITypeTraits<APITag>::Imp_EventQuery;
 		using Imp_Shader = typename RHITypeTraits<APITag>::Imp_Shader;
-		using Imp_ShaderLibrary = typename RHITypeTraits<APITag>::Imp_ShaderLibrary;
 		using Imp_InputLayout = typename RHITypeTraits<APITag>::Imp_InputLayout;
 		using Imp_GraphicsPipeline = typename RHITypeTraits<APITag>::Imp_GraphicsPipeline;
 		using Imp_ComputePipeline = typename RHITypeTraits<APITag>::Imp_ComputePipeline;
 		using Imp_MeshletPipeline = typename RHITypeTraits<APITag>::Imp_MeshletPipeline;
 		using Imp_BindingLayout = typename RHITypeTraits<APITag>::Imp_BindingLayout;
 		using Imp_BindingSet = typename RHITypeTraits<APITag>::Imp_BindingSet;
-		//TODO :using Imp_DescriptorSet = typename RHITypeTraits<APITag>::Imp_DescriptorSet;
 		using Imp_CommandList = typename RHITypeTraits<APITag>::Imp_CommandList;
 
 	protected:
@@ -160,10 +156,6 @@ namespace RHI {
 
 		void UpdateTextureTileMappings(Imp_Texture* texture, const RHITextureTilesMapping<APITag>* TileMappings, Uint32 TileMappingCount, RHICommandQueue executionQueue = RHICommandQueue::Graphics) { this->Get_Derived()->Imp_UpdateTextureTileMappings(texture, TileMappings, TileMappingCount, executionQueue); }
 
-		STDNODISCARD RefCountPtr<Imp_SamplerFeedbackTexture> CreateSamplerFeedbackTexture(Imp_Texture* texture, const RHISamplerFeedbackTextureDesc& desc) { return this->Get_Derived()->Imp_CreateSamplerFeedbackTexture(texture, desc); }
-
-		STDNODISCARD RefCountPtr<Imp_SamplerFeedbackTexture> CreateSamplerFeedbackForNativeTexture(RHIObjectType type, RHIObject texture, Imp_Texture* pairedtexture) { return this->Get_Derived()->Imp_CreateSamplerFeedbackForNativeTexture(type, texture, pairedtexture); }
-
 		STDNODISCARD RefCountPtr<Imp_Buffer> CreateBuffer(const RHIBufferDesc& desc) { return this->Get_Derived()->Imp_CreateBuffer(desc); }
 
 		STDNODISCARD void* MapBuffer(Imp_Buffer* buffer, RHICPUAccessMode CPUaccess) { return this->Get_Derived()->Imp_MapBuffer(buffer, CPUaccess); }
@@ -179,8 +171,6 @@ namespace RHI {
 		STDNODISCARD RefCountPtr<Imp_Shader> CreateShader(const RHIShaderDesc& desc, const void* binary, Uint64 binarySize) { return this->Get_Derived()->Imp_CreateShader(desc, binary, binarySize); }
 
 		STDNODISCARD RefCountPtr<Imp_Shader> CreateShaderSpecialization(Imp_Shader* baseshader, const RHIShaderSpecialization* Constants, Uint32 ConstantCount) { return this->Get_Derived()->Imp_CreateShaderSpecialization(baseshader, Constants, ConstantCount); }
-
-		STDNODISCARD RefCountPtr<Imp_ShaderLibrary> CreateShaderLibrary(const void* binary, Uint64 binarySize) { return this->Get_Derived()->Imp_CreateShaderLibrary(binary, binarySize); }
 
 		STDNODISCARD RefCountPtr<Imp_Sampler> CreateSampler(const RHISamplerDesc& desc) { return this->Get_Derived()->Imp_CreateSampler(desc); }
 		//TODO :constexpr if to do d3d11
@@ -214,8 +204,6 @@ namespace RHI {
 
 		STDNODISCARD RefCountPtr<Imp_BindingLayout> CreateBindingLayout(const RHIBindingLayoutDesc& desc) { return this->Get_Derived()->Imp_CreateBindingLayout(desc); }
 
-		STDNODISCARD RefCountPtr<Imp_BindingLayout> CreateBindingLayout(const RHIBindlessLayoutDesc& desc) { return this->Get_Derived()->Imp_CreateBindingLayout(desc); }//TODO :
-
 		STDNODISCARD RefCountPtr<Imp_BindingSet> CreateBindingSet(const RHIBindingSetDesc<APITag>& desc, Imp_BindingLayout* layout) { return this->Get_Derived()->Imp_CreateBindingSet(desc, layout); }
 
 		//TODO :
@@ -240,12 +228,6 @@ namespace RHI {
 
 		STDNODISCARD RHIObject Get_NativeQueue(RHIObjectType type, RHICommandQueue queue) { return this->Get_Derived()->Imp_Get_NativeQueue(type, queue); }
 
-		STDNODISCARD Imp_MessageCallback* Get_MessageCallback(void) { return this->Get_Derived()->Imp_Get_MessageCallback(); }
-
-		//TODO 
-
-		//TODO
-
 	public:
 		/*STDNODISCARD*/ Uint64 ExecuteCommandList(Imp_CommandList* commandList, RHICommandQueue queue = RHICommandQueue::Graphics) { return this->ExecuteCommandLists(&commandList, 1u, queue); }
 
@@ -264,8 +246,6 @@ namespace RHI {
 		void Imp_UnmapStagingTexture(Imp_StagingTexture*) { LOG_ERROR("No Imp"); }
 		void Imp_Get_TextureTiling(Imp_Texture*, Uint32*, RHIPackedMipDesc*, RHITileShape*, Uint32*, RHISubresourceTiling*) { LOG_ERROR("No Imp"); }
 		void Imp_UpdateTextureTileMappings(Imp_Texture*, const RHITextureTilesMapping<APITag>*, Uint32, RHICommandQueue) { LOG_ERROR("No Imp"); }
-		RefCountPtr<Imp_SamplerFeedbackTexture> Imp_CreateSamplerFeedbackTexture(Imp_Texture*, const RHISamplerFeedbackTextureDesc&) { LOG_ERROR("No Imp"); return nullptr; }
-		RefCountPtr<Imp_SamplerFeedbackTexture> Imp_CreateSamplerFeedbackForNativeTexture(RHIObjectType, RHIObject, Imp_Texture*) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_Buffer> Imp_CreateBuffer(const RHIBufferDesc&) { LOG_ERROR("No Imp"); return nullptr; }
 		void* Imp_MapBuffer(Imp_Buffer*, RHICPUAccessMode) { LOG_ERROR("No Imp"); return nullptr; }
 		void Imp_UnmapBuffer(Imp_Buffer*) { LOG_ERROR("No Imp"); }
@@ -274,7 +254,6 @@ namespace RHI {
 		RefCountPtr<Imp_Buffer> Imp_CreateHandleForNativeBuffer(RHIObjectType, RHIObject, const RHIBufferDesc&) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_Shader> Imp_CreateShader(const RHIShaderDesc&, const void*, Uint64) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_Shader> Imp_CreateShaderSpecialization(Imp_Shader*, const RHIShaderSpecialization*, Uint32) { LOG_ERROR("No Imp"); return nullptr; }
-		RefCountPtr<Imp_ShaderLibrary> Imp_CreateShaderLibrary(const void*, Uint64) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_Sampler> Imp_CreateSampler(const RHISamplerDesc&) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_InputLayout> Imp_CreateInputLayout(const RHIVertexAttributeDesc*, Uint32, Imp_Shader*) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_EventQuery> Imp_CreateEventQuery(void) { LOG_ERROR("No Imp"); return nullptr; }
@@ -291,7 +270,6 @@ namespace RHI {
 		RefCountPtr<Imp_ComputePipeline> Imp_CreateComputePipeline(const RHIComputePipelineDesc<APITag>&) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_MeshletPipeline> Imp_CreateMeshletPipeline(const RHIMeshletPipelineDesc<APITag>&, Imp_FrameBuffer*) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_BindingLayout> Imp_CreateBindingLayout(const RHIBindingLayoutDesc&) { LOG_ERROR("No Imp"); return nullptr; }
-		RefCountPtr<Imp_BindingLayout> Imp_CreateBindingLayout(const RHIBindlessLayoutDesc&) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_BindingSet> Imp_CreateBindingSet(const RHIBindingSetDesc<APITag>&, Imp_BindingLayout*) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_CommandList> Imp_CreateCommandList(const RHICommandListParameters&) { LOG_ERROR("No Imp"); return nullptr; }
 		Uint64 Imp_ExecuteCommandLists(Imp_CommandList* const*, Uint32, RHICommandQueue) { LOG_ERROR("No Imp"); return 0; }
@@ -301,7 +279,6 @@ namespace RHI {
 		bool Imp_QueryFeatureSupport(RHIFeature, void*, Uint64) { LOG_ERROR("No Imp"); return false; }
 		RHIFormatSupport Imp_QueryFormatSupport(RHIFormat) { LOG_ERROR("No Imp"); return RHIFormatSupport::None; }
 		RHIObject Imp_Get_NativeQueue(RHIObjectType, RHICommandQueue) { LOG_ERROR("No Imp"); return nullptr; }
-		Imp_MessageCallback* Imp_Get_MessageCallback(void) { LOG_ERROR("No Imp"); return nullptr; }
 	};
 
 }

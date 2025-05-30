@@ -69,7 +69,6 @@ namespace RHI {
 		VolatileConstantBuffer,
 		Sampler,
 		PushConstants,
-		SamplerFeedbackTexture_UAV,
 
 		Count
 	};
@@ -77,7 +76,6 @@ namespace RHI {
 	PARTING_EXPORT struct/* alignas(4)*/ RHIBindingLayoutItem final {
 		Uint32 Slot;
 		RHIResourceType Type{ RHIResourceType::None };
-		Uint8 Unused : 8;//TODO do what thing I arleady forget... maybe to move bit ,becase it support net good ...
 		Uint16 ByteSize;
 
 		STDNODISCARD constexpr bool operator==(const RHIBindingLayoutItem& other) const noexcept { return Slot == other.Slot && Type == other.Type && ByteSize == other.ByteSize; }
@@ -139,31 +137,6 @@ namespace RHI {
 		RHIBindingLayoutDesc m_Desc{};
 	};
 
-	PARTING_EXPORT struct RHIBindlessLayoutDesc final {
-		RHIShaderType Visibility{ RHIShaderType::None };
-		Uint32 FirstSlot{ 0 };
-		Uint32 MaxCapacity{ 0 };
-
-		Array<RHIBindingLayoutItem, g_MaxBindlessLayoutCount> BindlessLayouts{};
-		RemoveCV<decltype(g_MaxBindlessLayoutCount)>::type BindlessLayoutCount{ 0 };
-	};
-
-	PARTING_EXPORT class RHIBindlessLayoutDescBuilder final {
-	public:
-		STDNODISCARD constexpr RHIBindlessLayoutDescBuilder& Reset(void) { this->m_Desc = RHIBindlessLayoutDesc{}; return *this; }
-
-		STDNODISCARD constexpr RHIBindlessLayoutDescBuilder& Set_Visibility(RHIShaderType visibility) { this->m_Desc.Visibility = visibility; return *this; }
-		STDNODISCARD constexpr RHIBindlessLayoutDescBuilder& Set_FirstSlot(Uint32 firstSlot) { this->m_Desc.FirstSlot = firstSlot; return *this; }
-		STDNODISCARD constexpr RHIBindlessLayoutDescBuilder& Set_MaxCapacity(Uint32 maxCapacity) { this->m_Desc.MaxCapacity = maxCapacity; return *this; }
-		STDNODISCARD constexpr RHIBindlessLayoutDescBuilder& AddBinding(RHIBindingLayoutItem binding) { this->m_Desc.BindlessLayouts[this->m_Desc.BindlessLayoutCount++] = binding; return *this; }
-
-		STDNODISCARD constexpr RHIBindlessLayoutDescBuilder& AddBinding(Uint32 Slot, RHIResourceType type) { this->m_Desc.BindlessLayouts[this->m_Desc.BindlessLayoutCount++] = RHIBindingLayoutItem{ .Slot{ Slot }, .Type {type} }; return *this; }
-
-		STDNODISCARD constexpr const RHIBindlessLayoutDesc& Build(void) { return this->m_Desc; }
-	private:
-		RHIBindlessLayoutDesc m_Desc{};
-	};
-
 	PARTING_EXPORT template<typename Derived>
 		class RHIBindingLayout :public RHIResource<Derived> {
 		friend class RHIResource<Derived>;//NOTE : Up final Class not Miiddle Class ,if you shoudl cut call in middle ,kan do 
@@ -179,22 +152,6 @@ namespace RHI {
 
 		private:
 			const RHIBindingLayoutDesc* Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return nullptr; }
-	};
-
-	PARTING_EXPORT template<typename Derived>
-		class RHIBindlessLayout :public RHIResource<Derived> {
-		friend class RHIResource<Derived>;//NOTE : Up final Class not Miiddle Class ,if you shoudl cut call in middle ,kan do 
-		public:
-			RHIBindlessLayout(void) = default;
-			PARTING_VIRTUAL ~RHIBindlessLayout(void) = default;
-
-		public:
-			STDNODISCARD const RHIBindlessLayoutDesc* Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }  // returns nullptr for bindless layouts
-
-		private:
-			STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
-		private:
-			const RHIBindlessLayoutDesc* Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return nullptr; }
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
@@ -335,16 +292,6 @@ namespace RHI {
 			};
 		}
 
-		STDNODISCARD static constexpr decltype(auto) SamplerFeedbackTexture_UAV(Uint32 Slot, RHITypeTraits<APITag>::Imp_SamplerFeedbackTexture* texture) {
-			return RHIBindingSetItem<APITag>{
-				.ResourcePtr{ texture },
-					.Slot{ Slot },
-					.Type{ RHIResourceType::SamplerFeedbackTexture_UAV },
-					.Subresources{ g_AllSubResourceSet }
-			};
-		}
-
-
 		struct BindingSetItemHash final {
 			Uint64 operator()(const RHIBindingSetItem<APITag>& item) {
 				Uint64 hash{ 0 };
@@ -432,25 +379,4 @@ namespace RHI {
 			const RHIBindingSetDesc<APITag>* Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return nullptr; }
 			const Imp_BindingLayout* Imp_Get_Layout(void)const { LOG_ERROR("No Imp"); return nullptr; }
 	};
-
-	PARTING_EXPORT template<typename Derived>
-		class RHIDescriptorTable :public RHIResource<Derived> {
-		friend class RHIResource<Derived>;//NOTE Friend isnot can be up class
-		protected:
-			RHIDescriptorTable(void) = default;
-			PARTING_VIRTUAL ~RHIDescriptorTable(void) = default;
-
-		public:
-			STDNODISCARD Uint32 Get_Capacity(void)const { return this->Get_Derived()->Imp_Get_Capacity(); }
-			STDNODISCARD Uint32 Get_FirstDescriptorIndexInHeap()const { return this->Get_Derived()->Imp_Get_FirstDescriptorIndexInHeap(); }
-
-		private:
-			STDNODISCARD constexpr Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
-		private:
-			Uint32 Imp_Get_Capacity(void)const { LOG_ERROR("No Imp"); return 0; }
-			Uint32 Imp_Get_FirstDescriptorIndexInHeap(void)const { LOG_ERROR("No Imp"); return 0; }
-
-	};
-
-
 }

@@ -81,9 +81,6 @@
     <ClInclude Include="..\..\Source\Engine\Engine\Module\TextureCache.h">
       <Filter>Engine\Modlue</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\Engine\Engine\Module\DescriptorTableManager.h">
-      <Filter>Engine\Modlue</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Source\Engine\Engine\Module\ShaderFactory.h">
       <Filter>Application\Module</Filter>
     </ClInclude>

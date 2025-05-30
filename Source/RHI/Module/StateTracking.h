@@ -43,18 +43,11 @@ namespace RHI {
 
 	PARTING_EXPORT template<APITagConcept APITag>
 		struct RHITextureStateExtension final {
-		using ParentTexture = Variant<
-			typename RHITypeTraits<APITag>::Imp_Texture*,
-			typename RHITypeTraits<APITag>::Imp_SamplerFeedbackTexture*/*,
-			Nullptr_T*/
-		>;
+		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
 
 		const RHITextureDesc& DescRef;
-		ParentTexture ParentTextureRef;
+		Imp_Texture* ParentTextureRef;
 		RHIResourceState PermanentState{ RHIResourceState::Unknown };
-
-		bool StateInitialized{ true };
-		bool IsSamplerFeedback{ false };
 	};
 
 
@@ -93,7 +86,6 @@ namespace RHI {
 
 	PARTING_EXPORT template<APITagConcept APITag>
 		class RHICommandListResourceStateTracker final {
-		using Imp_MessageCallback = typename RHITypeTraits<APITag>::Imp_MessageCallback;
 
 		public:
 			RHICommandListResourceStateTracker(void) = default;
@@ -224,10 +216,7 @@ namespace RHI {
 	inline RHIResourceState RHICommandListResourceStateTracker<APITag>::Get_TextureSubresourceState(RHITextureStateExtension<APITag>* texture, Uint32 arraySlice, Uint32 mipLevel) {
 		auto tracking{ this->Get_TextureStateTracking(texture, false) };
 		if (!tracking)
-			return
-			texture->DescRef.KeepInitialState ?
-			(texture->StateInitialized ? texture->DescRef.InitialState : RHIResourceState::Common) :
-			RHIResourceState::Unknown;
+			return texture->DescRef.KeepInitialState ? texture->DescRef.InitialState : RHIResourceState::Unknown;
 
 		// whole resource
 		if (tracking->SubresourceStates.empty())
@@ -282,18 +271,17 @@ namespace RHI {
 			// Transition individual subresources
 
 			// Make sure that we're tracking the texture on subresource level
-			bool stateExpanded = false;
+			bool stateExpanded{ false };
 			if (tracking->SubresourceStates.empty()) {
 				if (RHIResourceState::Unknown == tracking->State)
 					LOG_ERROR("RequireTextureState: Texture state is unknown. Call CommandList::beginTrackingTextureState(...) before using the texture or use the keepInitialState and initialState members of TextureDesc.");
-
 
 				tracking->SubresourceStates.resize(static_cast<Uint64>(texture->DescRef.MipLevelCount) * texture->DescRef.ArrayCount, tracking->State);
 				tracking->State = RHIResourceState::Unknown;
 				stateExpanded = true;
 			}
 
-			bool anyUavBarrier = false;
+			bool anyUavBarrier{ false };
 
 			for (auto arraySlice = subresources.BaseArraySlice; arraySlice < subresources.BaseArraySlice + subresources.ArraySliceCount; ++arraySlice)
 				for (auto mipLevel = subresources.BaseMipLevel; mipLevel < subresources.BaseMipLevel + subresources.MipLevelCount; ++mipLevel) {
@@ -305,7 +293,7 @@ namespace RHI {
 						LOG_ERROR("RequireTextureState: Texture state is unknown. Call CommandList::beginTrackingTextureState(...) before using the texture or use the keepInitialState and initialState members of TextureDesc.");
 
 					bool transitionNecessary{ priorState != state };
-					bool uavNecessary = {
+					bool uavNecessary{
 						(RHIResourceState::Unknown != (state & RHIResourceState::UnorderedAccess)) &&
 						!anyUavBarrier && (tracking->EnableUAVBarriers || !tracking->FirstUAVBarrierPlaced)
 					};
@@ -318,13 +306,11 @@ namespace RHI {
 							.EntireTexture{ false },
 							.StateBefore{ priorState },
 							.StateAfter{ state }
-					}
-						);
+					});
 
 					tracking->SubresourceStates[subresourceIndex] = state;
 
-					if (uavNecessary && !transitionNecessary)
-					{
+					if (uavNecessary && !transitionNecessary) {
 						anyUavBarrier = true;
 						tracking->FirstUAVBarrierPlaced = true;
 					}
@@ -427,10 +413,6 @@ namespace RHI {
 		}
 		this->m_PermanentBufferStates.clear();
 
-		for (const auto& [texture, stateTracking] : this->m_TextureStates)
-			if (texture->DescRef.KeepInitialState && !texture->StateInitialized)
-				texture->StateInitialized = true;
-
 		this->m_TextureStates.clear();
 		this->m_BufferStates.clear();
 	}
@@ -449,7 +431,7 @@ namespace RHI {
 		this->m_TextureStates.insert(MakePair(texture, MoveTemp(TrackingRef)));
 
 		if (texture->DescRef.KeepInitialState)
-			Tracking->State = texture->StateInitialized ? texture->DescRef.InitialState : RHIResourceState::Common;
+			Tracking->State = texture->DescRef.InitialState;
 
 		return Tracking;
 	}

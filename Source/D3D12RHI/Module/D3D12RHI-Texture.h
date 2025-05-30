@@ -66,7 +66,6 @@ namespace RHI::D3D12 {
 		friend class RHIResource<Texture>;
 		friend class RHITexture<Texture>;
 
-		friend class SamplerFeedbackTexture;
 		friend class BindingSet;
 		friend class CommandList;
 		friend class Device;
@@ -703,70 +702,4 @@ namespace RHI::D3D12 {
 		default:ASSERT(false); return RHIObject{};
 		}
 	}
-
-
-	//NOTE :SamplerFeedbackTexture
-	class SamplerFeedbackTexture final :public RHISamplerFeedbackTexture<SamplerFeedbackTexture, D3D12Tag> {
-		friend class RHIResource<SamplerFeedbackTexture>;
-		friend class RHISamplerFeedbackTexture<SamplerFeedbackTexture, D3D12Tag>;
-
-		friend class CommandList;
-		friend class Device;
-	public:
-		SamplerFeedbackTexture(const Context& context, D3D12DeviceResources& resources, const RHISamplerFeedbackTextureDesc& desc, const RHITextureDesc& textureDesc, Texture* pairedTexture) :
-			RHISamplerFeedbackTexture<SamplerFeedbackTexture, D3D12Tag>{},
-			m_Context{ context },
-			m_DeviceResourcesRef{ resources },
-			m_Desc{ desc },
-			m_TextureDesc{ textureDesc },
-			m_PairdTexture{ pairedTexture } {
-
-			this->m_TextureStateExtension.IsSamplerFeedback = true;//NOTE : 
-		}
-
-		~SamplerFeedbackTexture(void) = default;
-
-	public:
-		void CreateUAV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle);
-
-	private:
-		const Context& m_Context;
-		D3D12DeviceResources& m_DeviceResourcesRef;
-		const RHISamplerFeedbackTextureDesc m_Desc;
-
-		const RHITextureDesc m_TextureDesc;//NOTE :Used to state tracking
-		RHITextureStateExtension<D3D12Tag> m_TextureStateExtension{ .DescRef{ this->m_TextureDesc }, .ParentTextureRef{this} };
-
-		RefCountPtr<ID3D12Resource> m_Resource{ nullptr };
-		RefCountPtr<Texture> m_PairdTexture{ nullptr };
-		D3D12DescriptorIndex m_ClearDescriptorIndex{ g_InvalidDescriptorIndex };
-
-	private:
-
-	private:
-		RHIObject Imp_GetNativeObject(RHIObjectType type)const noexcept;
-		const RHISamplerFeedbackTextureDesc& Imp_Get_Desc(void)const { return this->m_Desc; }
-		RefCountPtr<Texture> Imp_Get_PairedTexture(void)const { return this->m_PairdTexture; }
-	};
-
-
-	//Src
-
-
-
-	inline void SamplerFeedbackTexture::CreateUAV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle) {
-		auto PairedResource{ this->m_PairdTexture->m_Resource.Get() };
-
-		this->m_Context.Device8->CreateSamplerFeedbackUnorderedAccessView(PairedResource, this->m_Resource.Get(), descriptorhandle);
-	}
-
-	//Imp
-	inline RHIObject SamplerFeedbackTexture::Imp_GetNativeObject(RHIObjectType type) const noexcept {
-		switch (type) {
-		case RHIObjectType::D3D12_Resource: return RHIObject{ .Pointer{ this->m_Resource.Get() } };
-		default: ASSERT(false); return RHIObject{};
-		}
-	}
-
-
 }

@@ -33,41 +33,5 @@ PARTING_IMPORT Utility;
 
 namespace Parting {
 
-
-	template<RHI::APITagConcept APITag>
-	class DescriptorTableManager final :public EnableSharedFromThis<DescriptorTableManager<APITag>> {
-		using Imp_Device = typename RHI::RHITypeTraits<APITag>::Imp_Device;
-
-	public:
-		using DescriptorIndex = Int32;
-
-	protected:
-		RHI::RefCountPtr<Imp_Device> m_Device{ nullptr };
-
-	};
-
-
-	template<RHI::APITagConcept APITag>
-	class DescriptorHandle final :public  MoveAbleOnly {
-	public:
-		using DescriptorIndex = typename DescriptorTableManager<APITag>::DescriptorIndex;
-
-	public:
-		DescriptorHandle(void) = default;
-		DescriptorHandle(SharedPtr<DescriptorTableManager<APITag>> manager, DescriptorIndex index) :
-			m_Manager{ manager },
-			m_DescriptorIndex{ index } {
-		}
-		~DescriptorHandle(void) = default;
-
-	public:
-		DescriptorIndex Get(void)const { return this->m_DescriptorIndex; }
-
-
-	private:
-		WeakPtr<DescriptorTableManager<APITag>> m_Manager;
-		DescriptorIndex m_DescriptorIndex{ -1 };//TODO set a Invalid value
-
-	};
 }
 

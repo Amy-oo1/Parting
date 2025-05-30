@@ -57,15 +57,6 @@ namespace RHI {
 		Mesh = 0x0080,
 		AllGraphics = 0x00DF,
 
-		//TODO :
-		RayGeneration = 0x0100,
-		AnyHit = 0x0200,
-		ClosestHit = 0x0400,
-		Miss = 0x0800,
-		Intersection = 0x1000,
-		Callable = 0x2000,
-		AllRayTracing = 0x3F00,
-
 		All = 0x3FFF,
 	};
 	EXPORT_ENUM_CLASS_OPERATORS(RHIShaderType);
@@ -156,24 +147,4 @@ namespace RHI {
 		void Imp_Get_Bytecode(const void** ppbytecode, Uint64* psize)const { LOG_ERROR("No Imp"); *ppbytecode = nullptr; *psize = 0;  return; }
 
 	};
-
-	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
-	class RHIShaderLibrary :public RHIResource<Derived> {
-		friend class RHIResource<Derived>;
-		using Imp_Shader = typename RHITypeTraits<APITag>::Imp_Shader;
-	protected:
-		RHIShaderLibrary(void) = default;
-		virtual ~RHIShaderLibrary(void) = default;
-
-	public:
-		void Get_Bytecode(const void** ppbytecode, Uint64* psize)const { return this->Get_Derived()->Imp_Get_Bytecode(ppbytecode, psize); }
-		STDNODISCARD RefCountPtr<Imp_Shader> Get_Shader(const char* EntryName, RHIShaderType shaderType)const { return this->Get_Derived()->Imp_Get_Shader(EntryName, shaderType); }
-
-	private:
-		STDNODISCARD constexpr Derived* Get_Derived(void) const noexcept { return static_cast<Derived*>(this); }
-	private:
-		void Imp_Get_Bytecode(const void** ppbytecode, Uint64* psize)const { LOG_ERROR("No Imp"); return; }
-		RefCountPtr<Imp_Shader> Imp_Get_Shader(const char* EntryName, RHIShaderType shaderType)const { LOG_ERROR("No Imp"); return nullptr; }
-	};
-
 }

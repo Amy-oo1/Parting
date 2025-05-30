@@ -78,7 +78,7 @@ namespace Parting {
 		};
 
 	public:
-		Scene(Imp_Device* device, ShaderFactory<APITag>& shaderFactory, SharedPtr<IFileSystem> fs, SharedPtr<TextureCache<APITag>> textureCache, SharedPtr<DescriptorTableManager<APITag>> descriptorTable, SharedPtr<SceneTypeFactory<APITag>> sceneTypeFactory);
+		Scene(Imp_Device* device, ShaderFactory<APITag>& shaderFactory, SharedPtr<IFileSystem> fs, SharedPtr<TextureCache<APITag>> textureCache);
 		~Scene(void) = default;
 
 	public:
@@ -118,9 +118,7 @@ namespace Parting {
 				GeometryData& gdata{ this->m_Resources->GeometryData[geometry->GlobalGeometryIndex] };
 				gdata.NumIndices = geometry->NumIndices;
 				gdata.NumVertices = geometry->NumVertices;
-				gdata.IndexBufferIndex = nullptr != mesh->Buffers->IndexBufferDescriptor ? mesh->Buffers->IndexBufferDescriptor->Get() : -1;
 				gdata.IndexOffset = indexOffset * sizeof(Uint32);
-				gdata.VertexBufferIndex = nullptr != mesh->Buffers->VertexBufferDescriptor ? mesh->Buffers->VertexBufferDescriptor->Get() : -1;
 				gdata.PositionOffset = mesh->Buffers->HasAttribute(RHI::RHIVertexAttribute::Position) ? Uint32(vertexOffset * sizeof(Math::VecF3) + mesh->Buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Position).Offset) : ~0u;
 				gdata.PrevPositionOffset = mesh->Buffers->HasAttribute(RHI::RHIVertexAttribute::PrevPosition) ? Uint32(vertexOffset * sizeof(Math::VecF3) + mesh->Buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::PrevPosition).Offset) : ~0u;
 				gdata.TexCoord1Offset = mesh->Buffers->HasAttribute(RHI::RHIVertexAttribute::TexCoord1) ? Uint32(vertexOffset * sizeof(Math::VecF2) + mesh->Buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord1).Offset) : ~0u;
@@ -206,8 +204,6 @@ namespace Parting {
 
 		SharedPtr<IFileSystem> m_FS;
 		SharedPtr<TextureCache<APITag>> m_TextureCache;
-		SharedPtr<DescriptorTableManager<APITag>> m_DescriptorTable;
-		SharedPtr<SceneTypeFactory<APITag>> m_SceneTypeFactory;
 
 		SharedPtr<Scene::Resource> m_Resources;
 
@@ -223,12 +219,10 @@ namespace Parting {
 	};
 
 	template<RHI::APITagConcept APITag>
-	inline Scene<APITag>::Scene(Imp_Device* device, ShaderFactory<APITag>& shaderFactory, SharedPtr<IFileSystem> fs, SharedPtr<TextureCache<APITag>> textureCache, SharedPtr<DescriptorTableManager<APITag>> descriptorTable, SharedPtr<SceneTypeFactory<APITag>> sceneTypeFactory) :
+	inline Scene<APITag>::Scene(Imp_Device* device, ShaderFactory<APITag>& shaderFactory, SharedPtr<IFileSystem> fs, SharedPtr<TextureCache<APITag>> textureCache) :
 		m_Device{ device },
-		m_FS{ MoveTemp(fs) },
-		m_TextureCache{ MoveTemp(textureCache) },
-		m_DescriptorTable{ MoveTemp(descriptorTable) },
-		m_SceneTypeFactory{ MoveTemp(sceneTypeFactory) } {
+		m_FS{ ::MoveTemp(fs) },
+		m_TextureCache{ ::MoveTemp(textureCache) } {
 
 		this->m_SkinningShader = shaderFactory.CreateShader("Parting/skinning_cs", "main", nullptr, RHI::RHIShaderType::Compute);
 
@@ -248,10 +242,8 @@ namespace Parting {
 			);
 
 		this->m_Resources = MakeShared<Resource>();
-		if (nullptr == this->m_SceneTypeFactory)
-			this->m_SceneTypeFactory = MakeShared<SceneTypeFactory<APITag>>();
 
-		this->m_GLTFImporter = MakeShared<GLTFImporter<APITag>>(this->m_FS, this->m_SceneTypeFactory);
+		this->m_GLTFImporter = MakeShared<GLTFImporter<APITag>>(this->m_FS);
 	}
 
 	template<RHI::APITagConcept APITag>
@@ -342,12 +334,6 @@ namespace Parting {
 
 				buffers->IndexBuffer = this->m_Device->CreateBuffer(bufferDesc);
 
-				if (nullptr != m_DescriptorTable) {
-					ASSERT(false);
-					/*	buffers->IndexBufferDescriptor = MakeShared<DescriptorHandle<APITag>>(this->m_DescriptorTable->CreateDescriptorHandle(
-							RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(0, buffers->IndexBuffer)));*/
-				}
-
 				commandList->BeginTrackingBufferState(buffers->IndexBuffer, RHI::RHIResourceState::Common);
 
 				commandList->WriteBuffer(buffers->IndexBuffer, buffers->IndexData.data(), buffers->IndexData.size() * sizeof(typename decltype(buffers->IndexData)::value_type));
@@ -434,11 +420,6 @@ namespace Parting {
 				}
 
 				buffers->VertexBuffer = this->m_Device->CreateBuffer(bufferDesc);
-				if (nullptr != this->m_DescriptorTable) {
-					ASSERT(false);
-					/*	buffers->VertexBufferDescriptor = MakeShared<DescriptorHandle<APITag>>(
-							this->m_DescriptorTable->CreateDescriptorHandle(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(0, buffers->VertexBuffer)));*/
-				}
 
 				commandList->BeginTrackingBufferState(buffers->VertexBuffer, RHI::RHIResourceState::Common);
 
@@ -514,7 +495,6 @@ namespace Parting {
 				Uint32 totalVertices{ skinnedMesh->TotalVertices };
 
 				skinnedMesh->Buffers->IndexBuffer = skinnedInstance->Get_PrototypeMesh()->Buffers->IndexBuffer;
-				skinnedMesh->Buffers->IndexBufferDescriptor = skinnedInstance->Get_PrototypeMesh()->Buffers->IndexBufferDescriptor;
 
 				const auto& prototypeBuffers{ skinnedInstance->Get_PrototypeMesh()->Buffers };
 				const auto& skinnedBuffers{ skinnedMesh->Buffers };
@@ -578,12 +558,6 @@ namespace Parting {
 				};
 
 				skinnedBuffers->VertexBuffer = this->m_Device->CreateBuffer(bufferDesc);
-
-				if (nullptr != this->m_DescriptorTable) {
-					ASSERT(false);
-					/*skinnedBuffers->VertexBufferDescriptor = MakeShared<DescriptorHandle<APITag>>(
-						this->m_DescriptorTable->CreateDescriptorHandle(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(0, skinnedBuffers->VertexBuffer)));*/
-				}
 			}
 
 			if (nullptr == skinnedInstance->JointBuffer) {

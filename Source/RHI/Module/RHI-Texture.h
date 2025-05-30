@@ -367,43 +367,5 @@ namespace RHI {
 		Uint32 DepthInTiles{ 0 };
 		Uint32 StartTileIndexInOverallResource{ 0 };
 	};
-
-	PARTING_EXPORT enum class RHISamplerFeedbackFormat : Uint8 {
-		MinMipOpaque = 0x0,
-		MipRegionUsedOpaque = 0x1,
-	};
-
-	PARTING_EXPORT struct RHISamplerFeedbackTextureDesc final {
-		RHISamplerFeedbackFormat SamplerFeedbackFormat{ RHISamplerFeedbackFormat::MinMipOpaque };
-		Uint32 SamplerFeedbackMipRegionX{ 0 };
-		Uint32 SamplerFeedbackMipRegionY{ 0 };
-		Uint32 SamplerFeedbackMipRegionZ{ 0 };
-		RHIResourceState InitialState{ RHIResourceState::Unknown };
-		bool KeepInitialState{ false };
-	};
-
-	PARTING_EXPORT template<typename Derived, APITagConcept APITag>
-		class RHISamplerFeedbackTexture :public RHIResource<Derived> {
-		friend class RHIResource<Derived>;
-		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
-
-		protected:
-			RHISamplerFeedbackTexture(void) = default;
-			PARTING_VIRTUAL ~RHISamplerFeedbackTexture(void) = default;
-
-		public:
-			STDNODISCARD const RHISamplerFeedbackTextureDesc& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }
-
-			STDNODISCARD RefCountPtr<Imp_Texture> Get_PairedTexture(void)const { return this->Get_Derived()->Imp_Get_PairedTexture(); }
-
-		private:
-			Derived* Get_Derived(void) { return static_cast<Derived*>(this); }
-		private:
-			const RHISamplerFeedbackTextureDesc& Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return RHISamplerFeedbackTexture{}; }
-
-			RefCountPtr<Imp_Texture> Imp_Get_PairedTexture(void)const { LOG_ERROR("No Imp"); return nullptr; }
-
-	};
-
-
+	
 }

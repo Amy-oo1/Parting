@@ -105,14 +105,14 @@ namespace RHI::D3D12 {
 		const RHIBufferDesc m_Desc;
 		RHIBufferStateExtension<D3D12Tag> m_StateExtension{ .DescRef{ this->m_Desc }, .ParentBuffer{ this } };//TODO dep in init maybe can see better
 
-		RefCountPtr<ID3D12Resource> m_Resource{ nullptr };
+		RefCountPtr<ID3D12Resource> m_Resource;
 		D3D12_GPU_VIRTUAL_ADDRESS m_GPUVirtualAddress{ 0 };
 		D3D12_RESOURCE_DESC m_ResourceDesc{};
 		D3D12DescriptorIndex m_ClearUAV{ g_InvalidDescriptorIndex };
 
-		RefCountPtr<Heap> m_Heap{ nullptr };
+		RefCountPtr<Heap> m_Heap;
 
-		RefCountPtr<ID3D12Fence> m_LastUseFence{ nullptr };
+		RefCountPtr<ID3D12Fence> m_LastUseFence;
 		Uint64 m_LastUseFenceValue{ 0 };
 		HANDLE m_SharedHandle{ nullptr };
 

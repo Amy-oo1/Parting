@@ -142,9 +142,7 @@ namespace RHI::D3D12 {
 
 		D3D12_ROOT_CONSTANTS RootConstants{};
 
-		for (Uint32 Index = 0; Index < this->m_Desc.BindingCount; ++Index) {
-			const auto& BindingItem{ this->m_Desc.Bindings[Index] };
-
+		for (const auto& BindingItem : Span<const RHIBindingLayoutItem>{ this->m_Desc.Bindings.data(),this->m_Desc.BindingCount }) {
 			if (RHIResourceType::VolatileConstantBuffer == BindingItem.Type)
 				this->m_RootParametersVolatileCB[this->m_VolatileCBCount++] = MakePair(
 					Max_Uint32,
@@ -179,7 +177,7 @@ namespace RHI::D3D12 {
 						TempRangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 						break;
 
-					case Texture_UAV:case TypedBuffer_UAV:case StructuredBuffer_UAV:case RawBuffer_UAV:case SamplerFeedbackTexture_UAV:
+					case Texture_UAV:case TypedBuffer_UAV:case StructuredBuffer_UAV:case RawBuffer_UAV:
 						TempRangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
 						break;
 
@@ -238,9 +236,7 @@ namespace RHI::D3D12 {
 			this->m_RootParameterPushConstants = this->m_RootParameterCount - 1;
 		}
 
-		for (Uint32 Index = 0; Index < this->m_VolatileCBCount; ++Index) {
-			auto& [RootParameterIndex, d3d12RootDescriptor] { this->m_RootParametersVolatileCB[Index] };
-
+		for (auto& [RootParameterIndex, d3d12RootDescriptor] : Span<decltype(this->m_RootParametersVolatileCB)::value_type>{ this->m_RootParametersVolatileCB.data(),this->m_VolatileCBCount }) {
 			this->m_RootParameters[this->m_RootParameterCount++] = D3D12_ROOT_PARAMETER1{
 				.ParameterType{ D3D12_ROOT_PARAMETER_TYPE_CBV },
 				.Descriptor = { d3d12RootDescriptor },
@@ -277,104 +273,6 @@ namespace RHI::D3D12 {
 		}
 	}
 
-
-
-	class BindLessLayout final :public RHIBindlessLayout<BindLessLayout> {
-		friend class RHIResource<BindLessLayout>;
-		friend class RHIBindlessLayout<BindLessLayout>;
-
-		friend class BindingSet;
-	public:
-		using D3D12RootParameterIndex = D3D12RootSignature::D3D12RootParameterIndex;
-
-	public:
-		BindLessLayout(const RHIBindlessLayoutDesc& desc);
-		~BindLessLayout(void) = default;
-
-	public:
-
-
-	private:
-
-	private:
-		RHIBindlessLayoutDesc m_Desc{};
-
-		Array<D3D12_DESCRIPTOR_RANGE1, g_D3D12MaxRootParameterWordCount> m_DescriptorRanges;
-		RemoveCV<decltype(g_D3D12MaxRootParameterWordCount)>::type m_DescriptorRangeCount{ 0 };
-
-		D3D12_ROOT_PARAMETER1 m_RootParameter{};
-
-	private:
-		RHIObject Imp_GetNativeObject(RHIObjectType)const noexcept { LOG_ERROR("Imp But Empty");  return RHIObject{}; }
-
-		const RHIBindlessLayoutDesc* Imp_Get_Desc(void)const { return &this->m_Desc; };
-	};
-
-
-	//Src
-
-
-	//Imp
-
-	inline BindLessLayout::BindLessLayout(const RHIBindlessLayoutDesc& desc) :
-		RHIBindlessLayout<BindLessLayout>{},
-		m_Desc{ desc } {
-
-		for (Uint32 Index = 0; Index < this->m_Desc.BindlessLayoutCount; ++Index) {
-			const auto& BindItem{ this->m_Desc.BindlessLayouts[Index] };
-
-			D3D12_DESCRIPTOR_RANGE_TYPE rangeType;
-
-			switch (BindItem.Type) {
-				using enum RHIResourceType;
-			case Texture_SRV:
-			case TypedBuffer_SRV:
-			case StructuredBuffer_SRV:
-			case RawBuffer_SRV:
-				rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-				break;
-
-			case ConstantBuffer:
-				rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-				break;
-
-			case Texture_UAV:
-			case TypedBuffer_UAV:
-			case StructuredBuffer_UAV:
-			case RawBuffer_UAV:
-			case SamplerFeedbackTexture_UAV:
-				rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-				break;
-
-			case Sampler:
-				rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-				break;
-
-			case None:
-			case VolatileConstantBuffer:
-			case PushConstants:
-			case Count:
-			default:
-				ASSERT(false);
-			}
-
-			this->m_DescriptorRanges[this->m_DescriptorRangeCount++] = D3D12_DESCRIPTOR_RANGE1{
-				.RangeType{ rangeType },
-				.NumDescriptors { ~0u },
-				.BaseShaderRegister {this->m_Desc.FirstSlot },
-				.RegisterSpace { BindItem.Slot },
-				.Flags{ D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE },
-				.OffsetInDescriptorsFromTableStart{ 0 }
-			};
-
-		}
-
-		this->m_RootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		this->m_RootParameter.DescriptorTable.NumDescriptorRanges = this->m_DescriptorRangeCount;
-		this->m_RootParameter.DescriptorTable.pDescriptorRanges = this->m_DescriptorRanges.data();
-		this->m_RootParameter.ShaderVisibility = ConvertShaderStage(this->m_Desc.Visibility);
-
-	}
 
 	class BindingSet final :public RHIBindingSet<BindingSet, D3D12Tag> {
 		friend class RHIResource<BindingSet>;
@@ -589,19 +487,6 @@ namespace RHI::D3D12 {
 							Found = true;
 							break;
 						}
-						else if (D3D12_DESCRIPTOR_RANGE_TYPE_UAV == Range.RangeType && SamplerFeedbackTexture_UAV == BindingType) {
-							if (!HoldsAlternative<Nullptr_T>(Binding.ResourcePtr))
-								break;
-
-							pResource = Binding.ResourcePtr;
-							SamplerFeedbackTexture* TempSamplerFeedbackTexture{ Get<RefCountPtr<SamplerFeedbackTexture>>(Binding.ResourcePtr).Get() };
-							TempSamplerFeedbackTexture->CreateUAV(descriptorHandle);
-
-							this->m_HasUAVBindings = true;
-							Found = true;
-							break;
-						}
-						//TODO add RayTracingAccelStruct
 					}
 
 					if (!HoldsAlternative<Nullptr_T>(pResource))
@@ -620,36 +505,4 @@ namespace RHI::D3D12 {
 			this->m_DeviceResourcesRef.ShaderResourceViewHeap.CopyToShaderVisibleHeap(descriptorTableBaseIndex, this->m_Layout->m_DescriptorTableSizeSRVetc);
 		}
 	}
-
-	class DescriptorTable final :public RHIDescriptorTable<DescriptorTable> {
-		friend class RHIResource<DescriptorTable>;
-		friend class RHIDescriptorTable<DescriptorTable>;
-	public:
-
-		DescriptorTable(D3D12DeviceResources& resources) :
-			RHIDescriptorTable<DescriptorTable>{},
-			m_DeviceResourcesRef{ resources }
-		{}
-
-		~DescriptorTable(void) { this->m_DeviceResourcesRef.SamplerHeap.ReleaseDescriptor(this->m_FirstDescriptor, this->m_Capacity); }
-
-	public:
-		using D3D12RootParameterIndex = D3D12RootSignature::D3D12RootParameterIndex;
-
-	private:
-
-	private:
-		D3D12DeviceResources& m_DeviceResourcesRef;
-		Uint32 m_Capacity{ 0 };
-		D3D12DescriptorIndex m_FirstDescriptor{ 0 };
-
-	private:
-		RHIObject Imp_GetNativeObject(RHIObjectType)const noexcept { LOG_ERROR("Imp But Empty");  return RHIObject{}; }
-
-		Uint32 Imp_Get_Capacity(void)const { return this->m_Capacity; }
-		Uint32 Imp_Get_FirstDescriptorIndexInHeap(void)const { return this->m_FirstDescriptor; }
-	};
-
-
-
 }

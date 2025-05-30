@@ -6,10 +6,10 @@
 struct GeometryData {
 	Uint32 NumIndices;
 	Uint32 NumVertices;
-	Int32 IndexBufferIndex;
+	Int32 IndexBufferIndex{ -1 };//TODO :Removce
 	Uint32 IndexOffset;
 
-	Int32 VertexBufferIndex;
+	Int32 VertexBufferIndex{ -1 };//TODO :Removce
 	Uint32 PositionOffset;
 	Uint32 PrevPositionOffset;
 	Uint32 TexCoord1Offset;

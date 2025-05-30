@@ -90,13 +90,13 @@ public:
 		this->m_Buffers->IndexBuffer = this->CreateGeometryBuffer(device, commandList, _W("IndexBuffer"), g_Indices, sizeof(g_Indices), false, false);
 
 		Uint64 vertexBufferSize{ 0 };
-		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Position, RHI::RHIBufferRange{.Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Positions) } });
+		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Position, RHI::RHIBufferRange{ .Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Positions) } });
 		vertexBufferSize += sizeof(g_Positions);
-		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord1, RHI::RHIBufferRange{.Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_TexCoords) } });
+		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord1, RHI::RHIBufferRange{ .Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_TexCoords) } });
 		vertexBufferSize += sizeof(g_TexCoords);
-		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Normal, RHI::RHIBufferRange{.Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Normals) } });
+		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Normal, RHI::RHIBufferRange{ .Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Normals) } });
 		vertexBufferSize += sizeof(g_Normals);
-		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Tangent, RHI::RHIBufferRange{.Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Tangents) } });
+		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Tangent, RHI::RHIBufferRange{ .Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Tangents) } });
 		vertexBufferSize += sizeof(g_Tangents);
 		this->m_Buffers->VertexBuffer = this->CreateGeometryBuffer(device, commandList, _W("VertexBuffer"), nullptr, vertexBufferSize, true, false);
 
@@ -258,7 +258,7 @@ public:
 		this->m_DeferredLightingPass = MakeUnique<decltype(this->m_DeferredLightingPass)::element_type>(this->m_DeviceManager->Get_Device(), this->m_CommonPasses);
 		this->m_DeferredLightingPass->Init(this->m_ShaderFactory);
 
-		this->m_TextureCache = MakeUnique<decltype(this->m_TextureCache)::element_type>(this->m_DeviceManager->Get_Device(), nativeFS, nullptr);
+		this->m_TextureCache = MakeUnique<decltype(this->m_TextureCache)::element_type>(this->m_DeviceManager->Get_Device(), nativeFS);
 
 		this->m_CommandList = this->m_DeviceManager->Get_Device()->CreateCommandList();
 

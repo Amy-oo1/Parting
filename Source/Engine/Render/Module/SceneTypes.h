@@ -73,7 +73,6 @@ namespace Parting {
 		RHI::RefCountPtr<typename RHI::RHITypeTraits<APITag>::Imp_Texture> Texture;//TODO Fix
 		TextureAlphaMode AlphaMode{ TextureAlphaMode::UNKNOWN };
 		Uint32 OriginalBitsPerPixel{ 0 };
-		DescriptorHandle<APITag> BindlessDescriptor;
 		String FilePath;
 		String MimeType;
 	};
@@ -164,9 +163,6 @@ namespace Parting {
 		RHI::RefCountPtr<Imp_Buffer> IndexBuffer;
 		RHI::RefCountPtr<Imp_Buffer> VertexBuffer;
 		RHI::RefCountPtr<Imp_Buffer> InstanceBuffer;
-		SharedPtr<DescriptorHandle<APITag>> IndexBufferDescriptor;
-		SharedPtr<DescriptorHandle<APITag>> VertexBufferDescriptor;
-		SharedPtr<DescriptorHandle<APITag>> InstnaceBufferDescriptor;
 		Array<RHI::RHIBufferRange, Tounderlying(RHI::RHIVertexAttribute::COUNT)> VertexBufferRanges;
 		Vector<RHI::RHIBufferRange> MorphTargetBufferRange;
 		Vector<Uint32> IndexData;
@@ -271,15 +267,6 @@ namespace Parting {
 	};
 
 	HEADER_INLINE SceneLoadingStats g_LoadingStats;
-
-
-	template<RHI::APITagConcept APITag>
-	Int32 Get_BindlessTextureIndex(const SharedPtr<LoadedTexture<APITag>>& texture) {
-		return nullptr != texture ? texture->BindlessDescriptor.Get() : -1;
-	}
-
-
-
 
 	RHI::RHIVertexAttributeDesc BuildVertexAttributeDesc(RHI::RHIVertexAttributeDescBuilder& builder, RHI::RHIVertexAttribute attribute, const String& name, Uint32 bufferIndex) {
 		builder.Set_Attribute(attribute).Set_Name(name).Set_BufferIndex(bufferIndex);
@@ -420,18 +407,6 @@ namespace Parting {
 			constants.HairDiffuseReflectionWeight = this->Hair.DiffuseReflectionWeight;
 			constants.HairDiffuseReflectionTint = this->Hair.DiffuseReflectionTint;
 		}
-
-		// bindless textures//TODO Set a no bindingless optional
-
-		constants.BaseOrDiffuseTextureIndex = Parting::Get_BindlessTextureIndex(this->BaseOrDiffuseTexture);
-		constants.MetalRoughOrSpecularTextureIndex = Parting::Get_BindlessTextureIndex(this->MetalRoughOrSpecularTexture);
-		constants.NormalTextureIndex = Parting::Get_BindlessTextureIndex(this->NormalTexture);
-		constants.EmissiveTextureIndex = Parting::Get_BindlessTextureIndex(this->EmissiveTexture);
-		constants.OcclusionTextureIndex = Parting::Get_BindlessTextureIndex(this->OcclusionTexture);
-		constants.TransmissionTextureIndex = Parting::Get_BindlessTextureIndex(this->TransmissionTexture);
-		constants.OpacityTextureIndex = Parting::Get_BindlessTextureIndex(this->OpacityTexture);
-
-		constants.Padding1 = Math::VecU3{ 0u };
 	}
 
 	template<RHI::APITagConcept APITag>
