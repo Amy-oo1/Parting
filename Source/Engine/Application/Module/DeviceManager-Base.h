@@ -43,108 +43,6 @@ PARTING_IMPORT RHI;
 
 namespace Parting {
 
-	template<RHI::APITagConcept APITag>
-	struct ManageTypeTraits;
-
-
-	static void ApplyDeadZone(Math::VecF2& v, float deadZone = 0.1f) { v *= Math::Max(Math::Length(v) - deadZone, 0.f) / (1.f - deadZone); }
-
-	template<RHI::APITagConcept APITag>
-	class IRenderPass;
-
-
-	template<RHI::APITagConcept APITag>
-	class JoyStickManager final {
-	private:
-		JoyStickManager(void) = default;
-	public:
-		~JoyStickManager(void) = default;
-
-		static JoyStickManager<APITag>* Get() {
-			static JoyStickManager<APITag> singleton;
-
-			return &singleton;
-		}
-
-	public:
-
-		void UpdateAllJoysticks(const List<IRenderPass<APITag>*>& passes);
-
-		void EraseDisconnectedJoysticks(void);
-		void EnumerateJoysticks(void) {
-			// The glfw header says nothing about what values to expect for joystick IDs. Empirically, having connected two
-			// simultaneously, glfw just seems to number them starting at 0.
-			for (int Index = 0; Index < GLFW_JOYSTICK_LAST; ++Index)
-				if (::glfwJoystickPresent(Index))
-					this->m_JoystickIDs.push_back(Index);
-		}
-
-		void ConnectJoystick(Int32 id) { this->m_JoystickIDs.push_back(id); }
-		void DisconnectJoystick(Int32 id) { this->m_RemovedJoysticks.push_back(id); }
-
-	private:
-		void UpdateJoystick(Uint32 j, const List<IRenderPass<APITag>*>& passes);
-
-		List<Uint32> m_JoystickIDs, m_RemovedJoysticks;
-	};
-
-	struct InstanceParameters {
-		bool EnableDebugRuntime{ false };
-		bool EnableWarningsAsErrors{ false };
-		bool HeadlessDevice{ false };//TODO Remove
-		bool LogBufferLifetime{ false };//TODO Remove
-		bool EnablePerMonitorDPI{ false };
-
-		//Dx
-		bool EnableGPUValidation{ false }; // Affects only DX12
-		bool EnableHeapDirectlyIndexed{ false }; // Allows ResourceDescriptorHeap on DX12 //TODO Remove
-	};
-
-	struct DeviceCreationParameters final : public InstanceParameters {
-		bool StartMaximized{ false };	// ignores backbuffer width/height to be monitor size
-		bool StartFullscreen{ false };
-		bool StartBorderless{ false };
-		bool AllowModeSwitch{ false };
-		Int32 WindowPosX{ -1 };			// means use default placement
-		Int32 WindowPosY{ -1 };
-		Uint32 BackBufferWidth{ 1280 };
-		Uint32 BackBufferHeight{ 720 };
-
-		Uint32 SwapChainBufferCount{ 3 };
-		RHI::RHIFormat SwapChainFormat{ RHI::RHIFormat::SRGBA8_UNORM };
-		Uint32 SwapChainSampleCount{ 1 };
-		Uint32 SwapChainSampleQuality{ 0 };
-		//NOTE :dx
-		DXGI_USAGE SwapChainUsage{ DXGI_USAGE_SHADER_INPUT | DXGI_USAGE_RENDER_TARGET_OUTPUT };
-
-		Uint32 MaxFramesInFlight{ 2 };
-		bool VsyncEnabled{ false };
-		Uint32 RefreshRate{ 0 };
-
-		bool EnableComputeQueue{ false };
-		bool EnableCopyQueue{ false };
-		Uint8 AdapterIndex{ 0 };
-
-		// Set this to true if the application implements UI scaling for DPI explicitly instead of relying
-		// on ImGUI's DisplayFramebufferScale. This produces crisp text and lines at any scale
-		// but requires considerable changes to applications that rely on the old behavior:
-		// all UI sizes and offsets need to be computed as multiples of some scaled parameter,
-		// such as ImGui::GetFontSize(). Note that the ImGUI style is automatically reset and scaled in 
-		// ImGui_Renderer::DisplayScaleChanged(...).
-		//
-		// See ImGUI FAQ for more info:
-		//   https://github.com/ocornut/imgui/blob/master/docs/FAQ.md#q-how-should-i-handle-dpi-in-my-application
-		bool SupportExplicitDisplayScaling{ false };
-
-		// Enables automatic resizing of the application window according to the DPI scaling of the monitor
-		// that it is located on. When set to true and the app launches on a monitor with >100% scale, 
-		// the initial window size will be larger than specified in 'backBufferWidth' and 'backBufferHeight' parameters.
-		bool ResizeWindowWithDisplayScale{ false };
-
-
-		D3D_FEATURE_LEVEL FeatureLevel{ D3D_FEATURE_LEVEL_12_1 };
-	};
-
 	struct FormatInfo final {
 		RHI::RHIFormat Format;
 		Uint32 RedBits;
@@ -155,7 +53,7 @@ namespace Parting {
 		Uint32 StencilBits;
 	};
 
-	PARTING_EXPORT HEADER_INLINE constexpr Array<FormatInfo, 27> g_FormatInfos{
+	HEADER_INLINE constexpr Array<FormatInfo, 27> WindowFormatInfos{
 		FormatInfo{ RHI::RHIFormat::UNKNOWN,            0,  0,  0,  0,  0,  0, },
 		FormatInfo{ RHI::RHIFormat::R8_UINT,            8,  0,  0,  0,  0,  0, },
 		FormatInfo{ RHI::RHIFormat::RG8_UINT,           8,  8,  0,  0,  0,  0, },
@@ -185,6 +83,118 @@ namespace Parting {
 		FormatInfo{ RHI::RHIFormat::RGBA32_FLOAT,      32, 32, 32, 32,  0,  0, },
 	};
 
+	void ApplyDeadZone(Math::VecF2& v, float deadZone = 0.1f) { v *= Math::Max(Math::Length(v) - deadZone, 0.f) / (1.f - deadZone); }
+
+	template<RHI::APITagConcept APITag>
+	struct ManageTypeTraits;
+
+
+	template<RHI::APITagConcept APITag>
+	class IRenderPass;
+
+
+	template<RHI::APITagConcept APITag>
+	class JoyStickManager final :public ::MoveAbleOnly {
+	private:
+		JoyStickManager(void) = default;
+	public:
+		~JoyStickManager(void) = default;
+
+		static JoyStickManager<APITag>* Get(void) {
+			static JoyStickManager<APITag> singleton;
+
+			return &singleton;
+		}
+
+	public:
+
+		void UpdateAllJoysticks(const List<IRenderPass<APITag>*>& passes) {
+			for (auto Id : this->m_JoystickIDs)
+				this->UpdateJoystick(Id, passes);
+		}
+
+		void EraseDisconnectedJoysticks(void) {
+			while (!this->m_RemovedJoysticks.empty()) {
+				auto id{ m_RemovedJoysticks.back() };
+				this->m_RemovedJoysticks.pop_back();
+
+				if (auto it = ::STDFind(this->m_JoystickIDs.begin(), this->m_JoystickIDs.end(), id); it != this->m_JoystickIDs.end())
+					this->m_JoystickIDs.erase(it);
+			}
+		}
+		void EnumerateJoysticks(void) {
+			// The glfw header says nothing about what values to expect for joystick IDs. Empirically, having connected two
+			// simultaneously, glfw just seems to number them starting at 0.
+			for (int Index = 0; Index < GLFW_JOYSTICK_LAST; ++Index)
+				if (::glfwJoystickPresent(Index))
+					this->m_JoystickIDs.push_back(Index);
+		}
+
+		void ConnectJoystick(Int32 id) { this->m_JoystickIDs.push_back(id); }
+		void DisconnectJoystick(Int32 id) { this->m_RemovedJoysticks.push_back(id); }
+
+	private:
+		void UpdateJoystick(Uint32 j, const List<IRenderPass<APITag>*>& passes);//deferred
+
+		List<Uint32> m_JoystickIDs, m_RemovedJoysticks;
+	};
+
+	PARTING_EXPORT struct InstanceParameters {
+		bool EnableDebugRuntime{ false };
+		bool EnableWarningsAsErrors{ false };
+		bool EnablePerMonitorDPI{ false };
+
+		//Dx
+		bool EnableGPUValidation{ false };
+	};
+
+	PARTING_EXPORT struct DeviceCreationParameters final : public InstanceParameters {
+		//NOTE :WIndow attributes
+		bool StartMaximized{ false };	// ignores backbuffer width/height to be monitor size
+		bool StartFullscreen{ false };
+		bool StartBorderless{ false };
+		bool AllowModeSwitch{ false };
+		Int32 WindowPosX{ -1 };			// means use default placement
+		Int32 WindowPosY{ -1 };
+		Uint32 BackBufferWidth{ 1280 };
+		Uint32 BackBufferHeight{ 720 };
+
+		//NOTE :SwapChain attributes
+		Uint32 SwapChainBufferCount{ 3 };
+		RHI::RHIFormat SwapChainFormat{ RHI::RHIFormat::SRGBA8_UNORM };
+		Uint32 SwapChainSampleCount{ 1 };
+		Uint32 SwapChainSampleQuality{ 0 };
+
+		Uint32 RefreshRate{ 0 };
+		bool VsyncEnabled{ false };
+
+		bool EnableComputeQueue{ false };
+		bool EnableCopyQueue{ false };
+		Uint8 AdapterIndex{ 0 };
+
+		// Set this to true if the application implements UI scaling for DPI explicitly instead of relying
+		// on ImGUI's DisplayFramebufferScale. This produces crisp text and lines at any scale
+		// but requires considerable changes to applications that rely on the old behavior:
+		// all UI sizes and offsets need to be computed as multiples of some scaled parameter,
+		// such as ImGui::GetFontSize(). Note that the ImGUI style is automatically reset and scaled in 
+		// ImGui_Renderer::DisplayScaleChanged(...).
+		//
+		// See ImGUI FAQ for more info:
+		//   https://github.com/ocornut/imgui/blob/master/docs/FAQ.md#q-how-should-i-handle-dpi-in-my-application
+		bool SupportExplicitDisplayScaling{ false };
+
+		// Enables automatic resizing of the application window according to the DPI scaling of the monitor
+		// that it is located on. When set to true and the app launches on a monitor with >100% scale, 
+		// the initial window size will be larger than specified in 'backBufferWidth' and 'backBufferHeight' parameters.
+		bool ResizeWindowWithDisplayScale{ false };
+
+		//NOTE :Dx
+		D3D_FEATURE_LEVEL FeatureLevel{ D3D_FEATURE_LEVEL_12_1 };
+		DXGI_USAGE SwapChainUsage{ DXGI_USAGE_SHADER_INPUT | DXGI_USAGE_RENDER_TARGET_OUTPUT };
+
+		//NOTE :Vk
+		Uint32 MaxFramesInFlight{ 2 };
+	};
 
 	template<typename Derived, RHI::APITagConcept APITag>
 	class DeviceManagerBase {
@@ -323,8 +333,6 @@ namespace Parting {
 
 		//NOTE :Frame
 		Uint32 m_FrameIndex{ 0 };
-		Imp_FrameBuffer* m_CurrentFrameBuffer{ nullptr };
-		RHI::RefCountPtr<Imp_CommandList> m_CommandList;
 		Vector<RHI::RefCountPtr<Imp_FrameBuffer>> m_SwapChainFrameBuffers;
 
 		//NOTE :Render
@@ -397,22 +405,6 @@ namespace Parting {
 	};
 
 
-	template<RHI::APITagConcept APITag>
-	inline void JoyStickManager<APITag>::UpdateAllJoysticks(const List<IRenderPass<APITag>*>& passes) {
-		for (auto Id : this->m_JoystickIDs)
-			this->UpdateJoystick(Id, passes);
-	}
-
-	template<RHI::APITagConcept APITag>
-	void JoyStickManager<APITag>::EraseDisconnectedJoysticks() {
-		while (!this->m_RemovedJoysticks.empty()) {
-			auto id{ m_RemovedJoysticks.back() };
-			this->m_RemovedJoysticks.pop_back();
-
-			if (auto it = STDFind(m_JoystickIDs.begin(), m_JoystickIDs.end(), id); it != m_JoystickIDs.end())
-				m_JoystickIDs.erase(it);
-		}
-	}
 
 	template<RHI::APITagConcept APITag>
 	inline void JoyStickManager<APITag>::UpdateJoystick(Uint32 j, const List<IRenderPass<APITag>*>& passes) {
@@ -444,7 +436,7 @@ namespace Parting {
 		updateAxis(GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, axisValues[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]);
 		updateAxis(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, axisValues[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER]);
 
-		for (Uint32 buttonIndex = 0; const auto & button:gamepadState.buttons) {
+		for (Uint32 buttonIndex = 0; const auto & button : gamepadState.buttons) {
 			for (auto& pass : passes)
 				if (pass->JoystickButtonUpdate(buttonIndex, GLFW_PRESS == button))
 					break;
@@ -453,10 +445,13 @@ namespace Parting {
 		}
 	}
 
+
+
+
+
 	template<typename Derived, RHI::APITagConcept APITag>
 	inline bool DeviceManagerBase<Derived, APITag>::CreateWindowDeviceAndSwapChain(const DeviceCreationParameters& params, const char* windowTitle) {
 		this->m_DeviceParams = params;
-		this->m_DeviceParams.HeadlessDevice = false;//TODO :
 		this->m_RequestedVSync = params.VsyncEnabled;
 
 		if (false == this->CreateInstance(this->m_DeviceParams))
@@ -467,14 +462,14 @@ namespace Parting {
 		::glfwDefaultWindowHints();
 
 		bool foundFormat{ false };
-		for (const auto& info : g_FormatInfos)
+		for (const auto& info : WindowFormatInfos)
 			if (info.Format == params.SwapChainFormat) {
-				glfwWindowHint(GLFW_RED_BITS, info.RedBits);
-				glfwWindowHint(GLFW_GREEN_BITS, info.GreenBits);
-				glfwWindowHint(GLFW_BLUE_BITS, info.BlueBits);
-				glfwWindowHint(GLFW_ALPHA_BITS, info.AlphaBits);
-				glfwWindowHint(GLFW_DEPTH_BITS, info.DepthBits);
-				glfwWindowHint(GLFW_STENCIL_BITS, info.StencilBits);
+				::glfwWindowHint(GLFW_RED_BITS, info.RedBits);
+				::glfwWindowHint(GLFW_GREEN_BITS, info.GreenBits);
+				::glfwWindowHint(GLFW_BLUE_BITS, info.BlueBits);
+				::glfwWindowHint(GLFW_ALPHA_BITS, info.AlphaBits);
+				::glfwWindowHint(GLFW_DEPTH_BITS, info.DepthBits);
+				::glfwWindowHint(GLFW_STENCIL_BITS, info.StencilBits);
 				foundFormat = true;
 				break;
 			}
@@ -486,9 +481,7 @@ namespace Parting {
 		::glfwWindowHint(GLFW_SCALE_TO_MONITOR, params.ResizeWindowWithDisplayScale);
 
 		::glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
 		::glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);   // Ignored for fullscreen
-
 		if (params.StartBorderless)
 			::glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // Borderless window
 
@@ -522,7 +515,7 @@ namespace Parting {
 
 		::glfwSetWindowUserPointer(this->m_Window, this);
 
-		if (params.WindowPosX != -1 && params.WindowPosY != -1)
+		if (-1 != params.WindowPosX && -1 != params.WindowPosY)
 			::glfwSetWindowPos(this->m_Window, params.WindowPosX, params.WindowPosY);
 
 		::glfwSetWindowPosCallback(this->m_Window, DeviceManagerBase::WindowPosCallback_GLFW);
@@ -565,13 +558,11 @@ namespace Parting {
 
 		static_cast<InstanceParameters&>(this->m_DeviceParams) = params;
 
-		if (!params.HeadlessDevice) {//TODO :Remove
-			if (!params.EnablePerMonitorDPI)
-				SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);//NOTE : EXTERN_C
+		if (!params.EnablePerMonitorDPI)
+			SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);//NOTE : EXTERN_C
 
-			if (false == glfwInit())
-				return false;
-		}
+		if (false == glfwInit())
+			return false;
 
 
 		return this->m_InstanceCreated = this->Get_Derived()->Imp_CreateInstance();
@@ -825,12 +816,12 @@ namespace Parting {
 			// This custom code allows us to adjust DPI scaling when a window is moved
 			// between monitors with different scales.
 
-			HWND hwnd{ glfwGetWin32Window(this->m_Window) };
-			auto monitor{ MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST) };
+			HWND hwnd{ ::glfwGetWin32Window(this->m_Window) };
+			auto monitor{ ::MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST) };
 
 			Uint32 dpiX;
 			Uint32 dpiY;
-			GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+			GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);//Ex C
 
 			this->m_DPIScaleFactorX = dpiX / 96.f;
 			this->m_DPIScaleFactorY = dpiY / 96.f;
@@ -846,7 +837,7 @@ namespace Parting {
 
 	template<typename Derived, RHI::APITagConcept APITag>
 	inline void DeviceManagerBase<Derived, APITag>::KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) {
-		if (key == -1)
+		if (-1 == key)
 			return;
 
 		for (IRenderPass<APITag>* pass : this->m_vRenderPasses)

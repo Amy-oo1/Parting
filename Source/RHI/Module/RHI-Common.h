@@ -180,9 +180,7 @@ namespace RHI {
 		VirtualResources,
 		ComputeQueue,
 		CopyQueue,
-		ConstantBufferRanges,
-		HeapDirectlyIndexed,
-		SamplerFeedback
+		ConstantBufferRanges
 	};
 
 	PARTING_EXPORT struct RHIVariableRateShadingFeatureInfo {

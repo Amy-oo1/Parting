@@ -1364,14 +1364,13 @@ namespace Parting {
 			parentToWorld = Math::AffineD3{ parent->Get_LocalToWorldTransform() };
 
 		Math::AffineD3 worldToLocal{ Math::LookatZ(direction) };
-		Math::AffineD3 localToParent{ Inverse(worldToLocal * parentToWorld) };
+		Math::AffineD3 localToParent{ Math::Inverse(worldToLocal * parentToWorld) };
 
 		Math::QuatD rotation;
 		Math::VecD3 scaling;
 		Math::DecomposeAffine<double>(localToParent, nullptr, &rotation, &scaling);
 
 		node->Set_Transform(nullptr, &rotation, &scaling);
-
 	}
 
 	template<RHI::APITagConcept APITag>

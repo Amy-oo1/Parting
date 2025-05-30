@@ -281,7 +281,7 @@ namespace Parting {
 
 
 
-	RHI::RHIVertexAttributeDesc BuildVertexAttributeDesc(RHI::RHIVertexAttributeDescBuilder& builder, RHI::RHIVertexAttribute attribute, const char* name, Uint32 bufferIndex) {
+	RHI::RHIVertexAttributeDesc BuildVertexAttributeDesc(RHI::RHIVertexAttributeDescBuilder& builder, RHI::RHIVertexAttribute attribute, const String& name, Uint32 bufferIndex) {
 		builder.Set_Attribute(attribute).Set_Name(name).Set_BufferIndex(bufferIndex);
 
 		switch (attribute) {

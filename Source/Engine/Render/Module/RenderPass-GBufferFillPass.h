@@ -254,7 +254,7 @@ namespace Parting {
 		GBufferFillConstants gbufferConstants{};
 		view->FillPlanarViewConstants(gbufferConstants.View);
 		viewPrev->FillPlanarViewConstants(gbufferConstants.ViewPrev);
-		commandList->WriteBuffer(this->m_GBufferCB, &gbufferConstants, sizeof(gbufferConstants));
+		commandList->WriteBuffer(this->m_GBufferCB, &gbufferConstants, sizeof(GBufferFillConstants));
 
 		context.KeyTemplate.Bits.FrontCounterClockwise = view->Is_Mirrored();
 		context.KeyTemplate.Bits.ReverseDepth = view->Is_ReverseDepth();
@@ -264,10 +264,10 @@ namespace Parting {
 	inline bool GBufferFillPass<APITag>::SetupMaterial(GeometryPassContext& abstractContext, const Material<APITag>* material, RHI::RHIRasterCullMode cullMode, RHI::RHIGraphicsState<APITag>& state) {
 		auto& context{ static_cast<Context&>(abstractContext) };
 
-		PipelineKey key = context.KeyTemplate;
+		PipelineKey key{ context.KeyTemplate };
 		key.Bits.CullMode = cullMode;
 
-		switch (material->Domain){
+		switch (material->Domain) {
 			using enum MaterialDomain;
 			/* Case AlphaBlended : Blended and transmissive domains are for the material ID pass, shouldn't be used otherwise*/
 		case Opaque:case AlphaBlended:case Transmissive:case TransmissiveAlphaTested:case TransmissiveAlphaBlended:
@@ -284,14 +284,14 @@ namespace Parting {
 
 		auto materialBindingSet{ this->m_MaterialBindings->Get_MaterialBindingSet(material) };
 
-		if (nullptr==materialBindingSet)
+		if (nullptr == materialBindingSet)
 			return false;
 
 		state.BindingSetCount = 0;
 		state.BindingSets[state.BindingSetCount++] = materialBindingSet;
 		state.BindingSets[state.BindingSetCount++] = this->m_ViewBindingSet;
-		
-		if (!m_UseInputAssembler)
+
+		if (!this->m_UseInputAssembler)
 			state.BindingSets[state.BindingSetCount++] = context.InputBindingSet;
 
 		auto& pipeline{ this->m_Pipelines[key.Value] };
@@ -353,7 +353,7 @@ namespace Parting {
 		constants.NormalOffset = context.NormalOffset;
 		constants.TangentOffset = context.TangentOffset;
 
-		commandList->SetPushConstants(&constants, sizeof(constants));
+		commandList->SetPushConstants(&constants, sizeof(GBufferPushConstants));
 
 		args.StartInstanceLocation = 0;
 		args.StartVertexLocation = 0;
@@ -364,7 +364,7 @@ namespace Parting {
 		char const* sourceFileName{ "Parting/Passes/gbuffer_vs.hlsl" };
 
 		Vector<ShaderMacro> VertexShaderMacros{
-			ShaderMacro{.Name{ String{ "MOTION_VECTORS" } }, .Definition{ IntegralToString(params.EnableMotionVectors ? 1u : 0u) } }
+			ShaderMacro{.Name{ String{ "MOTION_VECTORS" } }, .Definition{ String{ params.EnableMotionVectors ? "1" : "0" } } }
 		};
 
 		if (params.UseInputAssembler)
@@ -416,15 +416,15 @@ namespace Parting {
 			RHI::RHIVertexAttributeDescBuilder vertexAttribDescBuilder{};
 
 			Vector<RHI::RHIVertexAttributeDesc> inputDescs{
-				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::Position, "POS", 0),
-				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::PrevPosition, "PREV_POS", 1),
-				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::TexCoord1, "TEXCOORD", 2),
-				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::Normal, "NORMAL", 3),
-				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::Tangent, "TANGENT", 4),
-				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::Transform, "TRANSFORM", 5)
+				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::Position, String{ "POS" }, 0),
+				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::PrevPosition, String{ "PREV_POS" }, 1),
+				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::TexCoord1, String{ "TEXCOORD" }, 2),
+				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::Normal, String{ "NORMAL" }, 3),
+				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::Tangent, String{ "TANGENT" }, 4),
+				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::Transform, String{ "TRANSFORM" }, 5)
 			};
 			if (params.EnableMotionVectors)
-				inputDescs.emplace_back(BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::PrevTransform, "PREV_TRANSFORM", 5));
+				inputDescs.emplace_back(BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(), RHI::RHIVertexAttribute::PrevTransform, "PREV_TRANSFORM", 6));
 
 			return this->m_Device->CreateInputLayout(inputDescs.data(), static_cast<Uint32>(inputDescs.size()), vertexShader);
 		}
@@ -455,7 +455,6 @@ namespace Parting {
 			.AddBinding(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(GBUFFER_BINDING_VERTEX_BUFFER, bufferGroup->VertexBuffer))
 			.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(GBUFFER_BINDING_PUSH_CONSTANTS, sizeof(GBufferPushConstants)))
 			.Build(),
-
 			this->m_InputBindingLayout
 			);
 	}
@@ -562,11 +561,11 @@ namespace Parting {
 			this->m_MaterialBindings = this->CreateMaterialBindingCache(*this->m_CommonPasses);
 
 		this->m_GBufferCB = this->m_Device->CreateBuffer(RHI::RHIBufferDescBuilder{}
+			.Set_ByteSize(sizeof(GBufferFillConstants))
+			.Set_MaxVersions(params.NumConstantBufferVersions)
+			.Set_DebugName(_W("GBufferFillConstants"))
 			.Set_IsVolatile(true)
 			.Set_IsConstantBuffer(true)
-			.Set_ByteSize(sizeof(GBufferFillConstants))
-			.Set_DebugName(_W("GBufferFillConstants"))
-			.Set_MaxVersions(params.NumConstantBufferVersions)
 			.Build()
 		);
 

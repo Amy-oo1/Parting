@@ -67,7 +67,7 @@ namespace RHI {
 	PARTING_EXPORT struct RHISamplerDesc final {
 		Color BorderColor{ 1.0f };
 		float MaxAnisotropy{ 1.0f };
-		float MiBias{ 0.0f };
+		float MipBias{ 0.0f };
 
 		bool MinFilter{ true };
 		bool MagFilter{ true };
@@ -86,7 +86,7 @@ namespace RHI {
 
 		constexpr RHISamplerDescBuilder& Set_BorderColor(const Color& color) { this->m_Desc.BorderColor = color; return *this; }
 		constexpr RHISamplerDescBuilder& Set_MaxAnisotropy(float maxAnisotropy) { this->m_Desc.MaxAnisotropy = maxAnisotropy; return *this; }
-		constexpr RHISamplerDescBuilder& Set_MiBias(float miBias) { this->m_Desc.MiBias = miBias; return *this; }
+		constexpr RHISamplerDescBuilder& Set_MipBias(float miBias) { this->m_Desc.MipBias = miBias; return *this; }
 		constexpr RHISamplerDescBuilder& Set_MinFilter(bool minFilter) { this->m_Desc.MinFilter = minFilter; return *this; }
 		constexpr RHISamplerDescBuilder& Set_MagFilter(bool magFilter) { this->m_Desc.MagFilter = magFilter; return *this; }
 		constexpr RHISamplerDescBuilder& Set_MipFilter(bool mipFilter) { this->m_Desc.MipFilter = mipFilter; return *this; }

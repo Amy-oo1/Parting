@@ -201,9 +201,7 @@ namespace RHI {
 		}
 
 		STDNODISCARD RHITextureSubresourceSet Resolve(const RHITextureDesc& desc, bool issinglemiplevel)const {
-			RHITextureSubresourceSet Re{
-				.BaseMipLevel = this->BaseMipLevel,
-			};
+			RHITextureSubresourceSet Re{ .BaseMipLevel = this->BaseMipLevel };
 
 			if (!issinglemiplevel) {
 				const Uint64 LastMipLevelPlusOne{ Math::Min<Uint64>(static_cast<Uint64>(this->BaseMipLevel) + this->MipLevelCount, desc.MipLevelCount) };

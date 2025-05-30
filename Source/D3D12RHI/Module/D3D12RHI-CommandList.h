@@ -112,8 +112,8 @@ namespace RHI::D3D12 {
 				this->m_RecordingVersion, g_D3D12ConstantBufferDataPlacementAlignment);
 		}
 
-		D3D12_GPU_VIRTUAL_ADDRESS Get_BufferGpuVA(Buffer* buffer) {
-			if (!buffer)
+		D3D12_GPU_VIRTUAL_ADDRESS Get_BufferGPUVirtualAddress(Buffer* buffer) {//TODO Remove
+			if (nullptr == buffer)
 				return 0;
 
 			if (buffer->m_Desc.IsVolatile)
@@ -138,7 +138,7 @@ namespace RHI::D3D12 {
 
 		void BindMeshletPipeline(MeshletPipeline* pso, bool updateRootSignature) const;
 
-		void BindFramebuffer(FrameBuffer* fb);
+		void BindFrameBuffer(FrameBuffer* fb);
 
 		void SetGraphicsBindings(const Array<BindingSet*, g_MaxBindingLayoutCount> bindings, Uint32 BindingSetCount, Uint32 bindingUpdateMask, Buffer* indirectParams, bool updateIndirectParams, const D3D12RootSignature* rootSignature);
 
@@ -326,13 +326,13 @@ namespace RHI::D3D12 {
 
 		if (heapSRVetc != this->m_CurrentHeapSRVetc || heapSamplers != this->m_CurrentHeapSamplers) {
 			ID3D12DescriptorHeap* heaps[2]{ heapSRVetc, heapSamplers };
-			m_ActiveCommandList->CommandList->SetDescriptorHeaps(2, heaps);
+			this->m_ActiveCommandList->CommandList->SetDescriptorHeaps(2, heaps);
 
-			m_CurrentHeapSRVetc = heapSRVetc;
-			m_CurrentHeapSamplers = heapSamplers;
+			this->m_CurrentHeapSRVetc = heapSRVetc;
+			this->m_CurrentHeapSamplers = heapSamplers;
 
-			m_Instance->ReferencedNativeResources.push_back(heapSRVetc);
-			m_Instance->ReferencedNativeResources.push_back(heapSamplers);
+			this->m_Instance->ReferencedNativeResources.push_back(heapSRVetc);
+			this->m_Instance->ReferencedNativeResources.push_back(heapSamplers);
 
 			return true;
 		}
@@ -369,7 +369,7 @@ namespace RHI::D3D12 {
 			commandList->RSSetScissorRects(pso->m_viewportState.ScissorCount, pso->m_viewportState.Scissors.data());
 	}
 
-	inline void CommandList::BindFramebuffer(FrameBuffer* fb) {
+	inline void CommandList::BindFrameBuffer(FrameBuffer* fb) {
 		if (this->m_EnableAutomaticBarriers)
 			this->SetResourceStatesForFramebuffer(fb);
 
@@ -381,7 +381,7 @@ namespace RHI::D3D12 {
 		if (fb->m_Desc.DepthStencilAttachment.Is_Valid())
 			DSV = this->m_DeviceResourcesRef.DepthStencilViewHeap.Get_CPUHandle(fb->DSV);
 
-		m_ActiveCommandList->CommandList->OMSetRenderTargets(fb->m_RTVCount, RTVs.data(), false, fb->m_Desc.DepthStencilAttachment.Is_Valid() ? &DSV : nullptr);
+		this->m_ActiveCommandList->CommandList->OMSetRenderTargets(fb->m_RTVCount, RTVs.data(), false, fb->m_Desc.DepthStencilAttachment.Is_Valid() ? &DSV : nullptr);
 	}
 
 	//TODO :Use Span
@@ -581,8 +581,7 @@ namespace RHI::D3D12 {
 		if (!this->m_AnyVolatileBufferWrites)
 			return;
 
-		for (Uint32 Index = 0; Index < this->m_CurrentGraphicsVolatileCBCount; ++Index) {
-			auto& parameter{ this->m_CurrentGraphicsVolatileCBs[Index] };
+		for (auto& parameter : Span<VolatileConstantBufferBinding>{ this->m_CurrentGraphicsVolatileCBs.data(), this->m_CurrentGraphicsVolatileCBCount }) {
 			auto currentGpuVA{ this->m_VolatileConstantBufferAddresses[parameter.Buffer] };
 
 			if (currentGpuVA != parameter.Address) {
@@ -600,8 +599,7 @@ namespace RHI::D3D12 {
 		if (!this->m_AnyVolatileBufferWrites)
 			return;
 
-		for (Uint32 Index = 0; Index < this->m_CurrentComputeVolatileCBCount; ++Index) {
-			auto& parameter{ this->m_CurrentComputeVolatileCBs[Index] };
+		for (auto& parameter : Span<VolatileConstantBufferBinding>{ this->m_CurrentComputeVolatileCBs.data(), this->m_CurrentComputeVolatileCBCount }) {
 			auto currentGpuVA{ this->m_VolatileConstantBufferAddresses[parameter.Buffer] };
 
 			if (currentGpuVA != parameter.Address) {
@@ -1167,9 +1165,9 @@ namespace RHI::D3D12 {
 		ASSERT(ByteSize == rootsig->m_PushConstantByteSize); // the validation error handles the error message
 
 		if (isGraphics)
-			this->m_ActiveCommandList->CommandList->SetGraphicsRoot32BitConstants(rootsig->m_RootParameterPushConstants, static_cast<Uint32>(ByteSize / 4), data, 0);
+			this->m_ActiveCommandList->CommandList->SetGraphicsRoot32BitConstants(rootsig->m_RootParameterPushConstants, ByteSize / sizeof(Uint32), data, 0u);
 		else
-			this->m_ActiveCommandList->CommandList->SetComputeRoot32BitConstants(rootsig->m_RootParameterPushConstants, static_cast<Uint32>(ByteSize / 4), data, 0);
+			this->m_ActiveCommandList->CommandList->SetComputeRoot32BitConstants(rootsig->m_RootParameterPushConstants, ByteSize / sizeof(Uint32), data, 0u);
 	}
 
 	void CommandList::Imp_SetGraphicsState(const RHIGraphicsState<D3D12Tag>& State) {
@@ -1257,7 +1255,7 @@ namespace RHI::D3D12 {
 			m_ActiveCommandList->CommandList->OMSetBlendFactor(&State.BlendConstantColor.R);
 
 		if (updateFramebuffer)
-			this->BindFramebuffer(framebuffer);
+			this->BindFrameBuffer(framebuffer);
 		this->m_Instance->ReferencedResources.push_back(framebuffer);
 
 		this->SetGraphicsBindings(State.BindingSets, State.BindingSetCount, bindingUpdateMask, State.IndirectParams, updateIndirectParams, pso->m_RootSignature);
@@ -1281,8 +1279,7 @@ namespace RHI::D3D12 {
 			this->m_ActiveCommandList->CommandList->IASetIndexBuffer(&IBV);
 		}
 
-		if (updateVertexBuffers)
-		{
+		if (updateVertexBuffers) {
 			D3D12_VERTEX_BUFFER_VIEW VBVs[g_MaxVertexAttributeCount]{};
 			Uint32 maxVbIndex{ 0 };
 			InputLayout* inputLayout{ pso->m_Desc.InputLayout.Get() };
@@ -1327,7 +1324,7 @@ namespace RHI::D3D12 {
 			if (shouldEnableVariableRateShading) {
 				this->m_StateTracker.RequireTextureState(
 					&framebufferDesc.ShadingRateAttachment.Texture->m_StateExtension,
-					RHITextureSubresourceSet{ .BaseMipLevel{ 0 }, .MipLevelCount{ 1 }, .BaseArraySlice{ 0 }, .ArraySliceCount { 1 } },
+					RHITextureSubresourceSet{/*default single*/ },
 					RHIResourceState::ShadingRateSurface
 				);
 				if (nullptr != this->m_Instance)
@@ -1341,7 +1338,7 @@ namespace RHI::D3D12 {
 		}
 
 		if (updateShadingRate) {
-			if (State.ShadingRateState.Enabled) {
+			if (State.ShadingRateState.Enabled) {//TODO :Remove
 				D3D12_SHADING_RATE_COMBINER combiners[g_D3D12ReSetShadingRateCombinerCount]{};
 				combiners[0] = ConvertShadingRateCombiner(State.ShadingRateState.PipelinePrimitiveCombiner);
 				combiners[1] = ConvertShadingRateCombiner(State.ShadingRateState.ImageCombiner);
@@ -1532,7 +1529,7 @@ namespace RHI::D3D12 {
 				this->m_ActiveCommandList->CommandList->OMSetBlendFactor(&State.BlendConstantColor.R);
 
 			if (updateFramebuffer) {
-				this->BindFramebuffer(framebuffer);
+				this->BindFrameBuffer(framebuffer);
 				this->m_Instance->ReferencedResources.push_back(framebuffer);
 			}
 
@@ -1635,8 +1632,7 @@ namespace RHI::D3D12 {
 				break;
 
 			default:
-				// do nothing
-				break;
+				break;// do nothing
 			}
 		}
 	}
@@ -1644,11 +1640,8 @@ namespace RHI::D3D12 {
 	inline void CommandList::Imp_SetResourceStatesForFramebuffer(FrameBuffer* framebuffer) {
 		const auto& desc = framebuffer->Get_Desc();
 
-		for (Uint32 Index = 0; Index < desc.ColorAttachmentCount; ++Index) {
-			const auto& attachment{ desc.ColorAttachments[Index] };
-
+		for (const auto& attachment : Span<const RHI::RHIFrameBufferAttachment<D3D12Tag>>(desc.ColorAttachments.data(), desc.ColorAttachmentCount))
 			this->SetTextureState(attachment.Texture, attachment.Subresources, RHIResourceState::RenderTarget);
-		}
 
 		if (desc.DepthStencilAttachment.Is_Valid())
 			this->SetTextureState(

@@ -131,9 +131,7 @@ namespace Parting {
 		graphicsState.Viewport = view->Get_ViewportState();
 		graphicsState.ShadingRateState = view->Get_VariableRateShadingState();
 
-		RHI::RHIDrawArguments currentDraw{
-			.InstanceCount{ 0 }
-		};
+		RHI::RHIDrawArguments currentDraw{ .InstanceCount{ 0 } };
 
 		auto flushDraw = [commandList, materialEvents, &graphicsState, &currentDraw, &eventMaterial, &pass, &passContext](const Material<APITag>* material) {
 			if (currentDraw.InstanceCount == 0)
@@ -160,7 +158,6 @@ namespace Parting {
 		while (const DrawItem<APITag>* item = drawStrategy.Get_NextItem()) {
 			if (item->Material == nullptr)
 				continue;
-
 
 			bool newBuffers{ item->Buffers != lastBuffers };
 			bool newMaterial{ item->Material != lastMaterial || item->CullMode != lastCullMode };

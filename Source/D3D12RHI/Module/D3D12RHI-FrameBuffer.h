@@ -56,7 +56,7 @@ namespace RHI::D3D12 {
 		friend class CommandList;
 		friend class Device;
 	public:
-		FrameBuffer(D3D12DeviceResources& resource):
+		FrameBuffer(D3D12DeviceResources& resource) :
 			RHIFrameBuffer<FrameBuffer, D3D12Tag>{},
 			m_DeviceResourcesRef{ resource } {
 		}
@@ -64,8 +64,8 @@ namespace RHI::D3D12 {
 		~FrameBuffer(void) {
 			this->m_TextureCount = 0;
 
-			for (Uint32 Index = 0; Index < m_RTVCount; ++Index)
-				this->m_DeviceResourcesRef.RenderTargetViewHeap.ReleaseDescriptor(m_RTVs[Index]);
+			for (Uint32 Index = 0; Index < this->m_RTVCount; ++Index)
+				this->m_DeviceResourcesRef.RenderTargetViewHeap.ReleaseDescriptor(this->m_RTVs[Index]);
 			this->m_RTVCount = 0;
 
 			if (g_InvalidDescriptorIndex != this->DSV)

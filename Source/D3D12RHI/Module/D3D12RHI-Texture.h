@@ -149,7 +149,7 @@ namespace RHI::D3D12 {
 		if (this->m_Desc.IsUAV)
 			this->m_ClearMipLevelUAVs.resize(this->m_Desc.MipLevelCount, g_InvalidDescriptorIndex);
 
-		this->m_PlaneCount = this->m_DeviceResourcesRef.GetFormatPlaneCount(this->m_ResourceDesc.Format);
+		this->m_PlaneCount = this->m_DeviceResourcesRef.Get_FormatPlaneCount(this->m_ResourceDesc.Format);
 
 		ASSERT(0 != this->m_PlaneCount);
 	}
@@ -293,9 +293,7 @@ namespace RHI::D3D12 {
 	inline void Texture::CreateRTV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIFormat format, RHITextureSubresourceSet subresources)const {
 		subresources = subresources.Resolve(this->m_Desc, true);
 
-		D3D12_RENDER_TARGET_VIEW_DESC RTVDesc{};
-
-		RTVDesc.Format = Get_DXGIFormatMapping(RHIFormat::UNKNOWN == format ? this->m_Desc.Format : format).RTVFormat;
+		D3D12_RENDER_TARGET_VIEW_DESC RTVDesc{ .Format{ Get_DXGIFormatMapping(RHIFormat::UNKNOWN == format ? this->m_Desc.Format : format).RTVFormat } };
 
 		switch (this->m_Desc.Dimension) {
 			using enum RHITextureDimension;
@@ -352,9 +350,7 @@ namespace RHI::D3D12 {
 	inline void Texture::CreateDSV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHITextureSubresourceSet subresources, bool isReadOnly)const {
 		subresources = subresources.Resolve(this->m_Desc, true);
 
-		D3D12_DEPTH_STENCIL_VIEW_DESC DSVDesc{};
-
-		DSVDesc.Format = Get_DXGIFormatMapping(this->m_Desc.Format).RTVFormat;
+		D3D12_DEPTH_STENCIL_VIEW_DESC DSVDesc{ .Format{ Get_DXGIFormatMapping(this->m_Desc.Format).RTVFormat } };
 
 		if (isReadOnly) {
 			DSVDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH;
@@ -390,7 +386,6 @@ namespace RHI::D3D12 {
 
 		case Texture2DMS:
 			DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
-			DSVDesc.Texture2DMS.UnusedField_NothingToDefine = 0;
 			break;
 
 		case Texture2DMSArray:

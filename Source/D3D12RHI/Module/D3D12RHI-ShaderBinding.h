@@ -54,12 +54,10 @@ namespace RHI::D3D12 {
 
 	RHIResourceType Get_NormalizedResourceType(RHIResourceType type)noexcept {
 		switch (type) {
-		case RHIResourceType::StructuredBuffer_UAV:case RHIResourceType::RawBuffer_UAV:
-			return RHIResourceType::TypedBuffer_UAV;
-		case RHIResourceType::StructuredBuffer_SRV:case RHIResourceType::RawBuffer_SRV:
-			return RHIResourceType::TypedBuffer_SRV;
-		default:
-			return type;
+			using enum RHIResourceType;
+		case StructuredBuffer_UAV:case RawBuffer_UAV:return TypedBuffer_UAV;
+		case StructuredBuffer_SRV:case RawBuffer_SRV:return TypedBuffer_SRV;
+		default:return type;
 		}
 	}
 
@@ -212,13 +210,13 @@ namespace RHI::D3D12 {
 			}
 			else {
 				if (RHIResourceType::Sampler == BindingItem.Type) {
-					this->m_DescriptorRangesSamplers.back().NumDescriptors++;
+					++this->m_DescriptorRangesSamplers.back().NumDescriptors;
 					++this->m_DescriptorTableSizeSamplers;
 
 					//tje same sampler not should add in table
 				}
 				else {
-					this->m_DescriptorRangesSRVetc.back().NumDescriptors++;
+					++this->m_DescriptorRangesSRVetc.back().NumDescriptors;
 					++this->m_DescriptorTableSizeSRVetc;
 
 					this->m_BindingLayoutsSRVetc.emplace_back(BindingItem);
@@ -241,7 +239,7 @@ namespace RHI::D3D12 {
 		}
 
 		for (Uint32 Index = 0; Index < this->m_VolatileCBCount; ++Index) {
-			auto& [RootParameterIndex, d3d12RootDescriptor] = this->m_RootParametersVolatileCB[Index];
+			auto& [RootParameterIndex, d3d12RootDescriptor] { this->m_RootParametersVolatileCB[Index] };
 
 			this->m_RootParameters[this->m_RootParameterCount++] = D3D12_ROOT_PARAMETER1{
 				.ParameterType{ D3D12_ROOT_PARAMETER_TYPE_CBV },
@@ -538,7 +536,7 @@ namespace RHI::D3D12 {
 								if (RHIResourceState::Unknown == TempBuffer->m_StateExtension.PermanentState)
 									this->m_BindingsThatNeedTransitions.push_back(static_cast<Uint16>(BindIndex));
 								else
-									ASSERT(false);//TODO :
+									ASSERT(RHIResourceState::ShaderResource == (TempBuffer->m_StateExtension.PermanentState & RHIResourceState::UnorderedAccess));//TODO :
 							}
 							else
 								Buffer::CreateNullUAV(descriptorHandle, Binding.Format, this->m_Context);
@@ -570,7 +568,7 @@ namespace RHI::D3D12 {
 							if (RHIResourceState::Unknown == TempTexture->m_StateExtension.PermanentState)
 								this->m_BindingsThatNeedTransitions.push_back(static_cast<Uint16>(BindIndex));
 							else
-								ASSERT(false);//TODO :
+								ASSERT(RHIResourceState::ShaderResource == (TempTexture->m_StateExtension.PermanentState & RHIResourceState::UnorderedAccess));//TODO :
 
 							this->m_HasUAVBindings = true;
 							Found = true;
@@ -586,7 +584,7 @@ namespace RHI::D3D12 {
 							if (RHIResourceState::Unknown == TempBuffer->m_StateExtension.PermanentState)
 								this->m_BindingsThatNeedTransitions.push_back(static_cast<Uint16>(BindIndex));
 							else
-								ASSERT(false);//TODO :
+								ASSERT(RHIResourceState::ShaderResource == (TempBuffer->m_StateExtension.PermanentState & RHIResourceState::ShaderResource));//TODO :
 
 							Found = true;
 							break;

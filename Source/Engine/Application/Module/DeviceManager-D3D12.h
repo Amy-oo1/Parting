@@ -78,16 +78,16 @@ namespace Parting {
 				if (D3D12_SUCCESS(hres) && nullptr != pOutput) {
 					DXGI_OUTPUT_DESC OutputDesc;
 					pOutput->GetDesc(&OutputDesc);
-					const RECT desktop = OutputDesc.DesktopCoordinates;
+					const RECT desktop{ OutputDesc.DesktopCoordinates };
 
-					const Int32 centreX = static_cast<Int32>(desktop.left) + static_cast<Int32>(desktop.right - desktop.left) / 2;
-					const Int32 centreY = static_cast<Int32>(desktop.top) + static_cast<Int32>(desktop.bottom - desktop.top) / 2;
-					const Int32 winW = rect.right - rect.left;
-					const Int32 winH = rect.bottom - rect.top;
-					const Int32 left = centreX - winW / 2;
-					const Int32 right = left + winW;
-					const Int32 top = centreY - winH / 2;
-					const Int32 bottom = top + winH;
+					const Int32 centreX{ static_cast<Int32>(desktop.left) + static_cast<Int32>(desktop.right - desktop.left) / 2 };
+					const Int32 centreY{ static_cast<Int32>(desktop.top) + static_cast<Int32>(desktop.bottom - desktop.top) / 2 };
+					const Int32 winW{ rect.right - rect.left };
+					const Int32 winH{ rect.bottom - rect.top };
+					const Int32 left{ centreX - winW / 2 };
+					const Int32 right{ left + winW };
+					const Int32 top{ centreY - winH / 2 };
+					const Int32 bottom{ top + winH };
 					rect.left = Math::Max(left, static_cast<Int32>(desktop.left));
 					rect.right = Math::Min(right, static_cast<Int32>(desktop.right));
 					rect.bottom = Math::Min(bottom, static_cast<Int32>(desktop.bottom));
@@ -212,7 +212,7 @@ namespace Parting {
 
 
 	bool D3D12DeviceManager::Imp_CreateInstance(void) {
-		D3D12_CHECK(CreateDXGIFactory2(this->m_DeviceParams.EnableDebugRuntime ? DXGI_CREATE_FACTORY_DEBUG : 0, PARTING_IID_PPV_ARGS(&this->m_DXFIFactory6)));
+		D3D12_CHECK(CreateDXGIFactory2(this->m_DeviceParams.EnableDebugRuntime ? /*DXGI_CREATE_FACTORY_DEBUG*/ 0x1 : 0, PARTING_IID_PPV_ARGS(&this->m_DXFIFactory6)));
 
 		return true;
 	}
@@ -230,7 +230,7 @@ namespace Parting {
 			debugController3->SetEnableGPUBasedValidation(true);
 		}
 
-		D3D12_CHECK(this->m_DXFIFactory6->EnumAdapterByGpuPreference(this->m_DeviceParams.AdapterIndex, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&this->m_DXGIAdapter)));
+		D3D12_CHECK(this->m_DXFIFactory6->EnumAdapterByGpuPreference(this->m_DeviceParams.AdapterIndex, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, PARTING_IID_PPV_ARGS(&this->m_DXGIAdapter)));
 
 		{
 			DXGI_ADAPTER_DESC aDesc;
@@ -239,7 +239,7 @@ namespace Parting {
 		}
 
 
-		D3D12_CHECK(D3D12CreateDevice(this->m_DXGIAdapter, this->m_DeviceParams.FeatureLevel, IID_PPV_ARGS(&this->m_D3D12Device)));
+		D3D12_CHECK(D3D12CreateDevice(this->m_DXGIAdapter, this->m_DeviceParams.FeatureLevel, PARTING_IID_PPV_ARGS(&this->m_D3D12Device)));
 
 		if (this->m_DeviceParams.EnableDebugRuntime) {
 			RHI::RefCountPtr<ID3D12InfoQueue> pInfoQueue;
@@ -257,7 +257,7 @@ namespace Parting {
 				D3D12_MESSAGE_ID_COMMAND_LIST_STATIC_DESCRIPTOR_RESOURCE_DIMENSION_MISMATCH, // descriptor validation doesn't understand acceleration structures
 			};
 			D3D12_INFO_QUEUE_FILTER filter{ .DenyList{.NumIDs{ static_cast<Uint32>(disableMessageIDs.size()) }, .pIDList{ const_cast<D3D12_MESSAGE_ID*>(disableMessageIDs.data()) } } };
-			pInfoQueue->AddStorageFilterEntries(&filter);
+			D3D12_CHECK(pInfoQueue->AddStorageFilterEntries(&filter));
 		}
 
 		D3D12_COMMAND_QUEUE_DESC queueDes{ .Type { D3D12_COMMAND_LIST_TYPE_DIRECT } };
@@ -279,9 +279,6 @@ namespace Parting {
 			.ComputeQueue { this->m_ComputeQueue },
 			.CopyQueue { this->m_CopyQueue },
 		};
-
-		deviceDesc.LogBufferLifetime = this->m_DeviceParams.LogBufferLifetime;//TODO :Remove
-		deviceDesc.EnableHeapDirectlyIndexed = this->m_DeviceParams.EnableHeapDirectlyIndexed;//TODO :Remove
 
 		this->m_RHIDevice = RHI::RefCountPtr<RHI::D3D12::Device>::Create(new RHI::D3D12::Device{ deviceDesc });
 
@@ -353,9 +350,9 @@ namespace Parting {
 
 		D3D12_CHECK(this->m_D3D12Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, PARTING_IID_PPV_ARGS(&this->m_FrameFence)));
 
-		this->m_FrameFenceEvents.resize(this->m_SwapChainDesc.BufferCount);
+		this->m_FrameFenceEvents.reserve(this->m_SwapChainDesc.BufferCount);
 		for (auto& event : this->m_FrameFenceEvents)
-			event = CreateEventW(nullptr, false, true, nullptr);
+			this->m_FrameFenceEvents.emplace_back(CreateEventW(nullptr, false, true, nullptr));
 
 		return true;
 	}
@@ -377,7 +374,7 @@ namespace Parting {
 			this->m_SwapChainDesc.Flags
 		));
 
-		if (false == CreateRenderTargets())
+		if (false == this->CreateRenderTargets())
 			LOG_ERROR("Failed to create swapchain buffers");
 	}
 

@@ -329,7 +329,7 @@ namespace Parting {
 			) };
 
 			view->FillPlanarViewConstants(deferredConstants.View);
-			commandList->WriteBuffer(this->m_DeferredLightingCB, &deferredConstants, sizeof(deferredConstants));
+			commandList->WriteBuffer(this->m_DeferredLightingCB, &deferredConstants, sizeof(DeferredLightingConstants));
 
 			commandList->SetComputeState(RHI::RHIComputeStateBuilder<APITag>{}
 			.Set_Pipeline(this->m_PSO)

@@ -147,7 +147,7 @@ namespace Parting {
 			layoutDescBuilder.AddBinding(layoutItem);
 		}
 
-		this->m_BindingLayout = m_Device->CreateBindingLayout(layoutDescBuilder.Build());
+		this->m_BindingLayout = this->m_Device->CreateBindingLayout(layoutDescBuilder.Build());
 	}
 
 	template<RHI::APITagConcept APITag>

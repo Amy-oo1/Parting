@@ -156,16 +156,16 @@ namespace Parting {
 				RHI::RHITextureDescBuilder textureDescBuilder{};
 
 				textureDescBuilder.Set_Format(RHI::RHIFormat::RGBA8_UNORM);
-				this->m_BlackTexture = this->m_Device->CreateTexture(textureDescBuilder.Build());
-				this->m_GrayTexture = this->m_Device->CreateTexture(textureDescBuilder.Build());
-				this->m_WhiteTexture = this->m_Device->CreateTexture(textureDescBuilder.Build());
+				this->m_BlackTexture = this->m_Device->CreateTexture(textureDescBuilder.Set_DebugName(String{ "BlackTexture" }).Build());
+				this->m_GrayTexture = this->m_Device->CreateTexture(textureDescBuilder.Set_DebugName(String{ "GrayTexture" }).Build());
+				this->m_WhiteTexture = this->m_Device->CreateTexture(textureDescBuilder.Set_DebugName(String{ "WhiteTexture" }).Build());
 
-				this->m_BlackTexture3D = this->m_Device->CreateTexture(textureDescBuilder.Set_Dimension(RHI::RHITextureDimension::Texture3D).Build());
+				this->m_BlackTexture3D = this->m_Device->CreateTexture(textureDescBuilder.Set_Dimension(RHI::RHITextureDimension::Texture3D).Set_DebugName(String{ "BlackTexture3D" }).Build());
 
 				textureDescBuilder.Set_ArraySize(6);
-				this->m_BlackTexture2DArray = this->m_Device->CreateTexture(textureDescBuilder.Set_Dimension(RHI::RHITextureDimension::Texture2DArray).Build());
-				this->m_WhiteTexture2DArray = this->m_Device->CreateTexture(textureDescBuilder.Set_Dimension(RHI::RHITextureDimension::Texture2DArray).Build());
-				this->m_BlackCubeMapArray = this->m_Device->CreateTexture(textureDescBuilder.Set_Dimension(RHI::RHITextureDimension::TextureCubeArray).Build());
+				this->m_BlackTexture2DArray = this->m_Device->CreateTexture(textureDescBuilder.Set_Dimension(RHI::RHITextureDimension::Texture2DArray).Set_DebugName(String{ "BlackTexture2DArray" }).Build());
+				this->m_WhiteTexture2DArray = this->m_Device->CreateTexture(textureDescBuilder.Set_Dimension(RHI::RHITextureDimension::Texture2DArray).Set_DebugName(String{ "WhiteTexture2DArray" }).Build());
+				this->m_BlackCubeMapArray = this->m_Device->CreateTexture(textureDescBuilder.Set_Dimension(RHI::RHITextureDimension::TextureCubeArray).Set_DebugName(String{ "BlackCubeMapArray" }).Build());
 			}
 
 			constexpr Uint32 blackImage{ 0xff000000 };

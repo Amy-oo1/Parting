@@ -118,7 +118,7 @@ namespace RHI::D3D12 {
 		this->m_SamplerDesc.AddressV = Get_D3D12AddressMode(this->m_Desc.AddressModeV);
 		this->m_SamplerDesc.AddressW = Get_D3D12AddressMode(this->m_Desc.AddressModeW);
 
-		this->m_SamplerDesc.MipLODBias = this->m_Desc.MiBias;
+		this->m_SamplerDesc.MipLODBias = this->m_Desc.MipBias;
 		this->m_SamplerDesc.MaxAnisotropy = Math::Max(static_cast<UINT32>(this->m_Desc.MaxAnisotropy), 1u);
 		this->m_SamplerDesc.ComparisonFunc = this->m_Desc.ReductionType == RHISamplerReductionType::Comparison ? D3D12_COMPARISON_FUNC_LESS : D3D12_COMPARISON_FUNC_NEVER;
 

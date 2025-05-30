@@ -53,12 +53,8 @@ namespace RHI {
 		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
 
 		Imp_Texture* Texture{ nullptr };
-		RHITextureSubresourceSet Subresources{
-			.BaseMipLevel{ 0 },
-			.MipLevelCount{ 1 },
-			.BaseArraySlice{ 0 },
-			.ArraySliceCount{ 1 }
-		};
+		RHITextureSubresourceSet Subresources{};
+
 		RHIFormat Format{ RHIFormat::UNKNOWN };
 		bool IsReadOnly{ false };
 
@@ -134,8 +130,7 @@ namespace RHI {
 		STDNODISCARD static RHIFrameBufferInfo<APITag> Build(const RHIFrameBufferDesc<APITag>& desc) {
 			RHIFrameBufferInfo<APITag> Re;//TODO : Forget....
 
-			for (Uint32 Index = 0; Index < desc.ColorAttachmentCount; ++Index) {
-				const auto& Attachment{ desc.ColorAttachments[Index] };
+			for (const auto& Attachment : Span<const RHIFrameBufferAttachment<APITag>>{ desc.ColorAttachments.data(), desc.ColorAttachmentCount }) {
 				if (RHIFormat::UNKNOWN == Attachment.Format && nullptr != Attachment.Texture)
 					Re.ColorFormats[Re.ColorFormatCount++] = Attachment.Texture->Get_Desc().Format;
 				else
@@ -154,7 +149,7 @@ namespace RHI {
 			}
 			else if (0 != desc.ColorAttachmentCount && desc.ColorAttachments[0].Is_Valid()) {
 				ASSERT(nullptr != desc.ColorAttachments[0].Texture);
-				const RHITextureDesc& TextureDesc{ desc.ColorAttachments[0].Texture->Get_Desc() };
+				const auto& TextureDesc{ desc.ColorAttachments[0].Texture->Get_Desc() };
 				Re.SampleCount = TextureDesc.SampleCount;
 				Re.SampleQuality = TextureDesc.SampleQuality;
 

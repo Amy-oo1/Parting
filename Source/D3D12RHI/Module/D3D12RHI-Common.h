@@ -88,15 +88,6 @@ namespace RHI::D3D12 {
 		Uint32 ShaderResourceViewHeapSize{ 16384 };
 		Uint32 SamplerHeapSize{ 1024 };
 		Uint32 MaxTimerQueries{ 256 };
-
-		// If enabled and the device has the capability,
-		// create RootSignatures with D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED 
-		// and D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED
-		bool EnableHeapDirectlyIndexed{ false };//TODO :Remove
-
-		// Enable logging the buffer lifetime to IMessageCallback
-		// Useful for debugging resource lifetimes
-		bool LogBufferLifetime{ false };//TODO :Remove
 	};
 
 	PARTING_EXPORT template<typename Derived>
@@ -147,7 +138,6 @@ namespace RHI::D3D12 {
 		RefCountPtr<ID3D12QueryHeap> TimerQueryHeap;
 
 		RefCountPtr<Buffer> TimerQueryResolveBuffer;
-		bool LogBufferLifetime{ false };
 	};
 
 	PARTING_EXPORT class D3D12StaticDescriptorHeap final :public D3D12DescriptorHeap<D3D12StaticDescriptorHeap> {
@@ -173,7 +163,7 @@ namespace RHI::D3D12 {
 		Mutex m_Mutex{};
 		RefCountPtr<ID3D12DescriptorHeap> m_Heap;
 		RefCountPtr<ID3D12DescriptorHeap> m_ShaderVisibleHeap;
-		D3D12_DESCRIPTOR_HEAP_TYPE m_HeapType{ D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV };
+		D3D12_DESCRIPTOR_HEAP_TYPE m_HeapType;
 		D3D12_CPU_DESCRIPTOR_HANDLE m_StartCPUHandle{ 0 };
 		D3D12_CPU_DESCRIPTOR_HANDLE m_StartCPUHandleShaderVisible{ 0 };
 		D3D12_GPU_DESCRIPTOR_HANDLE m_StartGPUHandleShaderVisible{ 0 };
@@ -208,12 +198,12 @@ namespace RHI::D3D12 {
 		UnorderedMap<Uint64, D3D12RootSignature*> RootSignatureCahe;
 		UnorderedMap<DXGI_FORMAT, Uint8> DXGIFormatPlaneCounts;
 
-		Uint8 GetFormatPlaneCount(DXGI_FORMAT format) {
+		Uint8 Get_FormatPlaneCount(DXGI_FORMAT format) {
 			auto& PlaneCount{ this->DXGIFormatPlaneCounts[format] };
 			if (0 == PlaneCount) {
 				D3D12_FEATURE_DATA_FORMAT_INFO ForamtInfo{ .Format{ format }, .PlaneCount{ 1 } };
 
-				if (!D3D12_SUCCESS(this->Context.Device->CheckFeatureSupport(D3D12_FEATURE_FORMAT_INFO, &ForamtInfo, sizeof(ForamtInfo))))
+				if (!D3D12_SUCCESS(this->Context.Device->CheckFeatureSupport(D3D12_FEATURE_FORMAT_INFO, &ForamtInfo, sizeof(decltype(ForamtInfo)))))
 					PlaneCount = Max_Uint8;
 				else
 					PlaneCount = ForamtInfo.PlaneCount;
@@ -223,7 +213,6 @@ namespace RHI::D3D12 {
 
 			return PlaneCount;
 		}
-
 	};
 
 	PARTING_EXPORT class D3D12RootSignature final :public RHIResource<D3D12RootSignature> {
@@ -286,7 +275,7 @@ namespace RHI::D3D12 {
 			m_Context{ context },
 			m_Queue{ queue } {
 
-			this->m_Context.Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, PARTING_IID_PPV_ARGS(&this->m_Fence));
+			D3D12_CHECK(this->m_Context.Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, PARTING_IID_PPV_ARGS(&this->m_Fence)));
 		}
 
 		~D3D12Queue(void) = default;
@@ -581,24 +570,21 @@ namespace RHI::D3D12 {
 		this->m_Heap = nullptr;
 		this->m_ShaderVisibleHeap = nullptr;
 
-		D3D12_DESCRIPTOR_HEAP_DESC HeapDesc{
-			.Type { heapType },
-			.NumDescriptors { DescriptorCount },
-			.Flags { D3D12_DESCRIPTOR_HEAP_FLAG_NONE },
-			.NodeMask { 1 },
-		};
-		this->m_Context.Device->CreateDescriptorHeap(&HeapDesc, PARTING_IID_PPV_ARGS(&this->m_Heap));
+		this->m_DescriptorCount = DescriptorCount;
+		this->m_HeapType = heapType;
+
+		D3D12_DESCRIPTOR_HEAP_DESC HeapDesc{ .Type { heapType }, .NumDescriptors { DescriptorCount } };
+
+		D3D12_CHECK(this->m_Context.Device->CreateDescriptorHeap(&HeapDesc, PARTING_IID_PPV_ARGS(&this->m_Heap)));
 
 		if (shaderVisible) {
 			HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-			this->m_Context.Device->CreateDescriptorHeap(&HeapDesc, PARTING_IID_PPV_ARGS(&this->m_ShaderVisibleHeap));
+			D3D12_CHECK(this->m_Context.Device->CreateDescriptorHeap(&HeapDesc, PARTING_IID_PPV_ARGS(&this->m_ShaderVisibleHeap)));
 			this->m_StartCPUHandleShaderVisible = this->m_ShaderVisibleHeap->GetCPUDescriptorHandleForHeapStart();
 			this->m_StartGPUHandleShaderVisible = this->m_ShaderVisibleHeap->GetGPUDescriptorHandleForHeapStart();
 		}
 
-		this->m_DescriptorCount = DescriptorCount;
-		this->m_HeapType = heapType;
 		this->m_StartCPUHandle = this->m_Heap->GetCPUDescriptorHandleForHeapStart();
 		this->m_Stride = this->m_Context.Device->GetDescriptorHandleIncrementSize(heapType);
 
@@ -670,32 +656,30 @@ namespace RHI::D3D12 {
 
 			for (auto Index = FoundIndex; Index < FoundIndex + Count; ++Index)
 				this->m_AllocatedDescriptors[Index] = true;
-
-			this->m_AllocatedCount += Count;
-			this->m_SearchStart = FoundIndex + Count;
 		}
+
+		this->m_AllocatedCount += Count;
+		this->m_SearchStart = FoundIndex + Count;
 
 		return FoundIndex;
 	}
 
 	inline void D3D12StaticDescriptorHeap::Imp_ReleaseDescriptor(D3D12DescriptorIndex Offset, Uint32 Count) {
-		//ASSERT(Count >= 1);
+		ASSERT(Count >= 1);
 
 		{
 			LockGuard lock{ this->m_Mutex };
-
-
 
 			for (auto Index = Offset; Index < Offset + Count; ++Index) {
 				ASSERT(true == this->m_AllocatedDescriptors[Index]);
 
 				this->m_AllocatedDescriptors[Index] = false;
 			}
-
-			this->m_AllocatedCount -= Count;
-			if (this->m_SearchStart > Offset)
-				this->m_SearchStart = Offset;
 		}
+
+		this->m_AllocatedCount -= Count;
+		if (this->m_SearchStart > Offset)
+			this->m_SearchStart = Offset;
 	}
 
 	inline D3D12_CPU_DESCRIPTOR_HANDLE D3D12StaticDescriptorHeap::Imp_Get_CPUHandle(D3D12DescriptorIndex Index)const {
@@ -725,13 +709,7 @@ namespace RHI::D3D12 {
 
 		ByteSize = Math::Align(ByteSize, BufferChunk::c_SizeAlignment);
 
-		D3D12_HEAP_PROPERTIES HeapDesc{
-			.Type{ this->m_IsScratchBuffer ? D3D12_HEAP_TYPE_DEFAULT : D3D12_HEAP_TYPE_UPLOAD },
-			.CPUPageProperty{ D3D12_CPU_PAGE_PROPERTY_UNKNOWN },
-			.MemoryPoolPreference{ D3D12_MEMORY_POOL_UNKNOWN },
-			.CreationNodeMask{ 1 },
-			.VisibleNodeMask{ 1 }
-		};
+		D3D12_HEAP_PROPERTIES HeapDesc{ .Type{ this->m_IsScratchBuffer ? D3D12_HEAP_TYPE_DEFAULT : D3D12_HEAP_TYPE_UPLOAD } };
 
 		D3D12_RESOURCE_DESC BufferDesc{
 			.Dimension{ D3D12_RESOURCE_DIMENSION_BUFFER },

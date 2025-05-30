@@ -128,12 +128,12 @@ namespace RHI {
 
 		STDNODISCARD RHIBufferRange Resolve(const RHIBufferDesc& desc) const {
 			RHIBufferRange Re{};
-			Re.Offset = Math::Min( this->Offset,desc.ByteSize);
+			Re.Offset = Math::Min(this->Offset,desc.ByteSize);
 
 			if (0 == this->ByteSize)
 				Re.ByteSize = desc.ByteSize - this->Offset;
 			else 
-				Re.ByteSize = Math::Min(this->ByteSize, desc.ByteSize - this->Offset);
+				Re.ByteSize = Math::Min(this->ByteSize, desc.ByteSize - Re.Offset);
 
 			return Re;
 		}

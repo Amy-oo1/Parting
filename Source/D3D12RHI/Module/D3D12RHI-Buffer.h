@@ -71,7 +71,7 @@ namespace RHI::D3D12 {
 
 		~Buffer(void) {
 			if (g_InvalidDescriptorIndex != this->m_ClearUAV) {
-				this->m_DeviceResourcesRef.ShaderResourceViewHeap.ReleaseDescriptor(this->m_ClearUAV, 1);
+				this->m_DeviceResourcesRef.ShaderResourceViewHeap.ReleaseDescriptor(this->m_ClearUAV);
 				this->m_ClearUAV = g_InvalidDescriptorIndex;
 			}
 		}
@@ -80,7 +80,7 @@ namespace RHI::D3D12 {
 		void CreateSRV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIBufferRange range, RHIFormat format, RHIResourceType type)const;
 		void CreateUAV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIBufferRange range, RHIFormat format, RHIResourceType type)const;
 		static void CreateNullSRV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIFormat format, const Context& context) {
-			D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc{};
+			D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc{};//TODO 
 			SRVDesc.Format = Get_DXGIFormatMapping(RHIFormat::UNKNOWN == format ? RHIFormat::R32_UINT : format).SRVFormat;
 			SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
 			SRVDesc.Shader4ComponentMapping = g_D3D12DefaultShader4ComponentMapping;
@@ -132,7 +132,7 @@ namespace RHI::D3D12 {
 		ASSERT(range.ByteSize <= Max_Uint32);
 
 		D3D12_CONSTANT_BUFFER_VIEW_DESC CBVDesc{
-			.BufferLocation { this->m_GPUVirtualAddress + range.Offset},
+			.BufferLocation { this->m_Resource->GetGPUVirtualAddress() + range.Offset },
 			.SizeInBytes { Math::Align(static_cast<Uint32>(range.ByteSize), g_ConstantBufferOffsetSizeAlignment) }
 		};
 		this->m_Context.Device->CreateConstantBufferView(&CBVDesc, descriptorhandle);
@@ -140,10 +140,11 @@ namespace RHI::D3D12 {
 	}
 
 	void Buffer::CreateSRV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIBufferRange range, RHIFormat format, RHIResourceType type)const {
-		D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc{};
+		D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc{
+			.ViewDimension{ D3D12_SRV_DIMENSION_BUFFER },
+			.Shader4ComponentMapping{ g_D3D12DefaultShader4ComponentMapping }
+		};
 
-		SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-		SRVDesc.Shader4ComponentMapping = g_D3D12DefaultShader4ComponentMapping;
 		if (RHIFormat::UNKNOWN == format)
 			format = this->m_Desc.Format;
 
@@ -157,8 +158,6 @@ namespace RHI::D3D12 {
 			SRVDesc.Buffer.FirstElement = range.Offset / this->m_Desc.StructStride;
 			SRVDesc.Buffer.NumElements = static_cast<Uint32>(range.ByteSize / this->m_Desc.StructStride);
 			SRVDesc.Buffer.StructureByteStride = this->m_Desc.StructStride;
-			SRVDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-
 			break;
 
 		case RHIResourceType::RawBuffer_SRV:
@@ -167,23 +166,18 @@ namespace RHI::D3D12 {
 			SRVDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 			SRVDesc.Buffer.FirstElement = range.Offset / sizeof(Uint32);
 			SRVDesc.Buffer.NumElements = static_cast<Uint32>(range.ByteSize / sizeof(Uint32));
-			SRVDesc.Buffer.StructureByteStride = 0;
 			SRVDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_RAW;
-
 			break;
+
 		case RHIResourceType::TypedBuffer_SRV: {
 			ASSERT(RHIFormat::UNKNOWN != format);
 
 			const auto& Mapping{ Get_DXGIFormatMapping(format) };
 			const auto& Info{ Get_RHIFormatInfo(format) };
 
-
 			SRVDesc.Format = Mapping.SRVFormat;
 			SRVDesc.Buffer.FirstElement = range.Offset / Info.BytesPerBlock;
 			SRVDesc.Buffer.NumElements = static_cast<Uint32>(range.ByteSize / Info.BytesPerBlock);
-			SRVDesc.Buffer.StructureByteStride = 0;
-			SRVDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-
 			break;
 		}
 		default:
@@ -195,9 +189,9 @@ namespace RHI::D3D12 {
 	}
 
 	void Buffer::CreateUAV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIBufferRange range, RHIFormat format, RHIResourceType type)const {
-		D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc{};
-
-		UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+		D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc{
+			.ViewDimension{ D3D12_UAV_DIMENSION_BUFFER }
+		};
 
 		if (RHIFormat::UNKNOWN == format)
 			format = this->m_Desc.Format;
@@ -212,20 +206,14 @@ namespace RHI::D3D12 {
 			UAVDesc.Buffer.FirstElement = range.Offset / this->m_Desc.StructStride;
 			UAVDesc.Buffer.NumElements = static_cast<Uint32>(range.ByteSize / this->m_Desc.StructStride);
 			UAVDesc.Buffer.StructureByteStride = this->m_Desc.StructStride;
-			UAVDesc.Buffer.CounterOffsetInBytes = 0;
-			UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-
 			break;
 
 		case RHIResourceType::RawBuffer_UAV:
 			ASSERT(this->m_Desc.StructStride == 0);
+
 			UAVDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 			UAVDesc.Buffer.FirstElement = range.Offset / sizeof(Uint32);
 			UAVDesc.Buffer.NumElements = static_cast<Uint32>(range.ByteSize / sizeof(Uint32));
-			UAVDesc.Buffer.StructureByteStride = 0;
-			UAVDesc.Buffer.CounterOffsetInBytes = 0;
-			UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;
-
 			break;
 
 		case RHIResourceType::TypedBuffer_UAV:
@@ -234,9 +222,6 @@ namespace RHI::D3D12 {
 			UAVDesc.Format = Get_DXGIFormatMapping(format).SRVFormat;
 			UAVDesc.Buffer.FirstElement = range.Offset / Get_RHIFormatInfo(format).BytesPerBlock;
 			UAVDesc.Buffer.NumElements = static_cast<Uint32>(range.ByteSize / Get_RHIFormatInfo(format).BytesPerBlock);
-			UAVDesc.Buffer.StructureByteStride = 0;
-			UAVDesc.Buffer.CounterOffsetInBytes = 0;
-			UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 			break;
 
 		default:
@@ -259,7 +244,7 @@ namespace RHI::D3D12 {
 	D3D12DescriptorIndex Buffer::Get_ClearUAV(void) {
 		ASSERT(this->m_Desc.CanHaveUAVs);
 
-		if (this->m_ClearUAV == g_InvalidDescriptorIndex) {
+		if (g_InvalidDescriptorIndex == this->m_ClearUAV) {
 			this->m_ClearUAV = this->m_DeviceResourcesRef.ShaderResourceViewHeap.AllocateDescriptor(1);
 
 			this->CreateUAV(this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_CPUHandle(this->m_ClearUAV), g_EntireBuffer, RHIFormat::R32_UINT, RHIResourceType::TypedBuffer_UAV);

@@ -198,6 +198,25 @@
     <ClInclude Include="..\..\Source\Engine\Render\Module\UIRender-UIRender.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\UIRender.h" />
     <ClInclude Include="..\..\Source\Engine\Render\Module\View.h" />
+    <ClInclude Include="..\..\Source\Shader\bindless.h" />
+    <ClInclude Include="..\..\Source\Shader\blit_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\bloom_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\deferred_lighting_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\depth_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\forward_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\gbuffer_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\light_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\light_probe_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\light_types.h" />
+    <ClInclude Include="..\..\Source\Shader\material_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\mipmapgen_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\pixel_readback_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\skinning_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\sky_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\ssao_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\taa_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\tonemapping_cb.h" />
+    <ClInclude Include="..\..\Source\Shader\view_cb.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\Engine\EnghineSrcEmpty.cpp" />

@@ -165,7 +165,7 @@ namespace Parting {
 			});
 
 		if (enableMotionVectors)
-			GBufferFrameBuffer->RenderTargets.push_back(this->MotionVectors);
+			this->GBufferFrameBuffer->RenderTargets.push_back(this->MotionVectors);
 
 		this->GBufferFrameBuffer->DepthStencil = this->Depth;
 
@@ -178,16 +178,14 @@ namespace Parting {
 	inline void GBufferRenderTargets<APITag>::Clear(Imp_CommandList* commandList) {
 		const RHI::RHIFormatInfo& depthFormatInfo{ RHI::Get_RHIFormatInfo(this->Depth->Get_Desc().Format) };
 
-
-
 		commandList->ClearTextureFloat(this->GBufferDiffuse, RHI::g_AllSubResourceSet, Color{ 0.f });
 		commandList->ClearTextureFloat(this->GBufferSpecular, RHI::g_AllSubResourceSet, Color{ 0.f });
 		commandList->ClearTextureFloat(this->GBufferNormals, RHI::g_AllSubResourceSet, Color{ 0.f });
 		commandList->ClearTextureFloat(this->GBufferEmissive, RHI::g_AllSubResourceSet, Color{ 0.f });
 		commandList->ClearTextureFloat(this->MotionVectors, RHI::g_AllSubResourceSet, Color{ 0.f });
 
-		float depthClearValue = this->m_UseReverseProjection ? 0.f : 1.f;
-		commandList->ClearDepthStencilTexture(this->Depth, RHI::g_AllSubResourceSet, depthClearValue, depthFormatInfo.HasStencil ? Optional<Uint8>{0} : NullOpt);
+		float depthClearValue{ this->m_UseReverseProjection ? 0.f : 1.f };
+		commandList->ClearDepthStencilTexture(this->Depth, RHI::g_AllSubResourceSet, depthClearValue, depthFormatInfo.HasStencil ? Optional<Uint8>{ 0 } : NullOpt);
 	}
 
 }

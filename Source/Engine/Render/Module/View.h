@@ -348,24 +348,24 @@ namespace Parting {
 			return;
 
 		this->m_PixelOffsetMatrix = Math::AffineToHomogeneous(Math::Translation(Math::VecF3{
-				2.f * this->m_PixelOffset.X / (this->m_Viewport.MaxX - m_Viewport.MinX),
+				2.f * this->m_PixelOffset.X / (this->m_Viewport.MaxX - this->m_Viewport.MinX),
 				-2.f * this->m_PixelOffset.Y / (this->m_Viewport.MaxY - this->m_Viewport.MinY),
 				0.f
 			})
 		);
-		this->m_PixelOffsetMatrixInv = Inverse(this->m_PixelOffsetMatrix);
+		this->m_PixelOffsetMatrixInv = Math::Inverse(this->m_PixelOffsetMatrix);
 
-		this->m_ViewProjMatrix = AffineToHomogeneous(this->m_ViewMatrix) * this->m_ProjMatrix;
+		this->m_ViewProjMatrix = Math::AffineToHomogeneous(this->m_ViewMatrix) * this->m_ProjMatrix;
 		this->m_ViewProjOffsetMatrix = this->m_ViewProjMatrix * this->m_PixelOffsetMatrix;
 
-		this->m_ViewMatrixInv = Inverse(this->m_ViewMatrix);
-		this->m_ProjMatrixInv = Inverse(this->m_ProjMatrix);
-		this->m_ViewProjMatrixInv = m_ProjMatrixInv * AffineToHomogeneous(this->m_ViewMatrixInv);
+		this->m_ViewMatrixInv = Math::Inverse(this->m_ViewMatrix);
+		this->m_ProjMatrixInv = Math::Inverse(this->m_ProjMatrix);
+		this->m_ViewProjMatrixInv = this->m_ProjMatrixInv * Math::AffineToHomogeneous(this->m_ViewMatrixInv);
 		this->m_ViewProjOffsetMatrixInv = this->m_PixelOffsetMatrixInv * this->m_ViewProjMatrixInv;
 
-		this->m_ReverseDepth = (this->m_ProjMatrix[2][2] == 0.f);
+		this->m_ReverseDepth = (0.f==this->m_ProjMatrix[2][2]);
 		this->m_ViewFrustum = Math::Frustum{ this->m_ViewProjMatrix, this->m_ReverseDepth };
-		m_ProjectionFrustum = Math::Frustum{ this->m_ProjMatrix, this->m_ReverseDepth };
+		this->m_ProjectionFrustum = Math::Frustum{ this->m_ProjMatrix, this->m_ReverseDepth };
 
 		this->m_IsMirrored = Math::Determinant(this->m_ViewMatrix.m_Linear) < 0.f;
 

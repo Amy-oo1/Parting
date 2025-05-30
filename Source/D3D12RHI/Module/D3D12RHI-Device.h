@@ -144,16 +144,11 @@ namespace RHI::D3D12 {
 
 		bool m_SinglePassStereoSupported = false;//TODO Remove
 		bool m_FastGeometryShaderSupported = false;//TODO Remove
-		bool m_MeshletsSupported = false;
+		bool m_MeshletsSupported{ false };
 		bool m_VariableRateShadingSupported = false;
 		bool m_LinearSweptSpheresSupported = false;//TODO Remove
 		bool m_SpheresSupported = false;//TODO Remove
 		bool m_ShaderExecutionReorderingSupported = false;//TODO Remove
-		bool m_SamplerFeedbackSupported = false;//TODO Remove
-		bool m_HeapDirectlyIndexedEnabled = false;//TODO Remove
-
-
-
 
 	private:
 		RHIObject Imp_GetNativeObject(RHIObjectType type)const noexcept;
@@ -219,14 +214,13 @@ namespace RHI::D3D12 {
 		}{
 
 		this->m_Context.Device = desc.Device;
-		this->m_Context.LogBufferLifetime = desc.LogBufferLifetime;//TODO Remove
 
 		if (nullptr != desc.GraphicsQueue)
-			this->m_Queues[Tounderlying(RHICommandQueue::Graphics)] = MakeUnique<D3D12Queue>(m_Context, desc.GraphicsQueue);
+			this->m_Queues[Tounderlying(RHICommandQueue::Graphics)] = MakeUnique<decltype(this->m_Queues)::value_type::element_type>(m_Context, desc.GraphicsQueue);
 		if (nullptr != desc.ComputeQueue)
-			this->m_Queues[Tounderlying(RHICommandQueue::Compute)] = MakeUnique<D3D12Queue>(m_Context, desc.ComputeQueue);
+			this->m_Queues[Tounderlying(RHICommandQueue::Compute)] = MakeUnique<decltype(this->m_Queues)::value_type::element_type>(m_Context, desc.ComputeQueue);
 		if (desc.CopyQueue)
-			this->m_Queues[Tounderlying(RHICommandQueue::Copy)] = MakeUnique<D3D12Queue>(m_Context, desc.CopyQueue);
+			this->m_Queues[Tounderlying(RHICommandQueue::Copy)] = MakeUnique<decltype(this->m_Queues)::value_type::element_type>(m_Context, desc.CopyQueue);
 
 		this->m_Resources.RenderTargetViewHeap.D3D12AllocateResources(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, desc.RenderTargetViewHeapSize, false);
 		this->m_Resources.DepthStencilViewHeap.D3D12AllocateResources(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, desc.DepthStencilViewHeapSize, false);
@@ -238,20 +232,15 @@ namespace RHI::D3D12 {
 		bool hasOptions6{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &this->m_Options6, sizeof(this->m_Options6)) };//TODO
 		bool hasOptions7{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &this->m_Options7, sizeof(this->m_Options7)) };//TODO
 
-		if (HRusltSucccess == this->m_Context.Device->QueryInterface(&this->m_Context.Device2) && hasOptions7)
+		if (hasOptions7 && HRusltSucccess == this->m_Context.Device->QueryInterface(&this->m_Context.Device2))
 			this->m_MeshletsSupported = this->m_Options7.MeshShaderTier >= D3D12_MESH_SHADER_TIER_1;
-
-		if (HRusltSucccess == this->m_Context.Device->QueryInterface(&this->m_Context.Device8) && hasOptions7)
-			this->m_SamplerFeedbackSupported = this->m_Options7.SamplerFeedbackTier >= D3D12_SAMPLER_FEEDBACK_TIER_0_9;
 
 		if (hasOptions6)
 			this->m_VariableRateShadingSupported = this->m_Options6.VariableShadingRateTier >= D3D12_VARIABLE_SHADING_RATE_TIER_2;
 
 		{
 			D3D12_INDIRECT_ARGUMENT_DESC argDesc{};
-			D3D12_COMMAND_SIGNATURE_DESC csDesc{};
-			csDesc.NumArgumentDescs = 1;
-			csDesc.pArgumentDescs = &argDesc;
+			D3D12_COMMAND_SIGNATURE_DESC csDesc{ .NumArgumentDescs{ 1 },.pArgumentDescs{ &argDesc } };
 
 			csDesc.ByteStride = 16;
 			argDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
@@ -269,17 +258,6 @@ namespace RHI::D3D12 {
 		this->m_FenceEvent = CreateEventW(nullptr, false, false, nullptr);
 
 		this->m_CommandListsToExecute.reserve(64);
-
-
-		if (desc.EnableHeapDirectlyIndexed) {//TODO : check if the device supports it
-			D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = { D3D_SHADER_MODEL_6_6 };
-			bool hasShaderModel{ HRusltSucccess == this->m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel)) };
-
-			this->m_HeapDirectlyIndexedEnabled =
-				this->m_Options.ResourceBindingTier >= D3D12_RESOURCE_BINDING_TIER_3 &&
-				hasShaderModel &&
-				shaderModel.HighestShaderModel >= D3D_SHADER_MODEL_6_6;
-		}
 	}
 
 
@@ -329,11 +307,6 @@ namespace RHI::D3D12 {
 			rsDesc.Desc_1_1.Flags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 		if (isLocal)
 			rsDesc.Desc_1_1.Flags |= D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
-
-		if (this->m_HeapDirectlyIndexedEnabled) {
-			rsDesc.Desc_1_1.Flags |= D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED;
-			rsDesc.Desc_1_1.Flags |= D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
-		}
 
 		if (!rootParameters.empty()) {
 			rsDesc.Desc_1_1.pParameters = rootParameters.data();
@@ -400,8 +373,6 @@ namespace RHI::D3D12 {
 			.NumRenderTargets{ static_cast<Uint32>(fbinfo.ColorFormatCount) },
 			.DSVFormat { Get_DXGIFormatMapping(fbinfo.DepthFormat).RTVFormat },
 			.SampleDesc{.Count{ fbinfo.SampleCount }, .Quality{ fbinfo.SampleQuality } },
-			.NodeMask{ 1 },
-			.Flags{ D3D12_PIPELINE_STATE_FLAG_NONE }
 		};
 
 		ASSERT(((desc.DepthStencilState.DepthEnable || desc.DepthStencilState.StencilEnable) && fbinfo.DepthFormat != RHIFormat::UNKNOWN) || (!desc.DepthStencilState.DepthEnable && !desc.DepthStencilState.StencilEnable));
@@ -427,6 +398,10 @@ namespace RHI::D3D12 {
 
 		RefCountPtr<ID3D12PipelineState> pipelineState;
 		D3D12_CHECK(this->m_Context.Device->CreateGraphicsPipelineState(&desc, PARTING_IID_PPV_ARGS(&pipelineState)));
+
+		static Uint32 Index{ 0 };
+		pipelineState->SetName((WString{ _W("Pipeline") } + std::to_wstring(Index)).c_str());
+
 		return pipelineState;
 	}
 
@@ -592,7 +567,7 @@ namespace RHI::D3D12 {
 		Texture* texture{ new Texture(this->m_Context, this->m_Resources, desc, pResource->GetDesc()) };
 		ASSERT(nullptr != texture);
 
-		texture->m_Resource = pResource;
+		texture->m_Resource = ::MoveTemp(pResource);
 		texture->PostCreate();
 
 		return RefCountPtr<Texture>::Create(texture);
@@ -1196,9 +1171,7 @@ namespace RHI::D3D12 {
 		fb->m_RenderTargetWidth = texture->m_Desc.Extent.Width;
 		fb->m_RenderTargetHeight = texture->m_Desc.Extent.Height;
 
-		for (Uint32 rt = 0; rt < desc.ColorAttachmentCount; ++rt) {
-			const auto& attachment{ desc.ColorAttachments[rt] };
-
+		for (const auto& attachment : Span<const RHIFrameBufferAttachment<D3D12Tag>>{ desc.ColorAttachments.data(), desc.ColorAttachmentCount }) {
 			Texture* texture{ attachment.Texture };
 			ASSERT(texture->m_Desc.Extent.Width == fb->m_RenderTargetWidth);
 			ASSERT(texture->m_Desc.Extent.Height == fb->m_RenderTargetHeight);
@@ -1214,8 +1187,9 @@ namespace RHI::D3D12 {
 
 		if (desc.DepthStencilAttachment.Is_Valid()) {
 			Texture* texture{ desc.DepthStencilAttachment.Texture };
-			fb->m_RenderTargetWidth = texture->m_Desc.Extent.Width;
-			fb->m_RenderTargetHeight = texture->m_Desc.Extent.Height;
+
+			ASSERT(texture->m_Desc.Extent.Width == fb->m_RenderTargetWidth);
+			ASSERT(texture->m_Desc.Extent.Height == fb->m_RenderTargetHeight);
 
 			const auto index{ this->m_Resources.DepthStencilViewHeap.AllocateDescriptor() };
 
@@ -1223,7 +1197,7 @@ namespace RHI::D3D12 {
 			texture->CreateDSV(descriptorHandle, desc.DepthStencilAttachment.Subresources, desc.DepthStencilAttachment.IsReadOnly);
 
 			fb->DSV = index;
-			fb->m_Texture[fb->m_TextureCount++] = texture;
+			fb->m_Texture[fb->m_TextureCount++] = texture;//Ignore err
 		}
 
 		return RefCountPtr<FrameBuffer>::Create(fb);
@@ -1350,8 +1324,6 @@ namespace RHI::D3D12 {
 		case CopyQueue:return (nullptr != this->Get_Queue(RHICommandQueue::Copy));
 		case ConservativeRasterization:return true;
 		case ConstantBufferRanges:return true;
-		case HeapDirectlyIndexed:return this->m_HeapDirectlyIndexedEnabled;
-		case SamplerFeedback:return this->m_SamplerFeedbackSupported;
 		default:return false;
 		}
 	}

@@ -89,14 +89,14 @@ public:
 		this->m_Buffers = MakeShared<decltype(this->m_Buffers)::element_type>();
 		this->m_Buffers->IndexBuffer = this->CreateGeometryBuffer(device, commandList, _W("IndexBuffer"), g_Indices, sizeof(g_Indices), false, false);
 
-		Uint32 vertexBufferSize{ 0 };
-		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Position, RHI::RHIBufferRange{ .Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Positions) }, });
+		Uint64 vertexBufferSize{ 0 };
+		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Position, RHI::RHIBufferRange{.Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Positions) } });
 		vertexBufferSize += sizeof(g_Positions);
-		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord1, RHI::RHIBufferRange{ .Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_TexCoords) }, });
+		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord1, RHI::RHIBufferRange{.Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_TexCoords) } });
 		vertexBufferSize += sizeof(g_TexCoords);
-		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Normal, RHI::RHIBufferRange{ .Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Normals) }, });
+		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Normal, RHI::RHIBufferRange{.Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Normals) } });
 		vertexBufferSize += sizeof(g_Normals);
-		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Tangent, RHI::RHIBufferRange{ .Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Tangents) }, });
+		this->m_Buffers->Set_VertexBufferRange(RHI::RHIVertexAttribute::Tangent, RHI::RHIBufferRange{.Offset{ vertexBufferSize }, .ByteSize{ sizeof(g_Tangents) } });
 		vertexBufferSize += sizeof(g_Tangents);
 		this->m_Buffers->VertexBuffer = this->CreateGeometryBuffer(device, commandList, _W("VertexBuffer"), nullptr, vertexBufferSize, true, false);
 
@@ -110,9 +110,9 @@ public:
 		InstanceData instance{};
 		instance.Transform = Math::MatF34{ Math::Transpose(Math::AffineToHomogeneous(Math::AffineF3::Identity())) };
 		instance.PrevTransform = instance.Transform;
-		this->m_Buffers->InstanceBuffer = CreateGeometryBuffer(device, commandList, _W("VertexBufferTransform"), &instance, sizeof(instance), false, true);
+		this->m_Buffers->InstanceBuffer = CreateGeometryBuffer(device, commandList, _W("VertexBufferTransform"), &instance, sizeof(InstanceData), false, true);
 
-		Path textureFileName{ ::Get_CatallogDirectory().parent_path() / "media/Amy-Logo.jpg" };
+		Path textureFileName{ ::Get_CatallogDirectory().parent_path() / "media/Amy-Logo.png" };
 
 		this->m_Material = MakeShared<decltype(this->m_Material)::element_type>();
 		this->m_Material->Name = "CubeMaterial";
@@ -205,7 +205,7 @@ private:
 
 		MaterialConstants constants;
 		material->FillConstantBuffer(constants);
-		commandList->WriteBuffer(buffer, &constants, sizeof(constants));
+		commandList->WriteBuffer(buffer, &constants, sizeof(MaterialConstants));
 
 		return buffer;
 	}
@@ -338,6 +338,8 @@ public:
 			false
 		);
 
+		/*this->m_CommandList->Close();
+		this->m_DeviceManager->Get_Device()->ExecuteCommandList(this->m_CommandList);*/
 
 		decltype(this->m_DeferredLightingPass)::element_type::Inputs deferredInputs;
 		deferredInputs.Set_GBuffer(*this->m_RenderTargets);
@@ -346,7 +348,13 @@ public:
 		deferredInputs.Lights = &this->m_Scene.Get_Lights();
 		deferredInputs.Output = this->m_RenderTargets->ShadedColor;
 
+		/*this->m_CommandList->Close();
+		this->m_DeviceManager->Get_Device()->ExecuteCommandList(this->m_CommandList);*/
+
 		this->m_DeferredLightingPass->Render(this->m_CommandList, this->m_View, deferredInputs);
+
+		/*this->m_CommandList->Close();
+		this->m_DeviceManager->Get_Device()->ExecuteCommandList(this->m_CommandList);*/
 
 		this->m_CommonPasses->BLITTexture(this->m_CommandList, framebuffer, this->m_RenderTargets->ShadedColor, this->m_BindingCache.get());
 
@@ -360,8 +368,8 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 
 	Parting::DeviceCreationParameters deviceParams;
 
-	deviceParams.BackBufferWidth = 1920;
-	deviceParams.BackBufferHeight = 1080;
+	/*deviceParams.BackBufferWidth = 1920;
+	deviceParams.BackBufferHeight = 1080;*/
 	//deviceParams.StartFullscreen = false;
 	deviceParams.VsyncEnabled = true;
 	deviceParams.EnablePerMonitorDPI = true;
