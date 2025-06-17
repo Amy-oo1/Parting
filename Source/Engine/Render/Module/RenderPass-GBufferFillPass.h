@@ -353,7 +353,7 @@ namespace Parting {
 		constants.NormalOffset = context.NormalOffset;
 		constants.TangentOffset = context.TangentOffset;
 
-		commandList->SetPushConstants(&constants, sizeof(GBufferPushConstants));
+		commandList->SetPushConstants(&constants, sizeof(decltype(constants)));
 
 		args.StartInstanceLocation = 0;
 		args.StartVertexLocation = 0;

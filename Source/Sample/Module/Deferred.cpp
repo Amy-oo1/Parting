@@ -111,7 +111,7 @@ public:
 		instance.PrevTransform = instance.Transform;
 		this->m_Buffers->InstanceBuffer = CreateGeometryBuffer(device, commandList, _W("VertexBufferTransform"), &instance, sizeof(InstanceData), false, true);
 
-		Path textureFileName{ ::Get_CatallogDirectory().parent_path() / "media/Amy-Logo.png" };
+		Path textureFileName{ ::Get_CatallogDirectory().parent_path() / "media/Amy-Logo.jpg" };
 
 		this->m_Material = MakeShared<decltype(this->m_Material)::element_type>();
 		this->m_Material->Name = "CubeMaterial";
@@ -280,7 +280,7 @@ private:
 
 public:
 	void Animate(float seconds) override {
-		/*m_Rotation += seconds * 1.1f;*/
+		m_Rotation += seconds * 1.1f;
 		this->m_DeviceManager->Set_InformativeWindowTitle(g_WindowTitle);
 	}
 
@@ -337,9 +337,6 @@ public:
 			false
 		);
 
-		this->m_CommandList->Close();
-		this->m_DeviceManager->Get_Device()->ExecuteCommandList(this->m_CommandList);
-
 		decltype(this->m_DeferredLightingPass)::element_type::Inputs deferredInputs;
 		deferredInputs.Set_GBuffer(*this->m_RenderTargets);
 		deferredInputs.AmbientColorTop = 0.2f;
@@ -347,13 +344,7 @@ public:
 		deferredInputs.Lights = &this->m_Scene.Get_Lights();
 		deferredInputs.Output = this->m_RenderTargets->ShadedColor;
 
-		/*this->m_CommandList->Close();
-		this->m_DeviceManager->Get_Device()->ExecuteCommandList(this->m_CommandList);*/
-
 		this->m_DeferredLightingPass->Render(this->m_CommandList, this->m_View, deferredInputs);
-
-		/*this->m_CommandList->Close();
-		this->m_DeviceManager->Get_Device()->ExecuteCommandList(this->m_CommandList);*/
 
 		this->m_CommonPasses->BLITTexture(this->m_CommandList, framebuffer, this->m_RenderTargets->ShadedColor, this->m_BindingCache.get());
 
@@ -367,14 +358,16 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 
 	Parting::DeviceCreationParameters deviceParams;
 
-	/*deviceParams.BackBufferWidth = 1920;
-	deviceParams.BackBufferHeight = 1080;*/
-	//deviceParams.StartFullscreen = false;
+	deviceParams.BackBufferWidth = 1920;
+	deviceParams.BackBufferHeight = 1080;
+
+	deviceParams.StartFullscreen = false;
 	deviceParams.VsyncEnabled = true;
 	deviceParams.EnablePerMonitorDPI = true;
 	deviceParams.SupportExplicitDisplayScaling = true;
-	deviceParams.EnableDebugRuntime = true;
-	deviceParams.EnableGPUValidation = true;
+
+	/*deviceParams.EnableDebugRuntime = true;
+	deviceParams.EnableGPUValidation = true;*/
 
 	auto deviceManager{ MakeUnique<DeviceManager>() };
 	if (false == deviceManager->CreateWindowDeviceAndSwapChain(deviceParams, g_WindowTitle))

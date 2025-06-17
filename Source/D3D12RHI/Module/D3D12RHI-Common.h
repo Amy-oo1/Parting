@@ -302,7 +302,7 @@ namespace RHI::D3D12 {
 		Uint64 BufferSize{ 0 };
 		Uint64 WritePointer{ 0 };
 		void* CPUVirtualAddress{ nullptr };
-		D3D12_GPU_VIRTUAL_ADDRESS GPUVirtualAddress;
+		D3D12_GPU_VIRTUAL_ADDRESS GPUVirtualAddress{ static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(0) };
 
 		~BufferChunk(void) {
 			if (nullptr != this->D3D12Buffer && nullptr != this->CPUVirtualAddress) {
@@ -634,7 +634,8 @@ namespace RHI::D3D12 {
 	}
 
 	inline void D3D12StaticDescriptorHeap::Imp_ReleaseDescriptor(D3D12DescriptorIndex Offset, Uint32 Count) {
-		ASSERT(Count >= 1);
+		if (0 == Count)
+			return;
 
 		{
 			LockGuard lock{ this->m_Mutex };

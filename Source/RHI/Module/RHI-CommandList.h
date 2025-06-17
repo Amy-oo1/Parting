@@ -193,7 +193,7 @@ namespace RHI {
 
 			void Draw(const RHIDrawArguments& args) { this->Get_Derived()->Imp_Draw(args); }
 
-			void DrawIndexed(const RHIDrawArguments& args) { this->Get_Derived()->Imp_Draw(args); }
+			void DrawIndexed(const RHIDrawArguments& args) { this->Get_Derived()->Imp_DrawIndexed(args); }
 
 			void DrawIndirect(Uint32 OffsetBytes, Uint32 Count = 1) { this->Get_Derived()->Imp_DrawIndirect(OffsetBytes, Count); }
 

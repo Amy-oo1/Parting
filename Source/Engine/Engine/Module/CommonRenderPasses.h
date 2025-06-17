@@ -305,7 +305,7 @@ namespace Parting {
 				.TargetSize { params.TargetBox.Diagonal() },
 			};
 
-			commandlist->SetPushConstants(&blitConstants, sizeof(blitConstants));
+			commandlist->SetPushConstants(&blitConstants, sizeof(decltype(blitConstants)));
 			commandlist->Draw(RHI::RHIDrawArguments{ .VertexCount{ 4 } });
 		}
 

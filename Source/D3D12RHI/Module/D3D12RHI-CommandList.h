@@ -329,7 +329,7 @@ namespace RHI::D3D12 {
 	}
 
 	inline void CommandList::BindGraphicsPipeline(GraphicsPipeline* pso, bool updateRootSignature) const {
-		const auto& pipelineDesc = pso->m_Desc;
+		const auto& pipelineDesc{ pso->m_Desc };
 
 		if (updateRootSignature)
 			this->m_ActiveCommandList->CommandList->SetGraphicsRootSignature(pso->m_RootSignature->m_RootSignature);
@@ -483,7 +483,7 @@ namespace RHI::D3D12 {
 				// Bind the volatile constant buffers
 				for (Uint32 volatileCbIndex = 0; volatileCbIndex < bindingSet->m_VolatileCBCount; ++volatileCbIndex) {
 					const auto& [ParameterIndex, buffer] { bindingSet->m_RootParametersVolatileCB[volatileCbIndex] };
-					auto rootParameterIndex = rootParameterOffset + ParameterIndex;
+					auto rootParameterIndex{ rootParameterOffset + ParameterIndex };
 
 					if (nullptr != buffer) {
 						if (buffer->m_Desc.IsVolatile) {
@@ -1191,10 +1191,10 @@ namespace RHI::D3D12 {
 		}
 
 		if (pso->m_Desc.RenderState.DepthStencilState.StencilEnable && (updatePipeline || updateStencilRef))
-			m_ActiveCommandList->CommandList->OMSetStencilRef(effectiveStencilRefValue);
+			this->m_ActiveCommandList->CommandList->OMSetStencilRef(effectiveStencilRefValue);
 
 		if (pso->m_RequiresBlendFactor && updateBlendFactor)
-			m_ActiveCommandList->CommandList->OMSetBlendFactor(&State.BlendConstantColor.R);
+			this->m_ActiveCommandList->CommandList->OMSetBlendFactor(&State.BlendConstantColor.R);
 
 		if (updateFramebuffer)
 			this->BindFrameBuffer(framebuffer);
@@ -1215,7 +1215,7 @@ namespace RHI::D3D12 {
 				IBV.SizeInBytes = static_cast<Uint32>(buffer->m_Desc.ByteSize - State.IndexBuffer.Offset);
 				IBV.BufferLocation = buffer->m_GPUVirtualAddress + State.IndexBuffer.Offset;
 
-				m_Instance->ReferencedResources.push_back(State.IndexBuffer.Buffer);
+				this->m_Instance->ReferencedResources.push_back(State.IndexBuffer.Buffer);
 			}
 
 			this->m_ActiveCommandList->CommandList->IASetIndexBuffer(&IBV);
@@ -1241,12 +1241,12 @@ namespace RHI::D3D12 {
 				VBVs[binding.Slot].BufferLocation = buffer->m_GPUVirtualAddress + binding.Offset;
 				maxVbIndex = Math::Max(maxVbIndex, binding.Slot);
 
-				m_Instance->ReferencedResources.push_back(buffer);
+				this->m_Instance->ReferencedResources.push_back(buffer);
 			}
 
 			if (this->m_CurrentGraphicsStateValid)
 				for (Uint32 Index = 0; Index < this->m_CurrentGraphicsState.VertexBufferCount; ++Index) {
-					const auto& binding = this->m_CurrentGraphicsState.VertexBuffers[Index];
+					const auto& binding{ this->m_CurrentGraphicsState.VertexBuffers[Index] };
 
 					if (binding.Slot < g_MaxVertexAttributeCount)
 						maxVbIndex = Math::Max(maxVbIndex, binding.Slot);
@@ -1272,7 +1272,7 @@ namespace RHI::D3D12 {
 				if (nullptr != this->m_Instance)
 					this->m_Instance->ReferencedResources.push_back(framebufferDesc.ShadingRateAttachment.Texture);
 
-				m_ActiveCommandList->CommandList6->RSSetShadingRateImage(framebufferDesc.ShadingRateAttachment.Texture->m_Resource);
+				this->m_ActiveCommandList->CommandList6->RSSetShadingRateImage(framebufferDesc.ShadingRateAttachment.Texture->m_Resource);
 			}
 			else if (variableRateShadingCurrentlyEnabled)
 				this->m_ActiveCommandList->CommandList6->RSSetShadingRateImage(nullptr);
@@ -1342,6 +1342,9 @@ namespace RHI::D3D12 {
 	}
 
 	void CommandList::Imp_SetComputeState(const RHIComputeState<D3D12Tag>& State) {
+		ASSERT(nullptr != State.Pipeline); // validation layer handles this
+		ASSERT(nullptr != State.Pipeline->m_RootSignature); // validation layer handles this
+
 		ComputePipeline* pso{ State.Pipeline };
 
 		const bool updateRootSignature{
@@ -1540,9 +1543,8 @@ namespace RHI::D3D12 {
 	}
 
 	void CommandList::Imp_SetResourceStatesForBindingSet(BindingSet* bindingSet) {
-		for (auto bindingIndex : bindingSet->m_BindingsThatNeedTransitions)
-		{
-			const auto& binding = bindingSet->m_Desc.Bindings[bindingIndex];
+		for (auto bindingIndex : bindingSet->m_BindingsThatNeedTransitions){
+			const auto& binding{ bindingSet->m_Desc.Bindings[bindingIndex] };
 
 			switch (binding.Type) {
 				using enum RHIResourceType;
@@ -1577,7 +1579,7 @@ namespace RHI::D3D12 {
 	}
 
 	inline void CommandList::Imp_SetResourceStatesForFramebuffer(FrameBuffer* framebuffer) {
-		const auto& desc = framebuffer->Get_Desc();
+		const auto& desc{ framebuffer->Get_Desc() };
 
 		for (const auto& attachment : Span<const RHI::RHIFrameBufferAttachment<D3D12Tag>>(desc.ColorAttachments.data(), desc.ColorAttachmentCount))
 			this->SetTextureState(attachment.Texture, attachment.Subresources, RHIResourceState::RenderTarget);
