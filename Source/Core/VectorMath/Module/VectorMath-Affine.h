@@ -227,7 +227,7 @@ namespace Math {
 		};
 
 		// Matrix form of Rodrigues' rotation formula
-		Mat<Type, 3, 3> mat{ Diagonal<Type, 3>(cosTheta) + crossProductMat * sinTheta + OuterProduct(axis, axis) * static_cast<Type>(1) - cosTheta };
+		Mat<Type, 3, 3> mat{ Diagonal<Type, 3>(cosTheta) + crossProductMat * sinTheta + OuterProduct(axis, axis) * (static_cast<Type>(1) - cosTheta) };
 
 		return Affine<Type, 3>{ mat, Vec<Type, 3>::Zero() };
 	}

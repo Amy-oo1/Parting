@@ -117,7 +117,6 @@ namespace Parting {
 		Array<bool, Tounderlying(KeyboardControls::COUNT)> m_KeyboardState{};
 		Array<bool, Tounderlying(MouseButtons::COUNT)> m_MouseButtonState{};
 
-
 		Math::VecF2 m_MousePos{ Math::VecF2::Zero() };
 		Math::VecF2 m_MousePosPrev{ Math::VecF2::Zero() };
 		Math::VecF2 m_MouseMotionAccumulator{ Math::VecF2::Zero() };
@@ -133,8 +132,6 @@ namespace Parting {
 		void Imp_Animate(float deltaT);
 
 	};
-
-
 
 	void FirstPersonCamera::LookAt(Math::VecF3 cameraPos, Math::VecF3 cameraTarget, Math::VecF3 cameraUp) {
 		this->BaseLookAt(cameraPos, cameraTarget, cameraUp);

@@ -282,7 +282,7 @@ namespace Parting {
 		static void KeyCallback_GLFW(GLFWwindow* window, Int32 key, Int32 scancode, Int32 action, Int32 mods) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->KeyboardUpdate(key, scancode, action, mods); }
 		static void CharModsCallback_GLFW(GLFWwindow* window, Uint32 unicode, Int32 mods) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->KeyboardCharInput(unicode, mods); }
 		static void MousePosCallback_GLFW(GLFWwindow* window, double xpos, double ypos) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->MousePosUpdate(xpos, ypos); }
-		static void MouseButtonCallback_GLFW(GLFWwindow* window, int button, Int32 action, Int32 mods) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->MouseButtonUpdate(button, action, mods); }
+		static void MouseButtonCallback_GLFW(GLFWwindow* window, Int32 button, Int32 action, Int32 mods) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->MouseButtonUpdate(button, action, mods); }
 		static void MouseScrollCallback_GLFW(GLFWwindow* window, double xoffset, double yoffset) { reinterpret_cast<DeviceManagerBase<Derived, APITag>*>(::glfwGetWindowUserPointer(window))->MouseScrollUpdate(xoffset, yoffset); }
 		static void JoystickConnectionCallback_GLFW(Int32 joyId, Int32 connectDisconnect) {
 			if (GLFW_CONNECTED == connectDisconnect)
@@ -877,7 +877,4 @@ namespace Parting {
 			if (pass->MouseScrollUpdate(xoffset, yoffset))
 				break;
 	}
-
-
-
 }

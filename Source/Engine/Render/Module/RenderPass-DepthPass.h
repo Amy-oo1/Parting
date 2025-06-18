@@ -235,7 +235,7 @@ namespace Parting {
 			BuildVertexAttributeDesc(builder.Reset(), RHI::RHIVertexAttribute::Transform, "TRANSFORM", 2)
 		};
 
-		return this->m_Device->CreateInputLayout(aInputDescs.data(), static_cast<Uint32>(aInputDescs.size()), vertexShader);
+		return this->m_Device->CreateInputLayout(aInputDescs.data(), static_cast<Uint32>(aInputDescs.size()));
 	}
 
 	template<RHI::APITagConcept APITag>

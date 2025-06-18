@@ -153,7 +153,7 @@ namespace Parting {
 			RHI::RHIVertexAttributeDesc{ vertexAttribDescBuilder.Set_Attribute(RHI::RHIVertexAttribute::COUNT).Set_Name("COLOR").Set_Format(RHI::RHIFormat::RGBA8_UNORM).Set_Offset(offsetof(ImDrawVert,col)).Build() }
 		};
 
-		this->ShaderAttribLayout = this->Device->CreateInputLayout(vertexAttribLayout.data(), static_cast<Uint32>(vertexAttribLayout.size()), this->VS.Get());
+		this->ShaderAttribLayout = this->Device->CreateInputLayout(vertexAttribLayout.data(), static_cast<Uint32>(vertexAttribLayout.size()));
 
 		// create PSO
 		{

@@ -170,8 +170,7 @@ private:
 	RHI::RefCountPtr<Imp_CommandList> m_CommandList;
 	Array<RHI::RefCountPtr<Imp_CommandList>, 6> m_FaceCommandLists;
 
-	/*bool m_UseThreads{ true };*/
-	bool m_UseThreads{ false };
+	bool m_UseThreads{ true };
 
 	UniquePtr<tf::Executor> m_Executor;
 
@@ -313,8 +312,8 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	deviceParams.EnablePerMonitorDPI = true;
 	deviceParams.SupportExplicitDisplayScaling = true;
 
-	deviceParams.EnableDebugRuntime = true;
-	deviceParams.EnableGPUValidation = true;
+	/*deviceParams.EnableDebugRuntime = true;
+	deviceParams.EnableGPUValidation = true;*/
 
 	SharedPtr<DeviceManager> deviceManager{ MakeShared<DeviceManager>() };
 	if (false == deviceManager->CreateWindowDeviceAndSwapChain(deviceParams, g_WindowTitle))

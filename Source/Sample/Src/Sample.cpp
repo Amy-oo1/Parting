@@ -232,26 +232,26 @@ struct SmaplerUIData final {
 	AntiAliasingMode												AntiAliasingMode{ AntiAliasingMode::TEMPORAL };
 	Parting::TemporalAntiAliasingJitter								TemporalAntiAliasingJitter{ Parting::TemporalAntiAliasingJitter::MSAA };
 
-	bool															ShowUI{ true };
+	bool															ShowUI{ /*true*/false };
 	bool															ShowConsole{ false };
-	bool															UseDeferredShading{ true };
+	bool															UseDeferredShading{ /*true*/false };
 	bool															Stereo{ false };
-	bool															EnableSSAO{ true };
+	bool															EnableSSAO{ /*true*/false };
 	bool															UseThirdPersonCamera{ false };
 	bool															EnableAnimations{ false };
 	bool															ShaderReloadRequested{ false };
 
 	bool															EnableVsync{ true };
 
-	bool															EnableProceduralSky{ true };
-	bool															EnableBloom{ true };
+	bool															EnableProceduralSky{ /*true*/false };
+	bool															EnableBloom{ /*true*/false };
 	float															BloomSigma{ 32.f };
 	float															BloomAlpha{ 0.05f };
-	bool															EnableTranslucency{ true };
+	bool															EnableTranslucency{ /*true*/false };
 	bool															EnableMaterialEvents{ false };
-	bool															EnableShadows{ true };
+	bool															EnableShadows{ /*true*/false };
 	float															AmbientIntensity{ 1.0f };
-	bool															EnableLightProbe{ true };
+	bool															EnableLightProbe{ /*true*/false };
 	float															LightProbeDiffuseScale{ 1.f };
 	float															LightProbeSpecularScale{ 1.f };
 	float															CsmExponent{ 4.f };
@@ -356,68 +356,6 @@ public:
 	bool Is_SceneLoading(void) const { return nullptr != this->m_SceneLoadingThread; }
 
 	const SharedPtr<Parting::Scene<CurrentAPI>>& Get_Scene(void) const { return this->m_Scene; }
-
-
-	bool LoadScene(SharedPtr<IFileSystem> fs, const Path& sceneFileName) override {
-		//TODO :add Time Show
-
-		this->m_Scene = MakeUnique<Parting::Scene<CurrentAPI>>(this->m_DeviceManager->Get_Device(), *this->m_ShaderFactory, fs, this->m_TextureCache);
-
-		//TODO add time cast info
-
-		return this->m_Scene->Load(sceneFileName);
-	}
-
-	virtual void SceneLoaded(void) override {
-		this->Parting::ApplicationBase<CurrentAPI>::SceneLoaded();
-
-		this->m_Scene->FinishedLoading(this->Get_FrameIndex());
-
-		this->m_WallclockTime = 0.f;
-		this->m_PreviousViewsValid = false;
-
-		for (const auto& Light : this->m_Scene->Get_SceneGraph()->Get_Lights())
-			if (LightType_Directional == Light->Get_LightType()) {
-				this->m_SunLight = StaticPointerCast<Parting::DirectionalLight<CurrentAPI>>(Light);
-				if (this->m_SunLight->Irradiance <= 0.f)
-					this->m_SunLight->Irradiance = 1.f;
-				break;
-			}
-
-		if (nullptr == this->m_SunLight) {
-			m_SunLight = MakeShared<Parting::DirectionalLight<CurrentAPI>>();
-			m_SunLight->AngularSize = 0.53f;
-			m_SunLight->Irradiance = 1.f;
-
-			auto node{ MakeShared<Parting::SceneGraphNode<CurrentAPI>>() };
-			node->Set_Leaf(this->m_SunLight);
-			this->m_SunLight->Set_Direction(Math::VecD3{ 0.1, -0.9, 0.1 });
-			this->m_SunLight->Set_Name("Sun");
-			this->m_Scene->Get_SceneGraph()->Attach(this->m_Scene->Get_SceneGraph()->Get_RootNode(), node);
-		}
-
-		auto cameras{ this->m_Scene->Get_SceneGraph()->Get_Cameras() };
-		if (!cameras.empty())
-			this->m_UIData.ActiveSceneCamera = cameras[0];
-		else {
-			this->m_UIData.ActiveSceneCamera.reset();
-
-			this->m_FirstPersonCamera.LookAt(
-				Math::VecF3{ 0.f, 1.8f, 0.f },
-				Math::VecF3{ 1.f, 1.8f, 0.f }
-			);
-			this->m_CameraVerticalFov = 60.f;
-		}
-
-		this->m_ThirdPersonCamera.Set_Rotation(Math::Radians(135.f), Math::Radians(20.f));
-		this->PointThirdPersonCameraAt(this->m_Scene->Get_SceneGraph()->Get_RootNode());
-		this->m_UIData.UseThirdPersonCamera = true;
-
-		this->CopyActiveCameraToFirstPerson();
-
-		//TODO :PrintSceneGraph
-
-	}
 
 	void SetCurrentScene(const String& sceneName) {
 		if (sceneName == this->m_CurrentSceneName)
@@ -688,6 +626,55 @@ public:
 
 
 public:
+	/*bool KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) {
+		if (GLFW_KEY_ESCAPE == key && GLFW_PRESS == action) {
+			this->m_UIData.ShowUI = !this->m_UIData.ShowUI;
+			return true;
+		}
+
+		if (GLFW_KEY_GRAVE_ACCENT == key && GLFW_PRESS = action)
+		{
+			m_ui.ShowConsole = !m_ui.ShowConsole;
+			return true;
+		}
+
+		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+		{
+			m_ui.EnableAnimations = !m_ui.EnableAnimations;
+			return true;
+		}
+
+		if (key == GLFW_KEY_T && action == GLFW_PRESS)
+		{
+			CopyActiveCameraToFirstPerson();
+			if (m_ui.ActiveSceneCamera)
+			{
+				m_ui.UseThirdPersonCamera = false;
+				m_ui.ActiveSceneCamera = nullptr;
+			}
+			else
+			{
+				m_ui.UseThirdPersonCamera = !m_ui.UseThirdPersonCamera;
+			}
+			return true;
+		}
+
+		if (!m_ui.ActiveSceneCamera)
+			GetActiveCamera().KeyboardUpdate(key, scancode, action, mods);
+		return true;
+	}*/
+
+	bool MousePosUpdate(double xpos, double ypos) {
+
+	}
+	bool MouseScrollUpdate(double xoffset, double yoffset) {
+
+	}
+	bool MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) {
+
+	}
+
+
 	void Animate(float fElapsedTimeSeconds) override {
 		if (nullptr == this->m_UIData.ActiveSceneCamera) {
 			if (this->m_UIData.UseThirdPersonCamera)
@@ -989,6 +976,65 @@ public:
 		this->m_DeviceManager->Set_VsyncEnabled(this->m_UIData.EnableVsync);
 	}
 
+	bool LoadScene(SharedPtr<IFileSystem> fs, const Path& sceneFileName) override {
+		//TODO :add Time Show
+
+		this->m_Scene = MakeUnique<Parting::Scene<CurrentAPI>>(this->m_DeviceManager->Get_Device(), *this->m_ShaderFactory, fs, this->m_TextureCache);
+
+		//TODO add time cast info
+
+		return this->m_Scene->Load(sceneFileName);
+	}
+
+	void SceneLoaded(void) override {
+		this->Parting::ApplicationBase<CurrentAPI>::SceneLoaded();
+
+		this->m_Scene->FinishedLoading(this->Get_FrameIndex());
+
+		this->m_WallclockTime = 0.f;
+		this->m_PreviousViewsValid = false;
+
+		for (const auto& Light : this->m_Scene->Get_SceneGraph()->Get_Lights())
+			if (LightType_Directional == Light->Get_LightType()) {
+				this->m_SunLight = StaticPointerCast<Parting::DirectionalLight<CurrentAPI>>(Light);
+				if (this->m_SunLight->Irradiance <= 0.f)
+					this->m_SunLight->Irradiance = 1.f;
+				break;
+			}
+
+		if (nullptr == this->m_SunLight) {
+			m_SunLight = MakeShared<Parting::DirectionalLight<CurrentAPI>>();
+			m_SunLight->AngularSize = 0.53f;
+			m_SunLight->Irradiance = 1.f;
+
+			auto node{ MakeShared<Parting::SceneGraphNode<CurrentAPI>>() };
+			node->Set_Leaf(this->m_SunLight);
+			this->m_SunLight->Set_Direction(Math::VecD3{ 0.1, -0.9, 0.1 });
+			this->m_SunLight->Set_Name("Sun");
+			this->m_Scene->Get_SceneGraph()->Attach(this->m_Scene->Get_SceneGraph()->Get_RootNode(), node);
+		}
+
+		auto cameras{ this->m_Scene->Get_SceneGraph()->Get_Cameras() };
+		if (!cameras.empty())
+			this->m_UIData.ActiveSceneCamera = cameras[0];
+		else {
+			this->m_UIData.ActiveSceneCamera.reset();
+
+			this->m_FirstPersonCamera.LookAt(
+				Math::VecF3{ 0.f, 1.8f, 0.f },
+				Math::VecF3{ 1.f, 1.8f, 0.f }
+			);
+			this->m_CameraVerticalFov = 60.f;
+		}
+
+		this->m_ThirdPersonCamera.Set_Rotation(Math::Radians(135.f), Math::Radians(20.f));
+		this->PointThirdPersonCameraAt(this->m_Scene->Get_SceneGraph()->Get_RootNode());
+		this->m_UIData.UseThirdPersonCamera = true;
+
+		this->CopyActiveCameraToFirstPerson();
+
+		//TODO :PrintSceneGraph
+	}
 
 };
 
@@ -1234,7 +1280,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 
 	deviceParams.BackBufferWidth = 1920;
 	deviceParams.BackBufferHeight = 1080;
-	//deviceParams.StartFullscreen = false;
+	deviceParams.StartFullscreen = false;
 	deviceParams.VsyncEnabled = true;
 	deviceParams.EnablePerMonitorDPI = true;
 	deviceParams.SupportExplicitDisplayScaling = true;
