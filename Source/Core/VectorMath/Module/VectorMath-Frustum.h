@@ -50,7 +50,7 @@ namespace Math {
 			return Plane{ this->m_Normal * scale ,this->m_Distance * scale };
 		}
 
-		constexpr bool Isempty(void) const { return All(this->m_Normal == 0.f); }//TODO ; float must in right ... so nedd a  operator(float ,vec)....
+		constexpr bool Is_Empty(void) const { return All(this->m_Normal == 0.f); }//TODO ; float must in right ... so nedd a  operator(float ,vec)....
 	};
 
 	// six planes, normals pointing outside of the volume
@@ -89,7 +89,8 @@ namespace Math {
 		bool IntersectsWith(const Vec<float, 3>& point) const;
 		bool IntersectsWith(const Box<float, 3>& Box) const;
 
-		static constexpr Uint32 NumCorners = 8;
+		static constexpr Uint32 NumCorners{ 8 };
+
 		Vec<float, 3> Get_Corner(Corners index) const;
 
 		Frustum Normalize(void) const {
@@ -112,12 +113,26 @@ namespace Math {
 		bool Is_Open(void) const;		 // returns true if the frustum has at least one plane that trivially accepts all points
 		bool Is_Infinite(void) const;	   // returns true if the frustum trivially accepts all points
 
+		//TODO : Func should be less, be like Get_Plane(PlaneType::Near) or Get_Plane(PlaneType::Far) etc
+		STDNODISCARD Plane& Get_Pline(PlaneType type) { return this->m_Planes[Tounderlying(type)]; }
+		STDNODISCARD const Plane& Get_Pline(PlaneType type) const { return this->m_Planes[Tounderlying(type)]; }
+
+		void Set_Plane(PlaneType type, const Plane& plane) { this->m_Planes[Tounderlying(type)] = plane; }
+
+		//NOTE :not use it
 		Plane& Get_NearPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Near)]; }
 		Plane& Get_FarPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Far)]; }
 		Plane& Get_LeftPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Left)]; }
 		Plane& Get_RightPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Right)]; }
 		Plane& Get_TopPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Top)]; }
 		Plane& Get_BottomPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Bottom)]; }
+
+		void Set_NearPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Near)] = plane; }
+		void Set_FarPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Far)] = plane; }
+		void Set_LeftPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Left)] = plane; }
+		void Set_RightPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Right)] = plane; }
+		void Set_TopPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Top)] = plane; }
+		void Set_BottomPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Bottom)] = plane; }
 
 		const Plane& Get_NearPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Near)]; }
 		const Plane& Get_FarPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Far)]; }
@@ -126,10 +141,10 @@ namespace Math {
 		const Plane& Get_TopPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Top)]; }
 		const Plane& Get_BottomPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Bottom)]; }
 
-		static Frustum Empty(void);    // a frustum that doesn't intersect with any points
-		static Frustum Infinite(void); // a frustum that intersects with all points
+		STDNODISCARD static Frustum Empty(void);    // a frustum that doesn't intersect with any points
+		STDNODISCARD static Frustum Infinite(void); // a frustum that intersects with all points
 
-		/*static frustum fromBox(const box3& b);*/
+		STDNODISCARD static Frustum FromBox(const Box<float, 3>& b);
 	};
 
 
@@ -231,6 +246,19 @@ namespace Math {
 			plne = Plane{ Vec<float, 3>::Zero(), 1.f };
 
 		return Re;
+	}
+
+	inline Frustum Frustum::FromBox(const Box<float, 3>& b) {
+		Frustum f;
+
+		f.m_Planes[Tounderlying(PlaneType::Left)] = Plane{ Vec<float,3>{-1.f, 0.f, 0.f}, -b.m_Mins.X };
+		f.m_Planes[Tounderlying(PlaneType::Right)] = Plane{ Vec<float,3>{1.f, 0.f, 0.f}, b.m_Maxs.X };
+		f.m_Planes[Tounderlying(PlaneType::Bottom)] = Plane{ Vec<float,3>{0.f, -1.f, 0.f}, -b.m_Mins.Y };
+		f.m_Planes[Tounderlying(PlaneType::Top)] = Plane{ Vec<float,3>{0.f, 1.f, 0.f}, b.m_Maxs.Y };
+		f.m_Planes[Tounderlying(PlaneType::Near)] = Plane{ Vec<float,3>{0.f, 0.f, -1.f}, -b.m_Mins.Z };
+		f.m_Planes[Tounderlying(PlaneType::Far)] = Plane{ Vec<float,3>{0.f, 0.f, 1.f}, b.m_Maxs.Z };
+
+		return f;
 	}
 
 }

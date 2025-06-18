@@ -524,15 +524,15 @@ namespace Parting {
 				}
 
 				// Didn't find a file blob - copy the data into a new container.
-				if (!textureData) {
+				if (nullptr == textureData) {
 					void* dataCopy{ malloc(dataSize) };
-					ASSERT(dataCopy);
+					ASSERT(nullptr != dataCopy);
 					memcpy(dataCopy, dataPtr, dataSize);
 					textureData = MakeShared<Blob>(dataCopy, dataSize);
 				}
 
 				Int64 imageIndex{ activeImage - objects->images };
-				String name{ activeImage->name ? activeImage->name : fileName.filename().generic_string() + "[" + std::to_string(imageIndex) + "]" };
+				String name{ nullptr != activeImage->name ? activeImage->name : fileName.filename().generic_string() + String{ "[" } + ::IntegralToString(imageIndex) + String{ "]" } };
 				String mimeType{ activeImage->mime_type ? activeImage->mime_type : "" };
 
 				if (executor)
@@ -549,7 +549,7 @@ namespace Parting {
 				Path filePath{ fileName.parent_path() / uri };
 
 				// Try to replace the texture with DDS, if enabled.
-				if (c_SearchForDDS && !ddsImage) {
+				if (c_SearchForDDS && nullptr == ddsImage) {
 					Path filePathDDS{ filePath };
 
 					filePathDDS.replace_extension(".dds");
@@ -558,7 +558,7 @@ namespace Parting {
 						filePath = filePathDDS;
 				}
 
-				if (executor)
+				if (nullptr != executor)
 					loadedTexture = textureCache.LoadTextureFromFileAsync(filePath, sRGB, *executor);
 				else
 					loadedTexture = textureCache.LoadTextureFromFileDeferred(filePath, sRGB);
@@ -578,7 +578,7 @@ namespace Parting {
 			matinfo->ModelFileName = normalizedFileName;//TDOD :better Name and MimType to do
 			matinfo->MaterialIndexInModel = static_cast<Int32>(mat_idx);
 
-			bool useTransmission = false;
+			bool useTransmission{ false };
 
 			if (material.has_pbr_specular_glossiness) {
 				matinfo->UseSpecularGlossModel = true;
@@ -647,9 +647,10 @@ namespace Parting {
 			}
 
 			switch (material.alpha_mode) {
-			case cgltf_alpha_mode_opaque: matinfo->Domain = useTransmission ? MaterialDomain::Transmissive : MaterialDomain::Opaque; break;
-			case cgltf_alpha_mode_mask: matinfo->Domain = useTransmission ? MaterialDomain::TransmissiveAlphaTested : MaterialDomain::AlphaTested; break;
-			case cgltf_alpha_mode_blend: matinfo->Domain = useTransmission ? MaterialDomain::TransmissiveAlphaBlended : MaterialDomain::AlphaBlended; break;
+				using enum MaterialDomain;
+			case cgltf_alpha_mode_opaque: matinfo->Domain = useTransmission ? Transmissive : Opaque; break;
+			case cgltf_alpha_mode_mask: matinfo->Domain = useTransmission ? TransmissiveAlphaTested : AlphaTested; break;
+			case cgltf_alpha_mode_blend: matinfo->Domain = useTransmission ? TransmissiveAlphaBlended : AlphaBlended; break;
 			default: break;
 			}
 
@@ -1328,7 +1329,7 @@ namespace Parting {
 		struct StackItem final {
 			SharedPtr<SceneGraphNode<APITag>> dstParent;
 			cgltf_node** srcNodes{ nullptr };
-			Uint64 srcCount = 0;
+			Uint64 srcCount{ 0 };
 		};
 		Vector<StackItem> stack;
 
@@ -1406,7 +1407,7 @@ namespace Parting {
 				if (auto found{ lightMap.find(src->light) }; found != lightMap.end()) {
 					auto light = found->second;
 
-					if (dst->Get_Leaf()) {
+					if (nullptr != dst->Get_Leaf()) {
 						auto node{ MakeShared<SceneGraphNode<APITag>>() };
 						node->Set_Leaf(light);
 						graph->Attach(dst, node);
@@ -1458,9 +1459,8 @@ namespace Parting {
 
 		result.RootNode = root;
 
-		auto animationContainer = root;
+		auto animationContainer{ root };
 		if (objects->animations_count > 1) {
-			ASSERT(false);//anmiationContainer->Get_Leaf() == nullptr);
 			animationContainer = MakeShared<SceneGraphNode<APITag>>();
 			animationContainer->Set_Name("Animations");
 			graph->Attach(root, animationContainer);
@@ -1584,7 +1584,7 @@ namespace Parting {
 		if (c_ForceRebuildTangents) {
 			for (Uint64 buffer_idx = 0; buffer_idx < objects->buffers_count; ++buffer_idx) {
 				Path outputFileName{ fileName.parent_path() / fileName.stem() };
-				outputFileName += ".buffer" + IntegralToString(buffer_idx) + ".bin";
+				outputFileName += String{ ".buffer" } + IntegralToString(buffer_idx) + String{ ".bin" };
 
 				this->m_FS->WriteFile(outputFileName, objects->buffers[buffer_idx].data, objects->buffers[buffer_idx].size);
 			}

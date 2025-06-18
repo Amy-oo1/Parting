@@ -257,7 +257,6 @@ namespace Parting {
 		return this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Vertex)
 			.Set_RegisterSpace(DepthSapceInput)
-			.Set_RegisterSpaceIsDescriptorSet(true)//not support d3d11.... i do not lean d3d11 forever
 			.AddBinding(RHI::RHIBindingLayoutItem::StructuredBuffer_SRV(DepthBindingInstanceBuffer))
 			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(DepthBindingVertexBuffer))
 			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(DepthBindingPushConstants, sizeof(DepthPushConstants)))
@@ -289,7 +288,6 @@ namespace Parting {
 		auto layout{ this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Vertex | RHI::RHIShaderType::Pixel)
 			.Set_RegisterSpace(DepthSpaceView)
-			.Set_RegisterSpaceIsDescriptorSet(true)//not support d3d11.... i do not lean d3d11 forever
 			.AddBinding(RHI::RHIBindingLayoutItem::VolatileConstantBuffer(DepthBindingViewConstants))
 			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(DepthBindingMaterialSampler))
 			.Build()

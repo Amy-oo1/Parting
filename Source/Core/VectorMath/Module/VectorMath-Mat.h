@@ -38,7 +38,7 @@ namespace Math {
 		operator ConstArray_T (void) const { return this->m_Data; } \
 		Vec<Type, ColCount> & operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, ColCount> &>(this->m_Data[RowIndex*ColCount]); } \
 		const Vec<Type, ColCount> & operator [] (Uint32 RowIndex) const { return reinterpret_cast<const Vec<Type, ColCount> &>(this->m_Data[RowIndex*ColCount]); } \
-		Vec<Type, RowCount> Col(int ColIndex) const { Vec<Type, RowCount> Value; for (Uint32 RowIndex = 0; RowIndex < RowCount; RowIndex++) Value[RowIndex] = this->m_Data[RowIndex * ColCount + ColIndex]; return Value; }
+		Vec<Type, RowCount> Col(int ColIndex) const { Vec<Type, RowCount> Value; for (Uint32 RowIndex = 0; RowIndex < RowCount; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * ColCount + ColIndex]; return Value; }
 
 #undef MATRIX_MEMBERS
 
@@ -69,7 +69,7 @@ namespace Math {
 			Mat result;
 			for (Uint32 RowIndex = 0; RowIndex < RowCount; ++RowIndex)
 				for (Uint32 ColIndex = 0; ColIndex < ColCount; ++ColIndex)
-					result[RowIndex][ColIndex] = (RowIndex == ColIndex) ? Value[RowIndex] : Type{ 0 };
+					result[RowIndex][ColIndex] = (RowIndex == ColIndex) ? Value[RowIndex] : static_cast<Type>(0);
 			return result;
 		}
 
@@ -77,13 +77,13 @@ namespace Math {
 			Mat result;
 			for (Uint32 RowIndex = 0; RowIndex < RowCount; ++RowIndex)
 				for (Uint32 ColIndex = 0; ColIndex < ColCount; ++ColIndex)
-					result[RowIndex][ColIndex] = (RowIndex == ColIndex) ? Scale : Type{ 0 };
+					result[RowIndex][ColIndex] = (RowIndex == ColIndex) ? Scale : static_cast<Type>(0);
 			return result;
 		}
 
-		static Mat Identity(void) { return Mat::Diagonal(Type{ 1 }); }
+		static Mat Identity(void) { return Mat::Diagonal(static_cast<Type>(1)); }
 
-		static Mat Zero(void) { return Mat{ Type{ 0 } }; }
+		static Mat Zero(void) { return Mat{ static_cast<Type>(0) }; }
 	};
 
 	template <typename Type>
@@ -115,7 +115,7 @@ namespace Math {
 		}
 		constexpr Mat(const Vec<Type, 2>& _row0, const Vec<Type, 2>& _row1) :
 			M00{ _row0.X }, M01{ _row0.Y },
-			M10{ _row1.Y }, M11{ _row1.Y } {
+			M10{ _row1.X }, M11{ _row1.Y } {
 		}
 		template<typename OtherType>explicit constexpr Mat(const Mat<OtherType, 2, 2>& other) { for (Uint32 Index = 0; Index < 4; ++Index) this->m_Data[Index] = static_cast<Type>(other.m_Data[Index]); }
 
@@ -124,7 +124,7 @@ namespace Math {
 		Vec<Type, 2>& operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, 2> &>(this->m_Data[RowIndex * 2]); }
 		const Vec<Type, 2>& operator [] (Uint32 RowIndex) const { reinterpret_cast<const Vec<Type, 2>&>(this->m_Data[RowIndex * 2]); }
 
-		Vec<Type, 2> Col(int ColIndex) const { Vec<Type, 2> Value; for (Uint32 RowIndex = 0; RowIndex < 2; RowIndex++) Value[RowIndex] = this->m_Data[RowIndex * 2 + ColIndex]; return Value; }
+		Vec<Type, 2> Col(int ColIndex) const { Vec<Type, 2> Value; for (Uint32 RowIndex = 0; RowIndex < 2; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 2 + ColIndex]; return Value; }
 
 		constexpr static Mat FromCols(const Vec<Type, 2>& col0, const Vec<Type, 2>& col1) {
 			return Mat{
@@ -135,18 +135,18 @@ namespace Math {
 
 		constexpr static Mat Diagonal(Type diag) {
 			return Mat{
-				diag, Type{ 0 },
-				Type{ 0 }, diag
+				diag,					static_cast<Type>(0),
+				static_cast<Type>(0),	diag
 			};
 		}
 
 		constexpr static Mat Diagonal(Vec<Type, 2> Value) {
 			return Mat{
-				Value.X, Type{ 0 },
-				Type{ 0 }, Value.Y };
+				Value.X,				static_cast<Type>(0),
+				static_cast<Type>(0),	Value.Y };
 		}
 
-		constexpr static Mat Identity(void) { return Mat<Type, 3, 3>::Diagonal(Type{ 1 }); }
+		constexpr static Mat Identity(void) { return Mat<Type, 3, 3>::Diagonal(static_cast<Type>(1)); }
 
 		constexpr static Mat Zero(void) { return Mat{ static_cast<Type>(0) }; }
 
@@ -203,7 +203,7 @@ namespace Math {
 		Vec<Type, 3>& operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, 3> &>(this->m_Data[RowIndex * 3]); }
 		const Vec<Type, 3>& operator [] (Uint32 RowIndex) const { return reinterpret_cast<const Vec<Type, 3> &>(this->m_Data[RowIndex * 3]); }
 
-		Vec<Type, 3> Col(int ColIndex) const { Vec<Type, 3> Value; for (Uint32 RowIndex = 0; RowIndex < 3; RowIndex++) Value[RowIndex] = this->m_Data[RowIndex * 3 + ColIndex]; return Value; }
+		Vec<Type, 3> Col(int ColIndex) const { Vec<Type, 3> Value; for (Uint32 RowIndex = 0; RowIndex < 3; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 3 + ColIndex]; return Value; }
 
 		constexpr static Mat FromCols(const Vec<Type, 3>& col0, const Vec<Type, 3>& col1, const Vec<Type, 3>& col2) {
 			return Mat{
@@ -215,17 +215,17 @@ namespace Math {
 
 		constexpr static Mat Diagonal(Type diag) {
 			return Mat{
-				diag, static_cast<Type>(0), static_cast<Type>(0),
-				static_cast<Type>(0), diag, static_cast<Type>(0),
-				static_cast<Type>(0), static_cast<Type>(0), diag
+				diag,					static_cast<Type>(0),	static_cast<Type>(0),
+				static_cast<Type>(0),	diag,					static_cast<Type>(0),
+				static_cast<Type>(0),	static_cast<Type>(0),	diag
 			};
 		}
 
 		constexpr static Mat Diagonal(Vec<Type, 3> Value) {
 			return Mat{
-				Value.X, static_cast<Type>(0), static_cast<Type>(0),
-				static_cast<Type>(0), Value.Y, static_cast<Type>(0),
-				static_cast<Type>(0), static_cast<Type>(0), Value.Z
+				Value.X,				static_cast<Type>(0),	static_cast<Type>(0),
+				static_cast<Type>(0),	Value.Y,				static_cast<Type>(0),
+				static_cast<Type>(0),	static_cast<Type>(0),	Value.Z
 			};
 		}
 
@@ -289,7 +289,7 @@ namespace Math {
 		Vec<Type, 4>& operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, 4> &>(this->m_Data[RowIndex * 4]); }
 		const Vec<Type, 4>& operator [] (Uint32 RowIndex) const { return reinterpret_cast<const Vec<Type, 4> &>(this->m_Data[RowIndex * 4]); }
 
-		Vec<Type, 3> Col(int ColIndex) const { Vec<Type, 3> Value; for (Uint32 RowIndex = 0; RowIndex < 3; RowIndex++) Value[RowIndex] = this->m_Data[RowIndex * 4 + ColIndex]; return Value; }
+		Vec<Type, 3> Col(int ColIndex) const { Vec<Type, 3> Value; for (Uint32 RowIndex = 0; RowIndex < 3; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 4 + ColIndex]; return Value; }
 
 		constexpr static Mat FromCols(const Vec<Type, 3>& col0, const Vec<Type, 3>& col1, const Vec<Type, 3>& col2, const Vec<Type, 3>& col3) {
 			return Mat{
@@ -301,17 +301,17 @@ namespace Math {
 
 		constexpr static Mat Diagonal(Type diag) {
 			return Mat{
-				diag, static_cast<Type>(0), static_cast<Type>(0),static_cast<Type>(0),
-				static_cast<Type>(0), diag, static_cast<Type>(0),static_cast<Type>(0),
-				static_cast<Type>(0), static_cast<Type>(0), diag, static_cast<Type>(0)
+				diag,					static_cast<Type>(0),	static_cast<Type>(0),	static_cast<Type>(0),
+				static_cast<Type>(0),	diag,					static_cast<Type>(0),	static_cast<Type>(0),
+				static_cast<Type>(0),	static_cast<Type>(0),	diag,					static_cast<Type>(0)
 			};
 		}
 
 		constexpr static Mat Diagonal(Vec<Type, 3> Value) {
 			return Mat{
-				Value.X, static_cast<Type>(0), static_cast<Type>(0),static_cast<Type>(0),
-				static_cast<Type>(0), Value.Y, static_cast<Type>(0),static_cast<Type>(0),
-				static_cast<Type>(0), static_cast<Type>(0), Value.Z, static_cast<Type>(0)
+				Value.X,				static_cast<Type>(0),	static_cast<Type>(0),	static_cast<Type>(0),
+				static_cast<Type>(0),	Value.Y,				static_cast<Type>(0),	static_cast<Type>(0),
+				static_cast<Type>(0),	static_cast<Type>(0),	Value.Z,				static_cast<Type>(0)
 			};
 		}
 
@@ -373,7 +373,7 @@ namespace Math {
 		Vec<Type, 4>& operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, 4> &>(this->m_Data[RowIndex * 4]); }
 		const Vec<Type, 4>& operator [] (Uint32 RowIndex) const { return reinterpret_cast<const Vec<Type, 4> &>(this->m_Data[RowIndex * 4]); }
 
-		Vec<Type, 4> Col(int ColIndex) const { Vec<Type, 4> Value; for (Uint32 RowIndex = 0; RowIndex < 4; RowIndex++) Value[RowIndex] = this->m_Data[RowIndex * 4 + ColIndex]; return Value; }
+		Vec<Type, 4> Col(int ColIndex) const { Vec<Type, 4> Value; for (Uint32 RowIndex = 0; RowIndex < 4; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 4 + ColIndex]; return Value; }
 
 		constexpr static Mat FromCols(const Vec<Type, 4>& col0, const Vec<Type, 4>& col1, const Vec<Type, 4>& col2, const Vec<Type, 4>& col3) {
 			return Mat{
@@ -386,18 +386,18 @@ namespace Math {
 
 		constexpr static Mat Diagonal(Type diag) {
 			return Mat{
-				diag, static_cast<Type>(0), static_cast<Type>(0),static_cast<Type>(0),
-				static_cast<Type>(0), diag, static_cast<Type>(0),static_cast<Type>(0),
-				static_cast<Type>(0), static_cast<Type>(0), diag, static_cast<Type>(0),
-				static_cast<Type>(0), static_cast<Type>(0), static_cast<Type>(0), diag
+				diag,					static_cast<Type>(0),	static_cast<Type>(0),	static_cast<Type>(0),
+				static_cast<Type>(0),	diag,					static_cast<Type>(0),	static_cast<Type>(0),
+				static_cast<Type>(0),	static_cast<Type>(0),	diag,					static_cast<Type>(0),
+				static_cast<Type>(0),	static_cast<Type>(0),	static_cast<Type>(0),	diag
 			};
 		}
 		constexpr static Mat Diagonal(Vec<Type, 4> Value) {
 			return Mat{
-				Value.X, static_cast<Type>(0), static_cast<Type>(0),static_cast<Type>(0),
-				static_cast<Type>(0), Value.Y, static_cast<Type>(0),static_cast<Type>(0),
-				static_cast<Type>(0), static_cast<Type>(0), Value.Z, static_cast<Type>(0),
-				static_cast<Type>(0), static_cast<Type>(0), static_cast<Type>(0), Value.W
+				Value.X,				static_cast<Type>(0),	static_cast<Type>(0),	static_cast<Type>(0),
+				static_cast<Type>(0),	Value.Y,				static_cast<Type>(0),	static_cast<Type>(0),
+				static_cast<Type>(0),	static_cast<Type>(0),	Value.Z,				static_cast<Type>(0),
+				static_cast<Type>(0),	static_cast<Type>(0),	static_cast<Type>(0),	Value.W
 			};
 		}
 
@@ -847,7 +847,7 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type>	Vec<Type, 3> operator * (const Mat<Type, 3, 3>& a, const Vec<Type, 3>& b) {
+	template <typename Type> Vec<Type, 3> operator * (const Mat<Type, 3, 3>& a, const Vec<Type, 3>& b) {
 		Vec<Type, 3> result;
 		result.X = a.Row0.X * b.X + a.Row0.Y * b.Y + a.Row0.Z * b.Z;
 		result.Y = a.Row1.X * b.X + a.Row1.Y * b.Y + a.Row1.Z * b.Z;
@@ -855,7 +855,7 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type>	Vec<Type, 3> operator * (const Vec<Type, 3>& a, const Mat<Type, 3, 3>& b) {
+	template <typename Type> Vec<Type, 3> operator * (const Vec<Type, 3>& a, const Mat<Type, 3, 3>& b) {
 		Vec<Type, 3> result;
 		result.X = a.X * b.Row0.X + a.Y * b.Row1.X + a.Z * b.Row2.X;
 		result.Y = a.X * b.Row0.Y + a.Y * b.Row1.Y + a.Z * b.Row2.Y;
@@ -863,7 +863,7 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type>	Vec<Type, 4> operator * (const Mat<Type, 4, 4>& a, const Vec<Type, 4>& b) {
+	template <typename Type> Vec<Type, 4> operator * (const Mat<Type, 4, 4>& a, const Vec<Type, 4>& b) {
 		Vec<Type, 4> result;
 		result.X = a.Row0.X * b.X + a.Row0.Y * b.Y + a.Row0.Z * b.Z + a.Row0.W * b.W;
 		result.Y = a.Row1.X * b.X + a.Row1.Y * b.Y + a.Row1.Z * b.Z + a.Row1.W * b.W;
@@ -872,7 +872,7 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type>	Vec<Type, 4> operator * (const Vec<Type, 4>& a, const Mat<Type, 4, 4>& b) {
+	template <typename Type> Vec<Type, 4> operator * (const Vec<Type, 4>& a, const Mat<Type, 4, 4>& b) {
 		Vec<Type, 4> result;
 		result.X = a.X * b.Row0.X + a.Y * b.Row1.X + a.Z * b.Row2.X + a.W * b.Row3.X;
 		result.Y = a.X * b.Row0.Y + a.Y * b.Row1.Y + a.Z * b.Row2.Y + a.W * b.Row3.Y;
@@ -962,18 +962,18 @@ namespace Math {
 	template <typename Type, Uint32 N>Type Determinant(const Mat<Type, N, N>& m) {
 		// Calculate determinant using Gaussian elimination
 
-		Mat<Type, N, N> a = m;
-		Type result{ static_cast<Type>(1) };
+		auto a{ m };
+		auto result{ static_cast<Type>(1) };
 
 		// Loop through columns
 		for (Uint32 ColIndex = 0; ColIndex < N; ++ColIndex) {
 			// Select pivot element: maximum magnitude in this column at or below main diagonal
-			Uint32 pivot = ColIndex;
+			Uint32 pivot{ ColIndex };
 			for (Uint32 RowIndex = ColIndex + 1; RowIndex < N; ++RowIndex)
 				if (Abs(a[RowIndex][ColIndex]) > Abs(a[pivot][ColIndex]))
 					pivot = RowIndex;
 			if (Abs(a[pivot][ColIndex]) < Epsilon)
-				return Type{ static_cast<Type>(0) };
+				return static_cast<Type>(0);
 
 			// Interchange rows to put pivot element on the diagonal,
 			// if it is not already there
@@ -1032,29 +1032,29 @@ namespace Math {
 		return result;
 	}
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> IsNear(const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b, float epsilon = Epsilon) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> Is_Near(const Mat<Type, RowCount, ColCount>& a, const Mat<Type, RowCount, ColCount>& b, float epsilon = Epsilon) {
 		Mat<bool, RowCount, ColCount> result;
-		for (Uint32 RowIndex = 0; RowIndex < RowCount * ColCount; ++RowIndex)
-			result.m_Data[RowIndex] = Isnear(a.m_Data[RowIndex], b.m_Data[RowIndex], epsilon);
+		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
+			result.m_Data[Index] = Is_Near(a.m_Data[Index], b.m_Data[Index], epsilon);
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> IsNear(Mat<Type, RowCount, ColCount> const& a, Type b, float epsilon = Epsilon) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> Is_Near(Mat<Type, RowCount, ColCount> const& a, Type b, float epsilon = Epsilon) {
 		Mat<bool, RowCount, ColCount> result;
-		for (Uint32 RowIndex = 0; RowIndex < RowCount * ColCount; ++RowIndex)
-			result.m_Data[RowIndex] = Isnear(a.m_Data[RowIndex], b, epsilon);
+		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
+			result.m_Data[Index] = Is_Near(a.m_Data[Index], b, epsilon);
 		return result;
 	}
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> IsNear(Type a, const Mat<Type, RowCount, ColCount>& b, float epsilon = Epsilon) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> Is_Near(Type a, const Mat<Type, RowCount, ColCount>& b, float epsilon = Epsilon) {
 		Mat<bool, RowCount, ColCount> result;
-		for (Uint32 RowIndex = 0; RowIndex < RowCount * ColCount; ++RowIndex)
-			result.m_Data[RowIndex] = Isnear(a, b.m_Data[RowIndex], epsilon);
+		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
+			result.m_Data[Index] = Is_Near(a, b.m_Data[Index], epsilon);
 		return result;
 	}
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> IsFinite(const Mat<Type, RowCount, ColCount>& a) {
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<bool, RowCount, ColCount> Is_Finite(const Mat<Type, RowCount, ColCount>& a) {
 		Mat<bool, RowCount, ColCount> result;
-		for (Uint32 RowIndex = 0; RowIndex < RowCount * ColCount; ++RowIndex)
-			result.m_Data[RowIndex] = Isfinite(a.m_Data[RowIndex]);
+		for (Uint32 Index = 0; Index < RowCount * ColCount; ++Index)
+			result.m_Data[Index] = Is_Finite(a.m_Data[Index]);
 		return result;
 	}
 
@@ -1093,24 +1093,19 @@ namespace Math {
 
 	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> Abs(const Mat<Type, RowCount, ColCount>& a) { return Select(a < Type{ 0 }, -a, a); }
 
-	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> Saturate(const Mat<Type, RowCount, ColCount>& value) { return Clamp(value, Mat<Type, RowCount, ColCount>::Zero(), Mat<Type, RowCount, ColCount>{static_cast<Type>(1)}); }
+	template <typename Type, Uint32 RowCount, Uint32 ColCount>Mat<Type, RowCount, ColCount> Saturate(const Mat<Type, RowCount, ColCount>& value) { return Clamp(value, Mat<Type, RowCount, ColCount>::Zero(), Mat<Type, RowCount, ColCount>{ static_cast<Type>(1) }); }
 
 	template <typename Type, Uint32 RowCount, Uint32 ColCount>Type MinComponent(const Mat<Type, RowCount, ColCount>& a) {
-		Type result = a.m_Data[0];
+		Type result{ a.m_Data[0] };
 		for (Uint32 Inex = 1; Inex < RowCount * ColCount; ++Inex)
 			result = Min(result, a.m_Data[Inex]);
 		return result;
 	}
 
 	template <typename Type, Uint32 RowCount, Uint32 ColCount>Type MaxComponent(const Mat<Type, RowCount, ColCount>& a) {
-		Type result = a.m_Data[0];
+		Type result{ a.m_Data[0] };
 		for (Uint32 Index = 1; Index < RowCount * ColCount; ++Index)
 			result = Max(result, a.m_Data[Index]);
 		return result;
 	}
-
-
-
-
-
 }

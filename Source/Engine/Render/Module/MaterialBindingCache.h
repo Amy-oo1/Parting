@@ -120,7 +120,7 @@ namespace Parting {
 		m_Sampler{ sampler },
 		m_TrackLiveness{ trackLiveness } {
 		RHI::RHIBindingLayoutDescBuilder layoutDescBuilder;
-		layoutDescBuilder.Set_Visibility(shaderType).Set_RegisterSpace(RegisterSpace).Set_RegisterSpaceIsDescriptorSet(registerSpaceIsDescriptorSet);
+		layoutDescBuilder.Set_Visibility(shaderType).Set_RegisterSpace(RegisterSpace);
 
 		for (const auto& item : bindings) {
 			RHI::RHIBindingLayoutItem layoutItem{ .Slot{ item.Slot } };
@@ -159,8 +159,6 @@ namespace Parting {
 				return bindingSet;
 
 			return bindingSet = this->CreateMaterialBindingSet(material);
-
-
 		}
 	}
 

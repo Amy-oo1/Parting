@@ -144,7 +144,7 @@ namespace Parting {
 			idata.NumGeometries = static_cast<Uint32>(mesh->Geometries.size());
 			idata.Flags = 0u;
 
-			if (mesh->Type == MeshType::CurveDisjointOrthogonalTriangleStrips)
+			if (MeshType::CurveDisjointOrthogonalTriangleStrips == mesh->Type)
 				idata.Flags |= InstanceFlags_CurveDisjointOrthogonalTriangleStrips;
 		}
 
@@ -210,11 +210,8 @@ namespace Parting {
 		SharedPtr<SceneGraph<APITag>> m_SceneGraph;
 		Vector<SceneImportResult<APITag>> m_Models;
 
-		bool m_EnableBindlessResources{ false };
 		bool m_SceneTransformsChanged{ false };
 		bool m_SceneStructureChanged{ false };
-
-
 	};
 
 	template<RHI::APITagConcept APITag>
@@ -223,7 +220,7 @@ namespace Parting {
 		m_FS{ ::MoveTemp(fs) },
 		m_TextureCache{ ::MoveTemp(textureCache) } {
 
-		this->m_SkinningShader = shaderFactory.CreateShader("Parting/skinning_cs", "main", nullptr, RHI::RHIShaderType::Compute);
+		this->m_SkinningShader = shaderFactory.CreateShader(String{ "Parting/skinning_cs" }, String{ "main" }, nullptr, RHI::RHIShaderType::Compute);
 
 		this->m_SkinningBindingLayout = this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Compute)
@@ -355,7 +352,7 @@ namespace Parting {
 				};
 
 				if (!buffers->PositionData.empty()) {
-					AppendBufferRange(
+					Parting::AppendBufferRange(
 						buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Position),
 						buffers->PositionData.size() * sizeof(typename decltype(buffers->PositionData)::value_type),//NOTE : makesure no cv descriptor in here 
 						bufferDesc.ByteSize
@@ -363,7 +360,7 @@ namespace Parting {
 				}
 
 				if (!buffers->NormalData.empty()) {
-					AppendBufferRange(
+					Parting::AppendBufferRange(
 						buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Normal),
 						buffers->NormalData.size() * sizeof(typename decltype(buffers->NormalData)::value_type),
 						bufferDesc.ByteSize
@@ -371,7 +368,7 @@ namespace Parting {
 				}
 
 				if (!buffers->TangentData.empty()) {
-					AppendBufferRange(
+					Parting::AppendBufferRange(
 						buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Tangent),
 						buffers->TangentData.size() * sizeof(typename decltype(buffers->TangentData)::value_type),
 						bufferDesc.ByteSize
@@ -379,7 +376,7 @@ namespace Parting {
 				}
 
 				if (!buffers->Texcoord1Data.empty()) {
-					AppendBufferRange(
+					Parting::AppendBufferRange(
 						buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord1),
 						buffers->Texcoord1Data.size() * sizeof(typename decltype(buffers->Texcoord1Data)::value_type),
 						bufferDesc.ByteSize
@@ -387,7 +384,7 @@ namespace Parting {
 				}
 
 				if (!buffers->Texcoord2Data.empty()) {
-					AppendBufferRange(
+					Parting::AppendBufferRange(
 						buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord2),
 						buffers->Texcoord2Data.size() * sizeof(typename decltype(buffers->Texcoord2Data)::value_type),
 						bufferDesc.ByteSize
@@ -395,7 +392,7 @@ namespace Parting {
 				}
 
 				if (!buffers->WeightData.empty()) {
-					AppendBufferRange(
+					Parting::AppendBufferRange(
 						buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::JointWeights),
 						buffers->WeightData.size() * sizeof(typename decltype(buffers->WeightData)::value_type),
 						bufferDesc.ByteSize
@@ -403,7 +400,7 @@ namespace Parting {
 				}
 
 				if (!buffers->JointData.empty()) {
-					AppendBufferRange(
+					Parting::AppendBufferRange(
 						buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::JointIndices),
 						buffers->JointData.size() * sizeof(typename decltype(buffers->JointData)::value_type),
 						bufferDesc.ByteSize
@@ -411,7 +408,7 @@ namespace Parting {
 				}
 
 				if (!buffers->RadiusData.empty()) {
-					AppendBufferRange(
+					Parting::AppendBufferRange(
 						buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::CurveRadius),
 						buffers->RadiusData.size() * sizeof(typename decltype(buffers->RadiusData)::value_type),
 						bufferDesc.ByteSize
@@ -423,56 +420,56 @@ namespace Parting {
 				commandList->BeginTrackingBufferState(buffers->VertexBuffer, RHI::RHIResourceState::Common);
 
 				if (!buffers->PositionData.empty()) {
-					const RHI::RHIBufferRange& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Position) };
+					const auto& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Position) };
 					commandList->WriteBuffer(buffers->VertexBuffer, buffers->PositionData.data(), range.ByteSize, range.Offset);
 					buffers->PositionData.clear();
 					buffers->PositionData.shrink_to_fit();
 				}
 
 				if (!buffers->NormalData.empty()) {
-					const RHI::RHIBufferRange& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Normal) };
+					const auto& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Normal) };
 					commandList->WriteBuffer(buffers->VertexBuffer, buffers->NormalData.data(), range.ByteSize, range.Offset);
 					buffers->NormalData.clear();
 					buffers->NormalData.shrink_to_fit();
 				}
 
 				if (!buffers->TangentData.empty()) {
-					const RHI::RHIBufferRange& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Tangent) };
+					const auto& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Tangent) };
 					commandList->WriteBuffer(buffers->VertexBuffer, buffers->TangentData.data(), range.ByteSize, range.Offset);
 					buffers->TangentData.clear();
 					buffers->TangentData.shrink_to_fit();
 				}
 
 				if (!buffers->Texcoord1Data.empty()) {
-					const RHI::RHIBufferRange& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord1) };
+					const auto& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord1) };
 					commandList->WriteBuffer(buffers->VertexBuffer, buffers->Texcoord1Data.data(), range.ByteSize, range.Offset);
 					buffers->Texcoord1Data.clear();
 					buffers->Texcoord1Data.shrink_to_fit();
 				}
 
 				if (!buffers->Texcoord2Data.empty()) {
-					const RHI::RHIBufferRange& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord2) };
+					const auto& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord2) };
 					commandList->WriteBuffer(buffers->VertexBuffer, buffers->Texcoord2Data.data(), range.ByteSize, range.Offset);
 					buffers->Texcoord2Data.clear();
 					buffers->Texcoord2Data.shrink_to_fit();
 				}
 
 				if (!buffers->WeightData.empty()) {
-					const RHI::RHIBufferRange& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::JointWeights) };
+					const auto& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::JointWeights) };
 					commandList->WriteBuffer(buffers->VertexBuffer, buffers->WeightData.data(), range.ByteSize, range.Offset);
 					buffers->WeightData.clear();
 					buffers->WeightData.shrink_to_fit();
 				}
 
 				if (!buffers->JointData.empty()) {
-					const RHI::RHIBufferRange& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::JointIndices) };
+					const auto& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::JointIndices) };
 					commandList->WriteBuffer(buffers->VertexBuffer, buffers->JointData.data(), range.ByteSize, range.Offset);
 					buffers->JointData.clear();
 					buffers->JointData.shrink_to_fit();
 				}
 
 				if (!buffers->RadiusData.empty()) {
-					const RHI::RHIBufferRange& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::CurveRadius) };
+					const auto& range{ buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::CurveRadius) };
 					commandList->WriteBuffer(buffers->VertexBuffer, buffers->RadiusData.data(), range.ByteSize, range.Offset);
 					buffers->RadiusData.clear();
 					buffers->RadiusData.shrink_to_fit();
@@ -552,7 +549,7 @@ namespace Parting {
 					.CanHaveTypedViews{ true },
 					.CanHaveRawViews{ true },
 					.IsVertexBuffer{ true },
-					.InitialState{ RHI::RHIResourceState::Common },
+					.InitialState{ RHI::RHIResourceState::ShaderResource },
 					.KeepInitialState{ true }
 				};
 
@@ -624,6 +621,7 @@ namespace Parting {
 			.DebugName{ _W("Instances") },
 			.CanHaveUAVs{ true },
 			.CanHaveRawViews{ true },
+			.IsVertexBuffer{ true },
 			.InitialState{ RHI::RHIResourceState::ShaderResource },
 			.KeepInitialState{ true }
 		};
@@ -667,19 +665,11 @@ namespace Parting {
 		if (this->m_SceneStructureChanged)
 			this->CreateMeshBuffers(commandList);
 
-		const Uint32 allocationGranularity{ 1024 };
+		constexpr Uint32 allocationGranularity{ 1024 };
 		bool arraysAllocated{ false };
-
-		if (this->m_EnableBindlessResources && this->m_SceneGraph->Get_GeometryCount() > this->m_Resources->GeometryData.size()) {
-			this->m_Resources->GeometryData.resize(Math::Align<Uint64>(this->m_SceneGraph->Get_GeometryCount(), allocationGranularity));
-			this->m_GeometryBuffer = this->CreateGeometryBuffer();
-			arraysAllocated = true;
-		}
 
 		if (this->m_SceneGraph->Get_Materials().size() > this->m_Resources->MaterialData.size()) {
 			this->m_Resources->MaterialData.resize(Math::Align<Uint64>(this->m_SceneGraph->Get_Materials().size(), allocationGranularity));
-			if (this->m_EnableBindlessResources)
-				this->m_MaterialBuffer = this->CreateMaterialBuffer();
 			arraysAllocated = true;
 		}
 
@@ -725,17 +715,9 @@ namespace Parting {
 			}
 		}
 
-		if (this->m_SceneStructureChanged || arraysAllocated) {
-			for (const auto& mesh : this->m_SceneGraph->Get_Meshes()) {
+		if (this->m_SceneStructureChanged || arraysAllocated)
+			for (const auto& mesh : this->m_SceneGraph->Get_Meshes())
 				mesh->Buffers->InstanceBuffer = this->m_InstanceBuffer;
-
-				if (this->m_EnableBindlessResources)
-					this->UpdateGeometry(mesh);
-			}
-
-			if (this->m_EnableBindlessResources)
-				this->WriteGeometryBuffer(commandList);
-		}
 
 		if (this->m_SceneStructureChanged || this->m_SceneTransformsChanged || arraysAllocated) {
 			for (const auto& instance : this->m_SceneGraph->Get_MeshInstances())
@@ -743,9 +725,6 @@ namespace Parting {
 
 			this->WriteInstanceBuffer(commandList);
 		}
-
-		if (this->m_EnableBindlessResources && (materialsChanged || this->m_SceneStructureChanged || arraysAllocated))
-			this->WriteMaterialBuffer(commandList);
 
 		this->UpdateSkinnedMeshes(commandList, frameIndex);
 	}

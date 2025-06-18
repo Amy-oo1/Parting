@@ -194,7 +194,7 @@ namespace Parting {
 
 						for (const auto& geometry : mesh->Geometries) {
 							auto domain{ geometry->Material->Domain };
-							if (domain != MaterialDomain::Opaque || domain != MaterialDomain::AlphaTested)//TODO :
+							if (domain != MaterialDomain::Opaque && domain != MaterialDomain::AlphaTested)
 								continue;
 
 							if (mesh->Geometries.size() > 1 && nullptr == mesh->SkinPrototype) {
@@ -219,7 +219,7 @@ namespace Parting {
 				}
 			}
 
-			m_Walker.Next(nodeVisible);
+			this->m_Walker.Next(nodeVisible);
 		}
 
 		this->m_InstanceChunk.resize(itemCount);

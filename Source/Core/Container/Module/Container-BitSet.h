@@ -169,7 +169,7 @@ public:
 		return 0;//TODO maybe can use Optional
 	}
 
-	STDNODISCARD bool Is_Ordered(void) { return  IsSorted(this->m_Storage.begin(), this->m_Storage.end(), [](const Element& element, const Element& other) {return element.WordIndex <= other.WordIndex; }); }
+	STDNODISCARD bool Is_Ordered(void) { return  Is_Sorted(this->m_Storage.begin(), this->m_Storage.end(), [](const Element& element, const Element& other) {return element.WordIndex <= other.WordIndex; }); }
 
 	void Set(Uint32 BitIndex, bool Value) {
 		//Uint32 wordIndex{ BitIndex / 32 };

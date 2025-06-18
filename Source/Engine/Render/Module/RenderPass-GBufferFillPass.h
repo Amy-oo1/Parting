@@ -440,7 +440,6 @@ namespace Parting {
 		return this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Vertex | RHI::RHIShaderType::Pixel)
 			.Set_RegisterSpace(GBUFFER_SPACE_INPUT)
-			.Set_RegisterSpaceIsDescriptorSet(true)
 			.AddBinding(RHI::RHIBindingLayoutItem::StructuredBuffer_SRV(GBUFFER_BINDING_INSTANCE_BUFFER))
 			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(GBUFFER_BINDING_VERTEX_BUFFER))
 			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(GBUFFER_BINDING_PUSH_CONSTANTS, sizeof(GBufferPushConstants)))

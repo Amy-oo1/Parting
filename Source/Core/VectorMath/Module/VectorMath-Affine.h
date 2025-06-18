@@ -67,13 +67,13 @@ namespace Math {
 			m_Linear{ m00, m01, m10, m11 },
 			m_Translation{ t0, t1 } {
 		}
-		constexpr Affine(const Vec<Type, 2>& row0, const Vec<Type, 2>& row1, const Vec<Type, 2>& translation)
-			: m_Linear{ row0, row1 }
-			, m_Translation{ translation } {
+		constexpr Affine(const Vec<Type, 2>& row0, const Vec<Type, 2>& row1, const Vec<Type, 2>& translation) :
+			m_Linear{ row0, row1 }, 
+			m_Translation{ translation } {
 		}
-		constexpr Affine(const Mat<Type, 2, 2>& linear, const Vec<Type, 2>& translation)
-			: m_Linear{ linear }
-			, m_Translation{ translation } {
+		constexpr Affine(const Mat<Type, 2, 2>& linear, const Vec<Type, 2>& translation) :
+			m_Linear{ linear }, 
+			m_Translation{ translation } {
 		}
 
 
@@ -143,15 +143,6 @@ namespace Math {
 		static constexpr Affine Identity(void) { return Affine{ Mat<Type, 3, 3>::Identity(), Vec<Type, 3>::Zero() }; }
 	};
 
-	/*template <typename type, uint32 N>
-	struct Affine;*/
-
-	/*	template<typename Type,int ize,int a>
-	struct Mat;*/
-
-	/*template<typename Type, int size>
-	struct Vec;*/
-
 	template <typename Type, Uint32 N>bool operator == (const Affine<Type, N>& a, const Affine<Type, N>& b) { return All(a.m_Linear == b.m_Linear) && All(a.m_Translation == b.m_Translation); }
 
 	template <typename Type, Uint32 N>bool operator != (const Affine<Type, N>& a, const Affine<Type, N>& b) { return Any(a.m_Linear != b.m_Linear) || Any(a.m_Translation != b.m_Translation); }
@@ -201,11 +192,11 @@ namespace Math {
 
 	//NOTE : !!! this doesn't match the behavior of isnear() for vectors and matrices -
 	// returns a single result rather than a componentwise result
-	template <typename Type, Uint32 N>bool IsNear(const Affine<Type, N>& a, const Affine<Type, N>& b, Type epsilon = Epsilon) { return All(IsNear(a.m_Linear, b.m_Linear, epsilon)) && All(IsNear(a.m_Translation, b.m_Translation, epsilon)); }
+	template <typename Type, Uint32 N>bool Is_Near(const Affine<Type, N>& a, const Affine<Type, N>& b, Type epsilon = Epsilon) { return All(Is_Near(a.m_Linear, b.m_Linear, epsilon)) && All(Is_Near(a.m_Translation, b.m_Translation, epsilon)); }
 
 	//NOTE : !!! this doesn't match the behavior of isfinite() for vectors and matrices -
 	// returns a single result rather than a componentwise result
-	template <typename Type, Uint32 N>bool IsFinite(const Affine<Type, N>& a) { return All(IsFinite(a.m_Linear)) && All(IsFinite(a.m_Translation)); }
+	template <typename Type, Uint32 N>bool Is_Finite(const Affine<Type, N>& a) { return All(Is_Finite(a.m_Linear)) && All(Is_Finite(a.m_Translation)); }
 
 	template <typename Type, Uint32 N>	Affine<Uint32, N> Round(const Affine<Type, N>& a) { return Affine<Uint32, N>{ Round(a.m_Linear), Round(a.m_Translation) }; }
 
@@ -230,9 +221,9 @@ namespace Math {
 
 		// Build Mat that does cross product by axis (on the right)
 		Mat<Type, 3, 3> crossProductMat{
-			static_cast<Type>(0), axis.Z, -axis.Y,
-			-axis.Z,static_cast<Type>(0), axis.X,
-			axis.Y, -axis.X, static_cast<Type>(0)
+			static_cast<Type>(0),	axis.Z,					-axis.Y,
+			-axis.Z,				static_cast<Type>(0),	axis.X,
+			axis.Y,					-axis.X,				static_cast<Type>(0)
 		};
 
 		// Matrix form of Rodrigues' rotation formula
@@ -241,27 +232,27 @@ namespace Math {
 		return Affine<Type, 3>{ mat, Vec<Type, 3>::Zero() };
 	}
 	template<typename Type>Affine<Type, 3> Rotation(const Affine<Type, 3>& euler) {
-		Type sinX{ Sin(euler.X) };
-		Type cosX{ Cos(euler.X) };
-		Type sinY{ Sin(euler.Y) };
-		Type cosY{ Cos(euler.Y) };
-		Type sinZ{ Sin(euler.Z) };
-		Type cosZ{ Cos(euler.Z) };
+		Type sinX{ Math::Sin(euler.X) };
+		Type cosX{ Math::Cos(euler.X) };
+		Type sinY{ Math::Sin(euler.Y) };
+		Type cosY{ Math::Cos(euler.Y) };
+		Type sinZ{ Math::Sin(euler.Z) };
+		Type cosZ{ Math::Cos(euler.Z) };
 
 		Mat<Type, 3, 3> matX{
-			static_cast<Type>(1), static_cast<Type>(0), static_cast<Type>(0),
-			static_cast<Type>(0), cosX, sinX,
-			static_cast<Type>(0), -sinX, cosX
+			static_cast<Type>(1),	static_cast<Type>(0),	static_cast<Type>(0),
+			static_cast<Type>(0),	cosX,					sinX,
+			static_cast<Type>(0),	-sinX,					cosX
 		};
 		Mat<Type, 3, 3> matY{
-			cosY, static_cast<Type>(0), -sinY,
-			static_cast<Type>(0), static_cast<Type>(1), static_cast<Type>(0),
-			sinY, static_cast<Type>(0), cosY
+			cosY,					static_cast<Type>(0),	-sinY,
+			static_cast<Type>(0),	static_cast<Type>(1),	static_cast<Type>(0),
+			sinY,					static_cast<Type>(0),	cosY
 		};
 		Mat<Type, 3, 3> matZ{
-			cosZ, sinZ, static_cast<Type>(0),
-			-sinZ, cosZ, static_cast<Type>(0),
-			static_cast<Type>(0), static_cast<Type>(0), static_cast<Type>(1)
+			cosZ,					sinZ,					static_cast<Type>(0),
+			-sinZ,					cosZ,					static_cast<Type>(0),
+			static_cast<Type>(0),	static_cast<Type>(0),	static_cast<Type>(1)
 		};
 
 		return Affine<Type, 3>{ matX* matY* matZ, Vec<Type, 3>::Zero() };
@@ -305,27 +296,27 @@ namespace Math {
 
 	template<typename Type>Affine<Type, 3> LookatX(const Vec<Type, 3>& look) {
 		Vec<Type, 3> lookNormalized{ Normalize(look) };
-		Vec<Type, 3> left{ Normalize(orthogonal(lookNormalized)) };
-		Vec<Type, 3> up{ Cross(lookNormalized, left) };
+		Vec<Type, 3> left{ Normalize(Orthogonal(lookNormalized)) };
+		Vec<Type, 3> up{ Math::Cross(lookNormalized, left) };
 		return Affine<Type, 3>::FromCols(lookNormalized, left, up, Vec<Type, 3>::Zero());
 	}
 	template<typename Type>Affine<Type, 3> LookatX(const Vec<Type, 3>& look, const Vec<Type, 3>& up) {
 		Vec<Type, 3> lookNormalized{ Normalize(look) };
-		Vec<Type, 3> left{ Normalize(Cross(up,lookNormalized)) };
-		Vec<Type, 3> trueUp{ Cross(lookNormalized, left) };
+		Vec<Type, 3> left{ Normalize(Math::Cross(up,lookNormalized)) };
+		Vec<Type, 3> trueUp{ Math::Cross(lookNormalized, left) };
 		return Affine<Type, 3>::FromCols(lookNormalized, left, trueUp, Vec<Type, 3>::Zero());
 	}
 
 	template<typename Type>Affine<Type, 3> LookatZ(const Vec<Type, 3>& look) {
 		Vec<Type, 3> lookNormalized{ Normalize(look) };
-		Vec<Type, 3> left{ Normalize(orthogonal(lookNormalized)) };
-		Vec<Type, 3> up{ Cross(lookNormalized, left) };
+		Vec<Type, 3> left{ Normalize(Orthogonal(lookNormalized)) };
+		Vec<Type, 3> up{ Math::Cross(lookNormalized, left) };
 		return Affine<Type, 3>::FromCols(-left, up, -lookNormalized, Vec<Type, 3>::Zero());
 	}
 	template<typename Type>Affine<Type, 3> LookatZ(const Vec<Type, 3>& look, const Vec<Type, 3>& up) {
 		Vec<Type, 3> lookNormalized{ Normalize(look) };
-		Vec<Type, 3> left{ Normalize(Cross(up,lookNormalized)) };
-		Vec<Type, 3> trueUp{ Cross(lookNormalized, left) };
+		Vec<Type, 3> left{ Normalize(Math::Cross(up,lookNormalized)) };
+		Vec<Type, 3> trueUp{ Math::Cross(lookNormalized, left) };
 		return Affine<Type, 3>::FromCols(-left, trueUp, -lookNormalized, Vec<Type, 3>::Zero());
 	}
 

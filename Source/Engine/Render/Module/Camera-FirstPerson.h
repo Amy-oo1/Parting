@@ -153,9 +153,8 @@ namespace Parting {
 		this->m_CameraMovePrev = 0.f;
 	}
 
-	inline Pair<bool, Math::AffineF3> FirstPersonCamera::AnimateRoll(Math::AffineF3 initialRotation) {
+	inline Pair<bool, Math::AffineF3> FirstPersonCamera::AnimateRoll(Math::AffineF3 cameraRotation) {
 		bool cameraDirty{ false };
-		Math::AffineF3 cameraRotation{ initialRotation };//TODO Remove use in parm copy
 		using enum KeyboardControls;
 		if (this->m_KeyboardState[Tounderlying(RollLeft)] ||
 			this->m_KeyboardState[Tounderlying(RollRight)]) {
@@ -182,7 +181,7 @@ namespace Parting {
 			moveStep *= 3.f;
 
 		if (this->m_KeyboardState[Tounderlying(SlowDown)])
-			moveStep *= .1f;
+			moveStep *= 0.1f;
 
 		if (this->m_KeyboardState[Tounderlying(MoveForward)]) {
 			cameraDirty = true;

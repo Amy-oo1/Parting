@@ -392,11 +392,11 @@ namespace Parting {
 		virtual void DisplayScaleChanged(float scaleX, float scaleY) {}
 
 
-		virtual bool KeyboardUpdate(int key, int scancode, int action, int mods) { return false; }
-		virtual bool KeyboardCharInput(unsigned int unicode, int mods) { return false; }
+		virtual bool KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) { return false; }
+		virtual bool KeyboardCharInput(Uint32 unicode, Int32 mods) { return false; }
 		virtual bool MousePosUpdate(double xpos, double ypos) { return false; }
 		virtual bool MouseScrollUpdate(double xoffset, double yoffset) { return false; }
-		virtual bool MouseButtonUpdate(int button, int action, int mods) { return false; }
+		virtual bool MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) { return false; }
 		virtual bool JoystickButtonUpdate(Uint32 button, bool pressed) { return false; }
 		virtual bool JoystickAxisUpdate(Uint32 axis, float value) { return false; }
 

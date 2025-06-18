@@ -260,7 +260,7 @@ namespace Math {
 
 	template<typename Type>Quaternion<Type> operator * (const Quaternion<Type>& a, const Quaternion<Type>& b) {
 		return Quaternion<Type>{
-				a.W* b.W - a.X * b.X - a.Y * b.Y - a.Z * b.Z,
+			a.W* b.W - a.X * b.X - a.Y * b.Y - a.Z * b.Z,
 				a.W* b.X + a.X * b.W + a.Y * b.Z - a.Z * b.Y,
 				a.W* b.Y + a.Y * b.W + a.Z * b.X - a.X * b.Z,
 				a.W* b.Z + a.Z * b.W + a.X * b.Y - a.Y * b.X
@@ -302,34 +302,34 @@ namespace Math {
 	// Apply a normalized quat as a rotation to a Vec or point
 
 	template <typename Type>Vec<Type, 3> ApplyQuat(const Quaternion<Type>& a, const Vec<Type, 3>& b) {
-		Quaternion<Type> v{ 0, b.X, b.Y, b.Z };
+		Quaternion<Type> v{ static_cast<Type>(0), b.X, b.Y, b.Z };
 		Quaternion<Type> resultQ{ a * v * Conjugate(a) };
 		return Vec<Type, 3>{ resultQ.X, resultQ.Y, resultQ.Z };
 	}
 
-	template<typename Type>Vec<bool, 4> IsNear(const Quaternion<Type>& a, const Quaternion<Type>& b, Type eps = Epsilon) {
+	template<typename Type>Vec<bool, 4> Is_Near(const Quaternion<Type>& a, const Quaternion<Type>& b, Type eps = Epsilon) {
 		Vec<bool, 4> result{};
 		for (Uint32 Index = 0; Index < 4; ++Index)
-			result[Index] = IsNear(a[Index], b[Index], eps);
+			result[Index] = Is_Near(a[Index], b[Index], eps);
 		return result;
 	}
-	template<typename Type>Vec<bool, 4> IsNear(const Quaternion<Type>& a, Type b, Type eps = Epsilon) {
+	template<typename Type>Vec<bool, 4> Is_Near(const Quaternion<Type>& a, Type b, Type eps = Epsilon) {
 		Vec<bool, 4> result{};
 		for (Uint32 Index = 0; Index < 4; ++Index)
-			result[Index] = IsNear(a[Index], b, eps);
+			result[Index] = Is_Near(a[Index], b, eps);
 		return result;
 	}
-	template<typename Type>Vec<bool, 4> IsNear(Type a, const Quaternion<Type>& b, Type eps = Epsilon) {
+	template<typename Type>Vec<bool, 4> Is_Near(Type a, const Quaternion<Type>& b, Type eps = Epsilon) {
 		Vec<bool, 4> result{};
 		for (Uint32 Index = 0; Index < 4; ++Index)
-			result[Index] = IsNear(a, b[Index], eps);
+			result[Index] = Is_Near(a, b[Index], eps);
 		return result;
 	}
 
-	template<typename Type>Vec<bool, 4> IsFinite(const Quaternion<Type>& a) {
+	template<typename Type>Vec<bool, 4> Is_Finite(const Quaternion<Type>& a) {
 		Vec<bool, 4> result{};
 		for (Uint32 Index = 0; Index < 4; ++Index)
-			result[Index] = IsFinite(a[Index]);
+			result[Index] = Is_Finite(a[Index]);
 		return result;
 	}
 
@@ -375,9 +375,9 @@ namespace Math {
 		Type sinHalfZ{ Sin(static_cast<Type>(0.5) * euler.Z) };
 		Type cosHalfZ{ Cos(static_cast<Type>(0.5) * euler.Z) };
 
-		Quaternion<Type> quatX{ cosHalfX, sinHalfX, 0, 0 };
-		Quaternion<Type> quatY{ cosHalfY, 0, sinHalfY, 0 };
-		Quaternion<Type> quatZ{ cosHalfZ, 0, 0, sinHalfZ };
+		Quaternion<Type> quatX{ cosHalfX, sinHalfX,				static_cast<Type>(0),	static_cast<Type>(0) };
+		Quaternion<Type> quatY{ cosHalfY, static_cast<Type>(0),	sinHalfY,				static_cast<Type>(0) };
+		Quaternion<Type> quatZ{ cosHalfZ, static_cast<Type>(0), static_cast<Type>(0),	sinHalfZ };
 
 		// Note: multiplication order for quats is like column-Vec convention
 		return quatZ * quatY * quatX;
@@ -438,9 +438,11 @@ namespace Math {
 			rotation.X = Sqrt(Max(static_cast<Type>(0), static_cast<Type>(1) + col0.X - col1.Y - col2.Z)) * static_cast<Type>(0.5);
 			rotation.Y = Sqrt(Max(static_cast<Type>(0), static_cast<Type>(1) - col0.X + col1.Y - col2.Z)) * static_cast<Type>(0.5);
 			rotation.Z = Sqrt(Max(static_cast<Type>(0), static_cast<Type>(1) - col0.X - col1.Y + col2.Z)) * static_cast<Type>(0.5);
-			rotation.X = std::copysign(rotation.X, col2.Y - col1.Z);
+
+			rotation.X = std::copysign(rotation.X, col2.Y - col1.Z);//TODO :
 			rotation.Y = std::copysign(rotation.Y, col0.Z - col2.X);
 			rotation.Z = std::copysign(rotation.Z, col1.X - col0.Y);
+			
 			*pRotation = rotation;
 		}
 	}

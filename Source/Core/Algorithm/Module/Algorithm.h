@@ -42,8 +42,8 @@ namespace Math {
 	template <typename _Ty>constexpr decltype(auto) Abs(_Ty value) { return value < static_cast<_Ty>(0) ? -value : value; }
 
 
-	inline bool IsNear(float a, float b, float eps = Epsilon) { return (Math::Abs(b - a) < eps); }
-	inline bool IsFinite(float f) {
+	inline bool Is_Near(float a, float b, float eps = Epsilon) { return (Math::Abs(b - a) < eps); }
+	inline bool Is_Finite(float f) {
 		union { Uint32 i; float f; } u;
 		u.f = f;
 		return ((u.i & 0x7f800000) != 0x7f800000);
@@ -76,8 +76,8 @@ namespace Math {
 	template<typename Type> constexpr Type DivCeil(Type dividend, Type divisor) { return (dividend + (divisor - static_cast<Type>(1))) / divisor; }
 
 	// Base-2 exp and log
-	inline float Exp2f(float x) { return expf(0.693147181f * x); }
-	inline float Log2f(float x) { return 1.442695041f * logf(x); }
+	inline float Exp2f(float x) { return exp(0.693147181f * x); }
+	inline float Log2f(float x) { return 1.442695041f * log(x); }
 
 	template<typename Type>
 	inline Type Sqrt(Type a) { return sqrt(a); }
@@ -85,10 +85,11 @@ namespace Math {
 	template<typename Type>
 	inline Type Pow(Type a, Type b) { return pow(a, b); }
 
-	inline bool IsPow2(Int32 x) { return (x > 0) && ((x & (x - 1)) == 0); }
+	inline bool Is_Pow2(Int32 x) { return (x > 0) && ((x & (x - 1)) == 0); }
 
 	PARTING_EXPORT STDNODISCARD constexpr Uint32 NextPowerOf2(Uint32 v) {
-		if (v == 0) return 1;
+		if (v == 0) 
+			return 1;
 		--v;
 		v |= v >> 1;
 		v |= v >> 2;
@@ -129,7 +130,7 @@ namespace Math {
 
 	template <typename _Ty>	constexpr decltype(auto) Clamp(const _Ty& Value, const _Ty& Lower, const _Ty& Upper) { return Min(Max(Value, Lower), Upper); }//NOTE :Not Use std::clamp
 
-	template<typename _Ty>	constexpr decltype(auto) Saturate(_Ty value) { return Clamp(value, static_cast<_Ty>(0), static_cast<_Ty>(1)); }
+	template<typename _Ty>	constexpr decltype(auto) Saturate(_Ty value) { return Math::Clamp(value, static_cast<_Ty>(0), static_cast<_Ty>(1)); }
 
 	template <typename _Ty>	constexpr decltype(auto) Lerp(_Ty a, _Ty b, float u) { return a + (b - a) * u; }
 
@@ -149,10 +150,10 @@ PARTING_EXPORT template<class _FwdIt, class _Ty>
 STDNODISCARD constexpr _FwdIt UpperBound(_FwdIt _First, _FwdIt _Last, const _Ty& _Val) { return std::upper_bound(_First, _Last, _Val); }
 
 PARTING_EXPORT template <class _FwdIt, class _Pr>
-STDNODISCARD constexpr bool IsSorted(_FwdIt _First, _FwdIt _Last, _Pr _Pred) { return std::is_sorted(_First, _Last, _Pred); }
+STDNODISCARD constexpr bool Is_Sorted(_FwdIt _First, _FwdIt _Last, _Pr _Pred) { return std::is_sorted(_First, _Last, _Pred); }
 
 PARTING_EXPORT template <class _FwdIt>
-STDNODISCARD constexpr bool IsSorted(_FwdIt _First, _FwdIt _Last) { return std::is_sorted(_First, _Last); }
+STDNODISCARD constexpr bool Is_Sorted(_FwdIt _First, _FwdIt _Last) { return std::is_sorted(_First, _Last); }
 
 PARTING_EXPORT template <class _InIt, class _Ty>
 STDNODISCARD constexpr _InIt STDFind(_InIt _First, _InIt _Last, const _Ty& _Val) { return std::find(_First, _Last, _Val); }

@@ -65,7 +65,7 @@ namespace Math {
 		float zScale{ 1.0f / (zFar - zNear) };
 		return MatF44{
 			2.0f * xScale,				0.f,						0.f,				0.f,
-			0.f,						2.0f * yScale,				0.f,				0.f,
+			0.f,						2.f * yScale,				0.f,				0.f,
 			0.f,						0.f,						zScale,				0.f,
 			-(left + right) * xScale,	-(bottom + top) * yScale,	-zNear * zScale,	1.f
 		};
@@ -74,7 +74,7 @@ namespace Math {
 
 	// Fast shortcut for float3x4(transpose(affineToHomogenous(a)))
 	// Useful for storing transformations in buffers and passing them to ray tracing APIs
-	inline void AffineToColumnMajor(AffineF3 const& a, float m[12]) {
+	inline void AffineToColumnMajor(const AffineF3& a, float m[12]) {
 		m[0] = a.m_Linear.M00;
 		m[1] = a.m_Linear.M10;
 		m[2] = a.m_Linear.M20;
@@ -89,20 +89,44 @@ namespace Math {
 		m[11] = a.m_Translation.Z;
 	}
 
-	MatF44 PerspProjD3DStyle(float verticalFOV, float aspect, float zNear, float zFar) {
-		float yScale{ 1.0f / Math::Tan(0.5f * verticalFOV) };
-		float xScale{ yScale / aspect };
-		float zScale{ 1.0f / (zFar - zNear) };
+	MatF44 PerspProjD3DStyle(float left, float right, float bottom, float top, float zNear, float zFar) {
+		float xScale{ 1.f / (right - left) };
+		float yScale{ 1.f / (top - bottom) };
+		float zScale{ 1.f / (zFar - zNear) };
 		return MatF44{
-			xScale,				0,					0,							0,
-			0,					yScale,				0,							0,
-			0,					0,					zFar * zScale,				1,
-			0,					0,					-zNear * zFar * zScale,		0
+			2.f * xScale,				0.f,						0.f,						0.f,
+			0.f,						2.f * yScale,				0.f,						0.f,
+			-(left + right) * xScale,	-(bottom + top) * yScale,	zFar * zScale,				1.f,
+			0.f,						0.f,						-zNear * zFar * zScale,		0.f
+		};
+	}
+
+	MatF44 PerspProjD3DStyleReverse(float left, float right, float bottom, float top, float zNear) {
+		float xScale{ 1.f / (right - left) };
+		float yScale{ 1.f / (top - bottom) };
+
+		return MatF44{
+			2.f * xScale,				0.f,						0.f,			0.f,
+			0.f,						2.f * yScale,				0.f,			0.f,
+			-(left + right) * xScale,	-(bottom + top) * yScale,	0.f,			1.f,
+			0.f,						0.f,						zNear,			0.f
+		};
+	}
+
+	MatF44 PerspProjD3DStyle(float verticalFOV, float aspect, float zNear, float zFar) {
+		float yScale{ 1.f / Math::Tan(0.5f * verticalFOV) };
+		float xScale{ yScale / aspect };
+		float zScale{ 1.f / (zFar - zNear) };
+		return MatF44{
+			xScale,				0.f,				0.f,						0.f,
+			0.f,				yScale,				0.f,						0.f,
+			0.f,				0.f,				zFar * zScale,				1.f,
+			0.f,				0.f,				-zNear * zFar * zScale,		0.f
 		};
 	}
 
 	MatF44 PerspProjD3DStyleReverse(float verticalFOV, float aspect, float zNear) {
-		float yScale{ 1.0f / Tan(0.5f * verticalFOV) };
+		float yScale{ 1.f / Tan(0.5f * verticalFOV) };
 		float xScale{ yScale / aspect };
 
 		return MatF44{

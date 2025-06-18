@@ -30,7 +30,6 @@
 #include "Engine/Render/Module/RenderPass.h"
 
 #include "Engine/Engine/Module/BindingCache.h"
-#include "Engine/Engine/Module/DescriptorTableManager.h"
 #include "Engine/Engine/Module/ShaderFactory.h"
 #include "Engine/Engine/Module/FrameBufferFactory.h"
 #include "Engine/Render/Module/GBuffer.h"

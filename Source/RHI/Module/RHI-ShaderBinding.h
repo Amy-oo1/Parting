@@ -106,17 +106,6 @@ namespace RHI {
 		// In order to use this behaviour, you must set `registerSpaceIsDescriptorSet` to true.  See below.
 		Uint32 RegisterSpace{ 0 };
 
-		// This flag controls the behavior for pipelines that use multiple binding layouts.
-		// It must be set to the same value for _all_ of the binding layouts in a pipeline.
-		// - When it's set to `false`, the `registerSpace` parameter only affects the DX12 implementation,
-		//   and the validation layer will report an error when non-zero `registerSpace` is used with other APIs.
-		// - When it's set to `true` the parameter also affects the Vulkan implementation, allowing any
-		//   layout to occupy any register space or descriptor set, regardless of their order in the pipeline.
-		//   However, a consequence of DXC mapping the descriptor set index to register space is that you may
-		//   not have more than one `BindingLayout` using the same `registerSpace` value in the same pipeline.
-		// - When it's set to different values for the layouts in a pipeline, the validation layer will report
-		//   an error.
-		bool RegisterSpaceIsDescriptorSet{ false };
 		Array<RHIBindingLayoutItem, g_MaxBindingsPerLayout> Bindings{};
 		RemoveCV<decltype(g_MaxBindingsPerLayout)>::type BindingCount{ 0 };
 	};
@@ -127,7 +116,6 @@ namespace RHI {
 
 		constexpr RHIBindingLayoutDescBuilder& Set_Visibility(RHIShaderType visibility) { this->m_Desc.Visibility = visibility; return *this; }
 		constexpr RHIBindingLayoutDescBuilder& Set_RegisterSpace(Uint32 registerSpace) { this->m_Desc.RegisterSpace = registerSpace; return *this; }
-		constexpr RHIBindingLayoutDescBuilder& Set_RegisterSpaceIsDescriptorSet(bool isDescriptorSet) { this->m_Desc.RegisterSpaceIsDescriptorSet = isDescriptorSet; return *this; }
 		constexpr RHIBindingLayoutDescBuilder& AddBinding(RHIBindingLayoutItem binding) { this->m_Desc.Bindings[this->m_Desc.BindingCount++] = binding; return *this; }
 
 		constexpr RHIBindingLayoutDescBuilder& AddBinding(Uint32 Slot, RHIResourceType type) { this->m_Desc.Bindings[this->m_Desc.BindingCount++] = RHIBindingLayoutItem{ .Slot{ Slot }, .Type {type} }; return *this; }

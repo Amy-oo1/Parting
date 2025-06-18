@@ -292,7 +292,8 @@ namespace RHI::D3D12 {
 	inline void Texture::CreateRTV(D3D12_CPU_DESCRIPTOR_HANDLE descriptorhandle, RHIFormat format, RHITextureSubresourceSet subresources)const {
 		subresources = subresources.Resolve(this->m_Desc, true);
 
-		D3D12_RENDER_TARGET_VIEW_DESC RTVDesc{ .Format{ Get_DXGIFormatMapping(RHIFormat::UNKNOWN == format ? this->m_Desc.Format : format).RTVFormat } };
+		D3D12_RENDER_TARGET_VIEW_DESC RTVDesc{};
+		RTVDesc.Format = Get_DXGIFormatMapping(RHIFormat::UNKNOWN == format ? this->m_Desc.Format : format).RTVFormat;//TODO : C-type (no default), not use juheti init ,some field no init (bug)
 
 		switch (this->m_Desc.Dimension) {
 			using enum RHITextureDimension;

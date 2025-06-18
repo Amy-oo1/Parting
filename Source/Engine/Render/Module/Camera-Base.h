@@ -59,7 +59,7 @@ namespace Parting {
 
 
 
-		void BaseLookAt(Math::VecF3 cameraPos, Math::VecF3 cameraTarget, Math::VecF3 cameraUp);
+		void BaseLookAt(Math::VecF3 cameraPos, Math::VecF3 cameraTarget, Math::VecF3 cameraUp = Math::VecF3{ 0.f,1.f,0.f });
 
 		void UpdateWorldToView(void);
 

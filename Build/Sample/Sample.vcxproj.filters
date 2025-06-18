@@ -21,6 +21,9 @@
     <ClCompile Include="..\..\Source\Sample\Module\Deferred.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\Sample\Src\Threaded_Rendering.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\Sample\Include\CubeGeometry.h">

@@ -306,7 +306,7 @@ namespace RHI {
 			STDNODISCARD const Derived* Get_Derived(void)const noexcept { return static_cast<const Derived*>(this); }
 		private:
 			const RHITextureDesc& Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return RHITextureDesc{}; }
-			RHIObject Imp_GetNativeView(RHIObjectType objectType, RHIFormat format, RHITextureSubresourceSet subresources, RHITextureDimension dimension, bool isReadOnlyDSV);
+			RHIObject Imp_GetNativeView(RHIObjectType objectType, RHIFormat format, RHITextureSubresourceSet subresources, RHITextureDimension dimension, bool isReadOnlyDSV) { LOG_ERROR("No Imp"); return RHIObject{}; }
 	};
 
 	PARTING_EXPORT template<typename Derived>
@@ -367,5 +367,5 @@ namespace RHI {
 		Uint32 DepthInTiles{ 0 };
 		Uint32 StartTileIndexInOverallResource{ 0 };
 	};
-	
+
 }

@@ -74,7 +74,15 @@ namespace Parting {
 	public:
 
 	public:
+
+	public:
+		STDNODISCARD Uint32 Get_NumChildViews(ViewType supportedTypes) const override;
+		STDNODISCARD const IView* Get_ChildView(ViewType supportedTypes, Uint32 index) const override;
+
+	public:
 		virtual	void FillPlanarViewConstants(PlanarViewConstants& constants) const;
+
+	public:
 
 		STDNODISCARD virtual RHI::RHIViewportState Get_ViewportState(void) const = 0;
 		STDNODISCARD virtual RHI::RHIVariableRateShadingState Get_VariableRateShadingState(void) const = 0;
@@ -97,12 +105,6 @@ namespace Parting {
 		STDNODISCARD virtual Math::MatF44 Get_InverseViewProjectionMatrix(bool includeOffset = true) const = 0;
 		STDNODISCARD virtual RHI::RHIRect2D Get_ViewExtent(void) const = 0;
 		STDNODISCARD virtual Math::VecF2 Get_PixelOffset(void) const = 0;
-
-
-	public:
-
-		STDNODISCARD Uint32 Get_NumChildViews(ViewType supportedTypes) const override;
-		STDNODISCARD const IView* Get_ChildView(ViewType supportedTypes, Uint32 index) const override;
 	};
 
 	class PlanarView final : public IView {
@@ -232,6 +234,104 @@ namespace Parting {
 	};
 
 	using StereoPlanarView = StereoView<PlanarView>;
+
+	class CubemapView : public IView {
+	public:
+		CubemapView(void) = default;
+		~CubemapView(void) = default;
+
+	public:
+		void Set_Transform(Math::AffineF3 viewMatrix, float zNear, float cullDistance, bool useReverseInfiniteProjections = true);
+		void Set_ArrayViewports(Uint32 resolution, Uint32 firstArraySlice);
+		void UpdateCache(void);
+
+		STDNODISCARD float Get_NearPlane(void) const;
+		STDNODISCARD Math::BoxF3 Get_CullingBox(void) const;
+
+		static Uint32* Get_CubemapCoordinateSwizzle(void);
+
+	protected:
+		void EnsureCacheIsValid(void) const;
+
+	protected:
+		Array<PlanarView, 6> m_FaceViews;
+		Math::AffineF3 m_ViewMatrix{ Math::AffineF3::Identity() };
+		Math::AffineF3 m_ViewMatrixInv{ Math::AffineF3::Identity() };
+		Math::MatF44 m_ProjMatrix{ Math::MatF44::Identity() };
+		Math::MatF44 m_ProjMatrixInv{ Math::MatF44::Identity() };
+		Math::MatF44 m_ViewProjMatrix{ Math::MatF44::Identity() };
+		Math::MatF44 m_ViewProjMatrixInv{ Math::MatF44::Identity() };
+
+		float m_CullDistance{ 1.f };
+		float m_NearPlane{ 1.f };
+		Math::VecF3 m_Center{ Math::VecF3::Zero() };
+		Math::BoxF3 m_CullingBox{ Math::BoxF3::Empty() };
+		Uint32 m_FirstArraySlice{ 0 };
+		bool m_CacheValid{ false };
+
+
+	public:
+		STDNODISCARD Uint32 Get_NumChildViews(ViewType supportedTypes) const override;
+		STDNODISCARD const IView* Get_ChildView(ViewType supportedTypes, Uint32 index) const override;
+
+	public:
+		STDNODISCARD virtual RHI::RHIViewportState Get_ViewportState(void) const override;
+		STDNODISCARD virtual RHI::RHIVariableRateShadingState Get_VariableRateShadingState(void) const override;
+		STDNODISCARD virtual RHI::RHITextureSubresourceSet Get_Subresources(void) const override;
+		STDNODISCARD virtual bool Is_ReverseDepth(void) const override;
+		STDNODISCARD virtual bool Is_OrthographicProjection(void) const override;
+		STDNODISCARD virtual bool Is_StereoView(void) const override;
+		STDNODISCARD virtual bool Is_CubemapView(void) const override;
+		STDNODISCARD virtual bool Is_BoxVisible(const Math::BoxF3& bbox) const override;
+		STDNODISCARD virtual bool Is_Mirrored(void) const override;
+		STDNODISCARD virtual Math::VecF3 Get_ViewOrigin(void) const override;
+		STDNODISCARD virtual Math::VecF3 Get_ViewDirection(void) const override;
+		STDNODISCARD virtual Math::Frustum Get_ViewFrustum(void) const override;
+		STDNODISCARD virtual Math::Frustum Get_ProjectionFrustum(void) const override;
+		STDNODISCARD virtual Math::AffineF3 Get_ViewMatrix(void) const override;
+		STDNODISCARD virtual Math::AffineF3 Get_InverseViewMatrix(void) const override;
+		STDNODISCARD virtual Math::MatF44 Get_ProjectionMatrix(bool includeOffset = true) const override;
+		STDNODISCARD virtual Math::MatF44 Get_InverseProjectionMatrix(bool includeOffset = true) const override;
+		STDNODISCARD virtual Math::MatF44 Get_ViewProjectionMatrix(bool includeOffset = true) const override;
+		STDNODISCARD virtual Math::MatF44 Get_InverseViewProjectionMatrix(bool includeOffset = true) const override;
+		STDNODISCARD virtual RHI::RHIRect2D Get_ViewExtent(void) const override;
+		STDNODISCARD virtual Math::VecF2 Get_PixelOffset(void) const override;
+
+	};
+
+	constexpr Array<Math::MatF33, 6> g_CubemapViewMatrices{
+	Math::MatF33{
+		0.f,	0.f,	1.f,
+		0.f,	1.f,	0.f,
+		-1.f,	0.f,	0.f
+	},
+	Math::MatF33{
+		0.f,	0.f,	-1.f,
+		0.f,	1.f,	0.f,
+		1.f,	0.f,	0.f
+	},
+	Math::MatF33{
+		1.f,	0.f,	0.f,
+		0.f,	0.f,	1.f,
+		0.f,	-1.f,	0.f
+	},
+	Math::MatF33{
+		1.f,	0.f,	0.f,
+		0.f,	0.f,	-1.f,
+		0.f,	1.f,	0.f
+	},
+	Math::MatF33{
+		1.f,	0.f,	0.f,
+		0.f,	1.f,	0.f,
+		0.f,	0.f,	1.f
+	},
+	Math::MatF33{
+		-1.f,	0.f,	0.f,
+		0.f,	1.f,	0.f,
+		0.f,	0.f,	-1.f
+	}
+	};
+
 
 
 	inline Uint32 IView::Get_NumChildViews(ViewType supportedTypes) const { return 1; }
@@ -363,7 +463,7 @@ namespace Parting {
 		this->m_ViewProjMatrixInv = this->m_ProjMatrixInv * Math::AffineToHomogeneous(this->m_ViewMatrixInv);
 		this->m_ViewProjOffsetMatrixInv = this->m_PixelOffsetMatrixInv * this->m_ViewProjMatrixInv;
 
-		this->m_ReverseDepth = (0.f==this->m_ProjMatrix[2][2]);
+		this->m_ReverseDepth = (0.f == this->m_ProjMatrix[2][2]);
 		this->m_ViewFrustum = Math::Frustum{ this->m_ViewProjMatrix, this->m_ReverseDepth };
 		this->m_ProjectionFrustum = Math::Frustum{ this->m_ProjMatrix, this->m_ReverseDepth };
 
@@ -450,11 +550,140 @@ namespace Parting {
 	template<typename ChildType> inline Math::VecF2 StereoView<ChildType>::Get_PixelOffset(void) const { return this->LeftView.Get_PixelOffset(); }
 
 
+	inline void CubemapView::Set_Transform(Math::AffineF3 viewMatrix, float zNear, float cullDistance, bool useReverseInfiniteProjections) {
+		this->m_ViewMatrix = viewMatrix;
+		this->m_NearPlane = zNear;
+		this->m_CullDistance = cullDistance;
 
+		Math::MatF44 faceProjMatrix;
+		if (useReverseInfiniteProjections)
+			faceProjMatrix = Math::MatF44(
+				1.f,	0.f,	0.f,	0.f,
+				0.f,	1.f,	0.f,	0.f,
+				0.f,	0.f,	0.f,	1.f,
+				0.f,	0.f,	zNear,	0.f
+			);
+		else
+			faceProjMatrix = Math::PerspProjD3DStyle(-1.f, 1.f, -1.f, 1.f, zNear, cullDistance);
 
+		for (Uint32 face = 0; face < 6; ++face) {
+			Math::AffineF3 faceViewMatrix{ this->m_ViewMatrix * Math::AffineF3{ g_CubemapViewMatrices[face], Math::VecF3::Zero() } };
 
+			this->m_FaceViews[face].Set_Matrices(faceViewMatrix, faceProjMatrix);
+		}
 
+		this->m_CacheValid = false;
+	}
 
+	inline void CubemapView::Set_ArrayViewports(Uint32 resolution, Uint32 firstArraySlice) {
+		this->m_FirstArraySlice = firstArraySlice;
 
+		for (int face = 0; face < 6; ++face) {
+			this->m_FaceViews[face].Set_Viewport(RHI::RHIViewport::Build(static_cast<float>(resolution), static_cast<float>(resolution)));
+			this->m_FaceViews[face].Set_ArraySlice(face + firstArraySlice);
+		}
+	}
+
+	inline void CubemapView::UpdateCache(void) {
+		for (auto& view : this->m_FaceViews)
+			view.UpdateCache();
+
+		if (this->m_CacheValid)
+			return;
+
+		this->m_ViewMatrixInv = Math::Inverse(this->m_ViewMatrix);
+		this->m_ProjMatrix = Math::AffineToHomogeneous(Math::Scaling<float, 3>(1.0f / this->m_NearPlane));
+		this->m_ProjMatrixInv = Math::Inverse(this->m_ProjMatrix);
+		this->m_ViewProjMatrix = Math::AffineToHomogeneous(this->m_ViewMatrix) * this->m_ProjMatrix;
+		this->m_ViewProjMatrixInv = Math::Inverse(this->m_ViewProjMatrix);
+		this->m_Center = Math::Inverse(this->m_ViewMatrix).m_Translation;
+		this->m_CullingBox = Math::BoxF3(this->m_Center - this->m_CullDistance, this->m_Center + this->m_CullDistance);
+
+		this->m_CacheValid = true;
+	}
+
+	inline float CubemapView::Get_NearPlane(void) const { return this->m_NearPlane; }
+
+	inline Math::BoxF3 CubemapView::Get_CullingBox(void) const { this->EnsureCacheIsValid(); return this->m_CullingBox; }
+
+	inline Uint32* CubemapView::Get_CubemapCoordinateSwizzle(void) {
+		ASSERT(false);
+
+		return nullptr;
+	}
+
+	void CubemapView::EnsureCacheIsValid(void) const { ASSERT(this->m_CacheValid); }
+
+	inline Uint32 CubemapView::Get_NumChildViews(ViewType supportedTypes) const { return ViewType::None != (supportedTypes & ViewType::CUBEMAP) ? 1 : 6; }
+
+	inline const IView* CubemapView::Get_ChildView(ViewType supportedTypes, Uint32 index) const {
+		if (ViewType::None != (supportedTypes & ViewType::CUBEMAP))
+			return this;
+
+		ASSERT(index < 6);
+		return &this->m_FaceViews[index];
+	}
+
+	inline RHI::RHIViewportState CubemapView::Get_ViewportState(void) const {
+		RHI::RHIViewportStateBuilder result;
+
+		for (const auto& faceView : this->m_FaceViews) {
+			result.AddViewport(faceView.Get_Viewport());
+			result.AddScissorRect(faceView.Get_ScissorRect());
+		}
+
+		return result.Build();
+	}
+
+	inline RHI::RHIVariableRateShadingState CubemapView::Get_VariableRateShadingState(void) const {
+		ASSERT(false);
+
+		return RHI::RHIVariableRateShadingState{};
+	}
+
+	inline RHI::RHITextureSubresourceSet CubemapView::Get_Subresources(void) const { return RHI::RHITextureSubresourceSet{ .BaseArraySlice{ this->m_FirstArraySlice }, .ArraySliceCount{ 6 } }; }
+
+	inline bool CubemapView::Is_ReverseDepth(void) const { return true; }
+
+	inline bool CubemapView::Is_OrthographicProjection(void) const { return false; }
+
+	inline bool CubemapView::Is_StereoView(void) const { return false; }
+
+	inline bool CubemapView::Is_CubemapView(void) const { return true; }
+
+	inline bool CubemapView::Is_BoxVisible(const Math::BoxF3& bbox) const {
+		this->EnsureCacheIsValid();
+
+		if (this->m_CullDistance <= 0)
+			return true;
+
+		return this->m_CullingBox.Intersects(bbox);
+	}
+
+	inline bool CubemapView::Is_Mirrored(void) const { return false; }
+
+	inline Math::VecF3 CubemapView::Get_ViewOrigin(void) const { return this->m_Center; }
+
+	inline Math::VecF3 CubemapView::Get_ViewDirection(void) const { ASSERT(false); return 0.f; }
+
+	inline Math::Frustum CubemapView::Get_ViewFrustum(void) const { this->EnsureCacheIsValid(); return Math::Frustum::FromBox(this->m_CullingBox); }
+
+	inline Math::Frustum CubemapView::Get_ProjectionFrustum(void) const { this->EnsureCacheIsValid(); return Math::Frustum::FromBox(Math::BoxF3{ -this->m_CullDistance, this->m_CullDistance }); }
+
+	inline Math::AffineF3 CubemapView::Get_ViewMatrix(void) const { return this->m_ViewMatrix; }
+
+	inline Math::AffineF3 CubemapView::Get_InverseViewMatrix(void) const { this->EnsureCacheIsValid(); return this->m_ViewMatrixInv; }
+
+	inline Math::MatF44 CubemapView::Get_ProjectionMatrix(bool includeOffset) const { this->EnsureCacheIsValid(); return this->m_ProjMatrix; }
+
+	inline Math::MatF44 CubemapView::Get_InverseProjectionMatrix(bool includeOffset) const { this->EnsureCacheIsValid(); return this->m_ProjMatrixInv; }
+
+	inline Math::MatF44 CubemapView::Get_ViewProjectionMatrix(bool includeOffset) const { this->EnsureCacheIsValid(); return this->m_ViewProjMatrix; }
+
+	inline Math::MatF44 CubemapView::Get_InverseViewProjectionMatrix(bool includeOffset) const { this->EnsureCacheIsValid(); return this->m_ViewProjMatrixInv; }
+
+	inline RHI::RHIRect2D CubemapView::Get_ViewExtent(void) const { return this->m_FaceViews[0].Get_ViewExtent(); }
+
+	inline Math::VecF2 CubemapView::Get_PixelOffset(void) const { return Math::VecF2::Zero(); }
 
 }

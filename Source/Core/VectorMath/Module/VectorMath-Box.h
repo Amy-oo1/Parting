@@ -61,21 +61,18 @@ namespace Math {
 
 		constexpr bool Intersects(const Box<Type, N>& a) const { return All(a.m_Mins <= this->m_Maxs) && All(this->m_Mins <= a.m_Maxs); }
 
-		bool IsFinite(void) const { return All(IsFinite(this->m_Mins)) && All(IsFinite(this->m_Maxs)); }
+		bool Is_Finite(void) const { return All(Is_Finite(this->m_Mins)) && All(Is_Finite(this->m_Maxs)); }
 
 		constexpr Vec<Type, N> Clamp(const Vec<Type, N>& a) const { return Clamp(a, this->m_Mins, this->m_Maxs); }
 
 		constexpr Vec<Type, N> Get_Center(void) const { return this->m_Mins + (this->m_Maxs - this->m_Mins) / static_cast<Type>(2); }
 		constexpr Vec<Type, N> Get_Corner(Uint32 iCorner) const { return Select(BitVec<N>(iCorner), this->m_Maxs, this->m_Mins); }
 		void Get_Corners(Vec<Type, N>* cornersOut) const {
-			for (int Index = 0, nc = Box<Type, N>::NumCorners; Index < nc; ++Index)
+			for (Uint32 Index = 0, nc = Box<Type, N>::NumCorners; Index < nc; ++Index)
 				cornersOut[Index] = this->Get_Corner(Index);
 		}
+
 		constexpr Vec<Type, N> Diagonal(void) const { return this->m_Maxs - this->m_Mins; }
-
-
-
-
 
 		void Get_ExtentsAlongAxis(const Vec<Type, N>& a, Type& outMin, Type& outMax) const {
 			Type dotCenter{ Dot(this->Get_Center(), a) };
@@ -124,7 +121,7 @@ namespace Math {
 			result.m_Mins = transform.m_Translation;
 			result.m_Maxs = transform.m_Translation;
 
-			const Vec<Type, N>* row = &transform.m_Linear.Row0;
+			const Vec<Type, N>* row{ &transform.m_Linear.Row0 };
 			for (Uint32 Index = 0; Index < N; ++Index) {
 				Vec<Type, N> e{ (&this->m_Mins.X)[Index] * (*row) };
 				Vec<Type, N> f{ (&this->m_Maxs.X)[Index] * (*row) };
@@ -151,14 +148,14 @@ namespace Math {
 
 	// !!! this doesn't match the behavior of isnear() for vectors and matrices -
 	// returns a single result rather than a componentwise result
-	template <typename Type, Uint32 N>bool IsNear(const Box<Type, N>& a, const Box<Type, N>& b, float epsilon = Epsilon) {
+	template <typename Type, Uint32 N>bool Is_Near(const Box<Type, N>& a, const Box<Type, N>& b, float epsilon = Epsilon) {
 		return
-			All(IsNear(a.m_Mins, b.m_Mins, epsilon)) &&
-			All(IsNear(a.m_Maxs, b.m_Maxs, epsilon));
+			All(Is_Near(a.m_Mins, b.m_Mins, epsilon)) &&
+			All(Is_Near(a.m_Maxs, b.m_Maxs, epsilon));
 	}
 
 	// !!! this doesn't match the behavior of isfinite() for vectors and matrices -
 	// returns a single result rather than a componentwise result
-	template <typename Type, Uint32 N>bool IsFinite(const Box<Type, N>& a) { return a.IsFinite(); }
+	template <typename Type, Uint32 N>bool Is_Finite(const Box<Type, N>& a) { return a.Is_Finite(); }
 
 }

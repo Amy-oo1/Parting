@@ -52,9 +52,11 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	class ApplicationBase : public IRenderPass<APITag> {
 		using Imp_FrameBuffer = typename RHI::RHITypeTraits<APITag>::Imp_FrameBuffer;
-	protected:
+	public://NOTE : virtual base class con can be public ,virtual prot it be build 
 		ApplicationBase(typename ManageTypeTraits<APITag>::DeviceManager* deviceManager) :
 			IRenderPass<APITag>{ deviceManager } {}
+
+		~ApplicationBase(void) = default;
 
 	public:
 		Vector<String> FindScenes(IFileSystem& fs, const Path& path);

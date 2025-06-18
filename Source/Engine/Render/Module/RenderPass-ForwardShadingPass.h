@@ -197,7 +197,7 @@ namespace Parting {
 	inline ForwardShadingPass<APITag>::ForwardShadingPass(Imp_Device* device, SharedPtr<CommonRenderPasses<APITag>> commonPasses) :
 		IGeometryPass<APITag>{},
 		m_Device{ device },
-		m_CommonPasses{ commonPasses }{
+		m_CommonPasses{ ::MoveTemp(commonPasses) }{
 	}
 
 	template<RHI::APITagConcept APITag>
@@ -319,7 +319,7 @@ namespace Parting {
 					}
 
 				for (Uint32 perObjectShadow = 0; perObjectShadow < light->ShadowMap->Get_NumberOfPerObjectShadows(); ++perObjectShadow)
-					if (numShadows < FORWARD_MAX_SHADOWS){
+					if (numShadows < FORWARD_MAX_SHADOWS) {
 						light->ShadowMap->Get_PerObjectShadow(perObjectShadow)->FillShadowConstants(constants.Shadows[numShadows]);
 						lightConstants.PerObjectShadows[perObjectShadow] = static_cast<Int32>(numShadows);//TODO :
 						++numShadows;
@@ -332,7 +332,7 @@ namespace Parting {
 		constants.AmbientColorTop = Math::VecF4{ ambientColorTop, 0.f };
 		constants.AmbientColorBottom = Math::VecF4{ ambientColorBottom, 0.f };
 
-		for (const auto& probe : lightProbes){
+		for (const auto& probe : lightProbes) {
 			if (!probe->Is_Active())
 				continue;
 
@@ -345,17 +345,17 @@ namespace Parting {
 				break;
 		}
 
-		commandList->WriteBuffer(this->m_ForwardLightCB, &constants, sizeof(constants));
+		commandList->WriteBuffer(this->m_ForwardLightCB, &constants, sizeof(decltype(constants)));
 	}
 
 	template<RHI::APITagConcept APITag>
 	inline auto ForwardShadingPass<APITag>::CreateVertexShader(ShaderFactory<APITag>& shaderFactory, const CreateParameters& params) -> RHI::RefCountPtr<Imp_Shader> {
-		constexpr const char* sourceFileName{ "Parting/Passes/forward_vs.hlsl" };
+		const String sourceFileName{ "Parting/Passes/forward_vs.hlsl" };
 
 		if (params.UseInputAssembler)
-			return shaderFactory.CreateShader(sourceFileName, "input_assembler", nullptr, RHI::RHIShaderType::Vertex);
+			return shaderFactory.CreateShader(sourceFileName, String{ "input_assembler" }, nullptr, RHI::RHIShaderType::Vertex);
 		else
-			return shaderFactory.CreateShader(sourceFileName, "buffer_loads", nullptr, RHI::RHIShaderType::Vertex);
+			return shaderFactory.CreateShader(sourceFileName, String{ "buffer_loads" }, nullptr, RHI::RHIShaderType::Vertex);
 	}
 
 	template<RHI::APITagConcept APITag>
@@ -393,7 +393,7 @@ namespace Parting {
 				BuildVertexAttributeDesc(vertexAttribDescBuilder.Reset(),RHI::RHIVertexAttribute::Transform, "TRANSFORM", 5),
 			};
 
-			return this->m_Device->CreateInputLayout(inputDescs.data(), static_cast<Uint32>(inputDescs.size()), vertexShader);
+			return this->m_Device->CreateInputLayout(inputDescs.data(), static_cast<Uint32>(inputDescs.size()));
 		}
 
 		return nullptr;
@@ -404,7 +404,6 @@ namespace Parting {
 		return this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Vertex | RHI::RHIShaderType::Pixel)
 			.Set_RegisterSpace(FORWARD_SPACE_VIEW)
-			.Set_RegisterSpaceIsDescriptorSet(true)
 			.AddBinding(RHI::RHIBindingLayoutItem::VolatileConstantBuffer(FORWARD_BINDING_VIEW_CONSTANTS))
 			.Build()
 		);
@@ -425,7 +424,6 @@ namespace Parting {
 		return this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Pixel)
 			.Set_RegisterSpace(FORWARD_SPACE_SHADING)
-			.Set_RegisterSpaceIsDescriptorSet(true)
 			.AddBinding(RHI::RHIBindingLayoutItem::VolatileConstantBuffer(FORWARD_BINDING_LIGHT_CONSTANTS))
 			.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(FORWARD_BINDING_SHADOW_MAP_TEXTURE))
 			.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(FORWARD_BINDING_DIFFUSE_LIGHT_PROBE_TEXTURE))
@@ -465,7 +463,6 @@ namespace Parting {
 		return this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Vertex)
 			.Set_RegisterSpace(FORWARD_SPACE_INPUT)
-			.Set_RegisterSpaceIsDescriptorSet(true)
 			.AddBinding(RHI::RHIBindingLayoutItem::StructuredBuffer_SRV(FORWARD_BINDING_INSTANCE_BUFFER))
 			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(FORWARD_BINDING_VERTEX_BUFFER))
 			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(FORWARD_BINDING_PUSH_CONSTANTS, sizeof(ForwardPushConstants)))
@@ -595,7 +592,7 @@ namespace Parting {
 
 		ForwardShadingViewConstants viewConstants{};
 		view->FillPlanarViewConstants(viewConstants.View);
-		commandList->WriteBuffer(this->m_ForwardViewCB, &viewConstants, sizeof(viewConstants));
+		commandList->WriteBuffer(this->m_ForwardViewCB, &viewConstants, sizeof(decltype(viewConstants)));
 
 		context.KeyTemplate.Bits.FrontCounterClockwise = view->Is_Mirrored();
 		context.KeyTemplate.Bits.ReverseDepth = view->Is_ReverseDepth();
@@ -609,8 +606,6 @@ namespace Parting {
 
 		if (nullptr == materialBindingSet)
 			return false;
-
-		ASSERT(cullMode == RHI::RHIRasterCullMode::None);
 
 		PipelineKey key{ context.KeyTemplate };
 		key.Bits.CullMode = cullMode;
@@ -681,7 +676,7 @@ namespace Parting {
 		constants.NormalOffset = context.NormalOffset;
 		constants.TangentOffset = context.TangentOffset;
 
-		commandList->SetPushConstants(&constants, sizeof(constants));
+		commandList->SetPushConstants(&constants, sizeof(decltype(constants)));
 
 		args.StartInstanceLocation = 0;
 		args.StartVertexLocation = 0;
