@@ -1050,7 +1050,7 @@ namespace RHI::D3D12 {
 
 		this->m_Instance->ReferencedResources.push_back(buffer);
 
-		const Uint32 values[4] = { clearvalue, clearvalue, clearvalue, clearvalue };
+		const Uint32 values[4]{ clearvalue, clearvalue, clearvalue, clearvalue };
 		this->m_ActiveCommandList->CommandList->ClearUnorderedAccessViewUint(
 			this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_GPUHandle(clearUAV),
 			this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_CPUHandle(clearUAV),

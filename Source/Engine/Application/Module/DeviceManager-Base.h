@@ -25,6 +25,8 @@ PARTING_IMPORT RHI;
 
 #include "Core/Utility/Include/UtilityMacros.h"
 #include "Core/Logger/Include/LogMacros.h"
+
+#include<ranges>
 //Global
 #include "Engine/Application/Module/GLFWWrapper.h"
 
@@ -712,7 +714,7 @@ namespace Parting {
 
 	template<typename Derived, RHI::APITagConcept APITag>
 	inline bool DeviceManagerBase<Derived, APITag>::ShouldRenderUnfocused(void) {
-		for (IRenderPass<APITag>* pass : this->m_vRenderPasses)
+		for (IRenderPass<APITag>* pass : std::views::reverse(this->m_vRenderPasses))//NOTE :TODO :
 			if (pass->ShouldRenderUnfocused())
 				return true;
 		return false;
@@ -840,14 +842,14 @@ namespace Parting {
 		if (-1 == key)
 			return;
 
-		for (IRenderPass<APITag>* pass : this->m_vRenderPasses)
+		for (IRenderPass<APITag>* pass : std::views::reverse(this->m_vRenderPasses))
 			if (pass->KeyboardUpdate(key, scancode, action, mods))
 				break;
 	}
 
 	template<typename Derived, RHI::APITagConcept APITag>
 	inline void DeviceManagerBase<Derived, APITag>::KeyboardCharInput(Uint32 unicode, Int32 mods) {
-		for (IRenderPass<APITag>* pass : this->m_vRenderPasses)
+		for (IRenderPass<APITag>* pass : std::views::reverse(this->m_vRenderPasses))
 			if (pass->KeyboardCharInput(unicode, mods))
 				break;
 	}
@@ -859,21 +861,21 @@ namespace Parting {
 			ypos /= this->m_DPIScaleFactorY;
 		}
 
-		for (IRenderPass<APITag>* pass : this->m_vRenderPasses)
+		for (IRenderPass<APITag>* pass : std::views::reverse(this->m_vRenderPasses))
 			if (pass->MousePosUpdate(xpos, ypos))
 				break;
 	}
 
 	template<typename Derived, RHI::APITagConcept APITag>
 	inline void DeviceManagerBase<Derived, APITag>::MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) {
-		for (IRenderPass<APITag>* pass : this->m_vRenderPasses)
+		for (IRenderPass<APITag>* pass : std::views::reverse(this->m_vRenderPasses))
 			if (pass->MouseButtonUpdate(button, action, mods))
 				break;
 	}
 
 	template<typename Derived, RHI::APITagConcept APITag>
 	inline void DeviceManagerBase<Derived, APITag>::MouseScrollUpdate(double xoffset, double yoffset) {
-		for (IRenderPass<APITag>* pass : this->m_vRenderPasses)
+		for (IRenderPass<APITag>* pass : std::views::reverse(this->m_vRenderPasses))
 			if (pass->MouseScrollUpdate(xoffset, yoffset))
 				break;
 	}

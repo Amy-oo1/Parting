@@ -887,7 +887,7 @@ namespace RHI::D3D12 {
 		layout->m_Attributes.resize(attributeCount);
 
 		for (Uint32 index = 0; index < attributeCount; index++) {//TODO :Span....
-			auto& attr = layout->m_Attributes[index];
+			auto& attr{ layout->m_Attributes[index] };
 
 			// Copy the description to get a stable name pointer in desc
 			attr = attributes[index];

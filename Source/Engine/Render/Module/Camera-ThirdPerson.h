@@ -193,12 +193,12 @@ namespace Parting {
 	}
 
 	inline void ThirdPersonCamera::Imp_Animate(float deltaT) {
-		AnimateOrbit(deltaT);
+		this->AnimateOrbit(deltaT);
 
-		Math::QuatF orbit{ Math::RotationQuat(Math::VecF3{ this->m_Pitch, this->m_Yaw, 0 }) };
+		Math::QuatF orbit{ Math::RotationQuat(Math::VecF3{ this->m_Pitch, this->m_Yaw, 0.f }) };
 
 		const auto targetRotation{ orbit.ToMat() };
-		AnimateTranslation(targetRotation);
+		this->AnimateTranslation(targetRotation);
 
 		const Math::VecF3 vectorToCamera{ -this->m_Distance * targetRotation.Row2 };
 
@@ -213,7 +213,7 @@ namespace Parting {
 		this->m_MousePosPrev = this->m_MousePos;
 	}
 
-	inline void ThirdPersonCamera::Set_View(const PlanarView& view){
+	inline void ThirdPersonCamera::Set_View(const PlanarView& view) {
 		this->m_ProjectionMatrix = view.Get_ProjectionMatrix(false);
 		this->m_InverseProjectionMatrix = view.Get_InverseProjectionMatrix(false);
 		const auto& viewport{ view.Get_Viewport() };

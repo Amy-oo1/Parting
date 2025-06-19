@@ -59,7 +59,7 @@ namespace Parting {
 
 		// Creates a custom font
 		RegisteredFont(SharedPtr<IBlob> data, bool isCompressed, float size) :
-			m_Data{ data },
+			m_Data{ ::MoveTemp(data) },
 			m_IsCompressed{ isCompressed },
 			m_SizeAtDefaultScale{ size }
 		{
@@ -144,7 +144,7 @@ namespace Parting {
 
 		void BeginFullScreenWindow(void);
 
-		void DrawScreenCenteredText(const char* text);
+		void DrawScreenCenteredText(const String& text);
 
 		void EndFullScreenWindow(void);
 
@@ -155,8 +155,8 @@ namespace Parting {
 		UniquePtr<UIRHI<APITag>> m_UIRHI;
 
 		// buffer mouse click and keypress events to make sure we don't lose events which last less than a full frame
-		Array<bool, 3> MouseDown{ false,false,false };
-		Array<bool, GLFW_KEY_LAST + 1> KeyDown{};//All default as false
+		Array<bool, 3> m_MouseDown{ false,false,false };
+		Array<bool, GLFW_KEY_LAST + 1> m_KeyDown{};//All default as false
 
 		Vector<SharedPtr<RegisteredFont>> m_Fonts;
 
@@ -167,6 +167,16 @@ namespace Parting {
 
 
 	public:
+		bool KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) override;
+
+		bool KeyboardCharInput(Uint32 unicode, Int32 mods) override;
+
+		bool MousePosUpdate(double xpos, double ypos) override;
+
+		bool MouseScrollUpdate(double xoffset, double yoffset) override;
+
+		bool MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) override;
+
 		void BackBufferResizing(void) override { if (nullptr != this->m_UIRHI) this->m_UIRHI->BackBufferResizing(); }
 
 		void DisplayScaleChanged(float scaleX, float scaleY) override;
@@ -188,9 +198,9 @@ namespace Parting {
 		this->m_UIRHI = MakeUnique<UIRHI<APITag>>();
 
 		// Set up keyboard mapping.
-		// ImGui will use those indices to peek into the io.KeyDown[] array
+		// ImGui will use those indices to peek into the io.m_KeyDown[] array
 		// that we will update during the application lifetime.
-		ImGuiIO& io = ImGui::GetIO();
+		ImGuiIO& io{ ImGui::GetIO() };
 		io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;
 		io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
 		io.KeyMap[ImGuiKey_RightArrow] = GLFW_KEY_RIGHT;
@@ -241,18 +251,101 @@ namespace Parting {
 	}
 
 	template<RHI::APITagConcept APITag>
-	inline void UIRenderer<APITag>::DrawScreenCenteredText(const char* text){
+	inline void UIRenderer<APITag>::DrawScreenCenteredText(const String& text) {
 		ImGuiIO const& io{ ImGui::GetIO() };
-		ImVec2 textSize{ ImGui::CalcTextSize(text) };
+		ImVec2 textSize{ ImGui::CalcTextSize(text.c_str()) };
 		ImGui::SetCursorPosX((io.DisplaySize.x / io.DisplayFramebufferScale.x - textSize.x) * 0.5f);
 		ImGui::SetCursorPosY((io.DisplaySize.y / io.DisplayFramebufferScale.y - textSize.y) * 0.5f);
-		ImGui::TextUnformatted(text);
+		ImGui::TextUnformatted(text.c_str());
 	}
 
 	template<RHI::APITagConcept APITag>
-	inline void UIRenderer<APITag>::EndFullScreenWindow(void){
+	inline void UIRenderer<APITag>::EndFullScreenWindow(void) {
 		ImGui::End();
 		ImGui::PopStyleVar();
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline bool UIRenderer<APITag>::KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) {
+		auto& io{ ImGui::GetIO() };
+
+		bool keyIsDown{ (GLFW_PRESS == action || GLFW_REPEAT == action) };
+
+		// update our internal state tracking for this key button
+		this->m_KeyDown[key] = keyIsDown;
+
+		if (keyIsDown)
+			io.KeysDown[key] = true;// if the key was pressed, update ImGui immediately
+		else {
+			// for key up events, ImGui state is only updated after the next frame
+			// this ensures that short keypresses are not missed
+		}
+
+		return io.WantCaptureKeyboard;
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline bool UIRenderer<APITag>::KeyboardCharInput(Uint32 unicode, Int32 mods) {
+		auto& io{ ImGui::GetIO() };
+
+		io.AddInputCharacter(unicode);
+
+		return io.WantCaptureKeyboard;
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline bool UIRenderer<APITag>::MousePosUpdate(double xpos, double ypos) {
+		auto& io{ ImGui::GetIO() };
+
+		io.MousePos.x = static_cast<float>(xpos);
+		io.MousePos.y = static_cast<float>(ypos);
+
+		return io.WantCaptureMouse;
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline bool UIRenderer<APITag>::MouseScrollUpdate(double xoffset, double yoffset) {
+		auto& io{ ImGui::GetIO() };
+
+		io.MouseWheel += static_cast<float>(yoffset);
+
+		return io.WantCaptureMouse;
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline bool UIRenderer<APITag>::MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) {
+		auto& io{ ImGui::GetIO() };
+
+		bool buttonIsDown{ (GLFW_PRESS == action || GLFW_REPEAT == action) };
+		Uint32 buttonIndex;
+
+		switch (button) {
+		case GLFW_MOUSE_BUTTON_LEFT:
+			buttonIndex = 0u;
+			break;
+
+		case GLFW_MOUSE_BUTTON_RIGHT:
+			buttonIndex = 1u;
+			break;
+
+		case GLFW_MOUSE_BUTTON_MIDDLE:
+			buttonIndex = 2u;
+			break;
+
+		default: ASSERT(false); break;
+		}
+
+		// update our internal state tracking for this mouse button
+		this->m_MouseDown[buttonIndex] = buttonIsDown;
+
+		if (buttonIsDown)
+			io.MouseDown[buttonIndex] = true;	// update ImGui state immediately
+		else {
+			// for mouse up events, ImGui state is only updated after the next frame
+			// this ensures that short clicks are not missed
+		}
+
+		return io.WantCaptureMouse;
 	}
 
 	template<RHI::APITagConcept APITag>
@@ -315,7 +408,7 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline void UIRenderer<APITag>::Render(Imp_FrameBuffer* framebuffer) {
-		if (nullptr == this->m_UIRHI) 
+		if (nullptr == this->m_UIRHI)
 			return;
 
 		this->BuildUI();
@@ -326,13 +419,13 @@ namespace Parting {
 
 		// reconcile mouse button states
 		auto& io{ ImGui::GetIO() };
-		for (Uint64 Index = 0; Index < this->MouseDown.size(); ++Index)
-			if (io.MouseDown[Index] == true && this->MouseDown[Index] == false)
+		for (Uint64 Index = 0; Index < this->m_MouseDown.size(); ++Index)
+			if (true == io.MouseDown[Index] && false == this->m_MouseDown[Index])
 				io.MouseDown[Index] = false;
 
 		// reconcile key states
-		for (Uint64 Index = 0; Index < this->KeyDown.size(); ++Index)
-			if (io.KeysDown[Index] == true && this->KeyDown[Index] == false)
+		for (Uint64 Index = 0; Index < this->m_KeyDown.size(); ++Index)
+			if (true == io.KeysDown[Index] && false == this->m_KeyDown[Index])
 				io.KeysDown[Index] = false;
 	}
 

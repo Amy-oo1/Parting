@@ -123,7 +123,7 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	inline SkyPass<APITag>::SkyPass(Imp_Device* device, const SharedPtr<ShaderFactory<APITag>>& shaderFactory, const SharedPtr<CommonRenderPasses<APITag>>& commonPasses, const SharedPtr<FrameBufferFactory<APITag>>& framebufferFactory, const ICompositeView& compositeView) :
 		m_FrameBufferFactory{ framebufferFactory } {
-		this->m_PixelShader = shaderFactory->CreateShader("Parting/Passes/sky_ps.hlsl", "main", nullptr, RHI::RHIShaderType::Pixel);
+		this->m_PixelShader = shaderFactory->CreateShader(String{ "Parting/Passes/sky_ps.hlsl" }, String{ "main" }, nullptr, RHI::RHIShaderType::Pixel);
 
 		this->m_SkyCB = device->CreateBuffer(RHI::RHIBufferDescBuilder{}
 			.Set_ByteSize(sizeof(SkyConstants))
@@ -167,12 +167,10 @@ namespace Parting {
 
 			Math::AffineF3 viewToWorld{ view->Get_InverseViewMatrix() };
 			viewToWorld.m_Translation = 0.f;
-			Math::MatF44 clipToTranslatedWorld{ view->Get_InverseProjectionMatrix(true) * Math::AffineToHomogeneous(viewToWorld) };
 
-			SkyConstants skyConstants{};
-			skyConstants.MatClipToTranslatedWorld = clipToTranslatedWorld;
+			SkyConstants skyConstants{ .MatClipToTranslatedWorld{ view->Get_InverseProjectionMatrix(true) * Math::AffineToHomogeneous(viewToWorld) } };
 			this->FillShaderParameters(light, params, skyConstants.Params);
-			commandList->WriteBuffer(this->m_SkyCB, &skyConstants, sizeof(skyConstants));
+			commandList->WriteBuffer(this->m_SkyCB, &skyConstants, sizeof(decltype(skyConstants)));
 
 			commandList->SetGraphicsState(RHI::RHIGraphicsStateBuilder<APITag>{}
 			.Set_Pipeline(this->m_PSO)
