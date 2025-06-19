@@ -34,23 +34,21 @@ PARTING_MODULE(Container)
 #endif // !NOGDI
 #include "windows.h"
 
-#include "shellapi.h"
+//#include "shellapi.h"
 #include "ShellScalingApi.h"
-#include "WinUser.h"
-#include "processenv.h"
+//#include "WinUser.h"
+//#include "processenv.h"
 //TODO useed to wapper in module
 
-PARTING_EXPORT using FileOffset_T = _off_t;
-
-constexpr UINT PlatformWindowsAccessGenericRead{ GENERIC_READ };
-constexpr UINT PlatformWindowsAccessGenericWrite{ GENERIC_WRITE };
-constexpr UINT PlatformWindowsAccessGenericExecute{ GENERIC_EXECUTE };
-constexpr UINT PlatformWindowsAccessGenericAll{ GENERIC_ALL };//TODO :Trans
+#include "Core/Logger/Module/Logger.h"
+#include "Core/Logger/Include/LogMacros.h"
 
 std::filesystem::path Get_CatallogDirectory(void) {
 	char path[MAX_PATH] = {};
-	if (0 == GetModuleFileNameA(nullptr, path, MAX_PATH))
-		assert(false);
+	if (0 == GetModuleFileNameA(nullptr, path, MAX_PATH)) {
+
+		LOG_ERROR("GetModuleFileNameA failed with error code: {}", GetLastError());
+	}
 
 	return std::filesystem::path(path).parent_path().parent_path();//remove de/re
 }

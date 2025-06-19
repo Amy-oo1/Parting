@@ -24,7 +24,7 @@ PARTING_IMPORT Utility;
 
 #endif // PARTING_MODULE_BUILD#pragma once
 
-class Color final {
+struct Color final {
 	CONSTEXPR_TRIVIAL_FUNCTION(Color)
 public:
 	constexpr Color(float c) noexcept : R{ c }, G{ c }, B{ c }, A{ c } {}
@@ -39,11 +39,6 @@ public:
 	operator const Math::VecF4(void)const { return Math::VecF4{ this->R, this->G, this->B, this->A }; }
 
 public:
-	STDNODISCARD constexpr decltype(auto) Get_R(void)const noexcept { return this->R; }
-	STDNODISCARD constexpr decltype(auto) Get_G(void)const noexcept { return this->G; }//TODO Move
-	STDNODISCARD constexpr decltype(auto) Get_B(void)const noexcept { return this->B; }
-	STDNODISCARD constexpr decltype(auto) Get_A(void)const noexcept { return this->A; }
-
 public:
 	STDNODISCARD constexpr bool operator==(const Color&) const noexcept = default;
 	STDNODISCARD constexpr bool operator!=(const Color&) const noexcept = default;

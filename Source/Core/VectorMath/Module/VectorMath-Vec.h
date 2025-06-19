@@ -112,7 +112,7 @@ namespace Math {
 	};
 
 	template <typename Type>
-	struct Vec<Type, 2> {
+	struct Vec<Type, 2> final {
 		using Array_T = Type(&)[2];
 		using ConstArray_T = const Type(&)[2];
 
@@ -139,7 +139,7 @@ namespace Math {
 	};
 
 	template <typename Type>
-	struct Vec<Type, 3> {
+	struct Vec<Type, 3> final {
 		using Array_T = Type(&)[3];
 		using ConstArray_T = const Type(&)[3];
 
@@ -156,7 +156,8 @@ namespace Math {
 
 		operator Array_T (void) { return reinterpret_cast<Array_T>(*this->Data()); }
 		operator ConstArray_T (void) const { return reinterpret_cast<ConstArray_T>(*this->Data()); }
-		Type& operator [] (Uint32 Index) { return this->Data()[Index]; } const Type& operator [] (Uint32 Index) const { return this->Data()[Index]; }
+		Type& operator [] (Uint32 Index) { return this->Data()[Index]; } 
+		const Type& operator [] (Uint32 Index) const { return this->Data()[Index]; }
 
 		Vec<Type, 2>& XY(void) { return *reinterpret_cast<Vec<Type, 2>*>(&this->X); }
 		const Vec<Type, 2>& XY(void) const { return *reinterpret_cast<const Vec<Type, 2>*>(&this->X); }
@@ -164,11 +165,11 @@ namespace Math {
 		Type* Data(void) { return  &this->X; }
 		const Type* Data(void) const { return  &this->X; }
 
-		constexpr static Vec Zero(void) { return Vec{ static_cast<Type>(0) }; }
+		static constexpr Vec Zero(void) { return Vec{ static_cast<Type>(0) }; }
 	};
 
 	template <typename Type>
-	struct Vec<Type, 4> {
+	struct Vec<Type, 4> final {
 		using Array_T = Type(&)[4];
 		using ConstArray_T = const Type(&)[4];
 
@@ -562,7 +563,7 @@ namespace Math {
 
 	template<Uint32 N>constexpr Vec<float, N> Degrees(const Vec<float, N>& rad) { return rad * (180.f / PI_F); }
 
-	template<int N>constexpr Vec<float, N> Radians(const Vec<float, N>& deg) { return deg * (PI_F / 180.f); }
+	template<Uint32 N>constexpr Vec<float, N> Radians(const Vec<float, N>& deg) { return deg * (PI_F / 180.f); }
 
 
 

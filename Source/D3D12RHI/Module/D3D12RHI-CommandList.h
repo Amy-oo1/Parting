@@ -170,7 +170,6 @@ namespace RHI::D3D12 {
 		ID3D12DescriptorHeap* m_CurrentHeapSRVetc{ nullptr };
 		ID3D12DescriptorHeap* m_CurrentHeapSamplers{ nullptr };
 		ID3D12Resource* m_CurrentUploadBuffer{ nullptr };
-		RHISinglePassStereoState m_CurrentSinglePassStereoState;
 
 		UnorderedMap<Buffer*, D3D12_GPU_VIRTUAL_ADDRESS> m_VolatileConstantBufferAddresses;
 		bool m_AnyVolatileBufferWrites{ false };
@@ -305,7 +304,6 @@ namespace RHI::D3D12 {
 		this->m_CurrentHeapSamplers = nullptr;
 		this->m_CurrentGraphicsVolatileCBCount = 0;
 		this->m_CurrentComputeVolatileCBCount = 0;
-		this->m_CurrentSinglePassStereoState = RHISinglePassStereoState{};
 	}
 
 	inline bool CommandList::CommitDescriptorHeaps(void) {
@@ -1050,7 +1048,7 @@ namespace RHI::D3D12 {
 
 		this->m_Instance->ReferencedResources.push_back(buffer);
 
-		const Uint32 values[4] = { clearvalue, clearvalue, clearvalue, clearvalue };
+		const Uint32 values[4]{ clearvalue, clearvalue, clearvalue, clearvalue };
 		this->m_ActiveCommandList->CommandList->ClearUnorderedAccessViewUint(
 			this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_GPUHandle(clearUAV),
 			this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_CPUHandle(clearUAV),
@@ -1086,18 +1084,15 @@ namespace RHI::D3D12 {
 
 		//TODO
 		if (this->m_CurrentGraphicsStateValid && nullptr != this->m_CurrentGraphicsState.Pipeline) {
-			GraphicsPipeline* pso = this->m_CurrentGraphicsState.Pipeline;
-			rootsig = pso->m_RootSignature;
+			rootsig = this->m_CurrentGraphicsState.Pipeline->m_RootSignature;
 			isGraphics = true;
 		}
 		else if (this->m_CurrentComputeStateValid && nullptr != this->m_CurrentComputeState.Pipeline) {
-			ComputePipeline* pso = this->m_CurrentComputeState.Pipeline;
-			rootsig = pso->m_RootSignature;
+			rootsig = this->m_CurrentComputeState.Pipeline->m_RootSignature;
 			isGraphics = false;
 		}
 		else if (this->m_CurrentMeshletStateValid && nullptr != this->m_CurrentMeshletState.Pipeline) {
-			MeshletPipeline* pso = this->m_CurrentMeshletState.Pipeline;
-			rootsig = pso->m_RootSignature;
+			rootsig = this->m_CurrentMeshletState.Pipeline->m_RootSignature;
 			isGraphics = true;
 		}
 

@@ -56,8 +56,7 @@ namespace Math {
 		constexpr bool Is_Empty(void) const { return Any(this->m_Mins > this->m_Maxs); }
 
 		constexpr bool Contains(const Vec<Type, N>& a) const { return All(this->m_Mins <= a) && All(a <= this->m_Maxs); }
-
-		constexpr bool contains(const Box<Type, N>& a) const { return a.Is_Empty() || (All(this->m_Mins <= a.m_Mins) && all(a.m_Maxs <= this->m_Maxs)); }
+		constexpr bool Contains(const Box<Type, N>& a) const { return a.Is_Empty() || (All(this->m_Mins <= a.m_Mins) && all(a.m_Maxs <= this->m_Maxs)); }
 
 		constexpr bool Intersects(const Box<Type, N>& a) const { return All(a.m_Mins <= this->m_Maxs) && All(this->m_Mins <= a.m_Maxs); }
 

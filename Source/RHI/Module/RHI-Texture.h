@@ -77,9 +77,6 @@ namespace RHI {
 		bool IsRenderTarget{ false };
 		bool IsUAV{ false };
 		bool IsTypeless{ false };
-		bool IsShadingRateSurface{ false };
-
-		RHISharedResourceFlag SharedResourceFlags{ RHISharedResourceFlag::None };
 
 		// Indicates that the texture is created with no backing memory,
 		// and memory is bound to the texture later using bindTextureMemory.
@@ -112,8 +109,6 @@ namespace RHI {
 		constexpr RHITextureDescBuilder& Set_IsRenderTarget(const bool isRenderTarget) { this->m_Desc.IsRenderTarget = isRenderTarget; return *this; }
 		constexpr RHITextureDescBuilder& Set_IsUAV(const bool isUAV) { this->m_Desc.IsUAV = isUAV; return *this; }
 		constexpr RHITextureDescBuilder& Set_IsTypeless(const bool isTypeless) { this->m_Desc.IsTypeless = isTypeless; return *this; }
-		constexpr RHITextureDescBuilder& Set_IsShadingRateSurface(const bool isShadingRateSurface) { this->m_Desc.IsShadingRateSurface = isShadingRateSurface; return *this; }
-		constexpr RHITextureDescBuilder& Set_SharedResourceFlags(const RHISharedResourceFlag sharedResourceFlags) { this->m_Desc.SharedResourceFlags = sharedResourceFlags; return *this; }
 		constexpr RHITextureDescBuilder& Set_IsVirtual(const bool isVirtual) { this->m_Desc.IsVirtual = isVirtual; return *this; }
 		constexpr RHITextureDescBuilder& Set_IsTiled(const bool isTiled) { this->m_Desc.IsTiled = isTiled; return *this; }
 		constexpr RHITextureDescBuilder& Set_ClearValue(const Color& clearValue) { this->m_Desc.ClearValue = clearValue; return *this; }

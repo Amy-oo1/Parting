@@ -154,7 +154,7 @@ namespace Parting {
 		Uint64 permutationSize{ 0 };
 		if (!ShaderMake::FindPermutationInBlob(shader.pBytecode, shader.Size, constants.data(), static_cast<Uint32>(constants.size()), &permutationBytecode, &permutationSize)) {
 			auto message{ ShaderMake::FormatShaderNotFoundMessage(shader.pBytecode, shader.Size, constants.data(), static_cast<Uint32>(constants.size())) };
-			LOG_ERROR(message);
+			/*LOG_ERROR(message);*/
 
 			return nullptr;
 		}

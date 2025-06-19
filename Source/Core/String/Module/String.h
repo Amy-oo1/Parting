@@ -39,7 +39,7 @@ String WStringToString(const WString& wstr) {
 	String Re;
 	Re.resize(Length);
 
-	WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), static_cast<Int32>(Length), Re.data(), static_cast<Int32>(Re.size()), nullptr, nullptr);
+	WideCharToMultiByte(/*CP_ACP*/ 0, 0, wstr.c_str(), static_cast<Int32>(Length), Re.data(), static_cast<Int32>(Re.size()), nullptr, nullptr);
 
 	return Re;
 }

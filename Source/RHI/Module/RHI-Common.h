@@ -151,20 +151,10 @@ namespace RHI {
 	EXPORT_ENUM_CLASS_OPERATORS(RHISharedResourceFlag);
 
 	PARTING_EXPORT enum class RHIFeature : Uint8 {
-		DeferredCommandLists,
-		SinglePassStereo,
-		ShaderExecutionReordering,
-		Spheres,
-		LinearSweptSpheres,
-		FastGeometryShader,
 		Meshlets,
 		ConservativeRasterization,
-		VariableRateShading,
-		ShaderSpecializations,
-		VirtualResources,
 		ComputeQueue,
 		CopyQueue,
-		ConstantBufferRanges
 	};
 
 	PARTING_EXPORT struct RHIVariableRateShadingFeatureInfo {

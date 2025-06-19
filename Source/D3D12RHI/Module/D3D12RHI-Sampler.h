@@ -122,10 +122,10 @@ namespace RHI::D3D12 {
 		this->m_SamplerDesc.MaxAnisotropy = Math::Max(static_cast<UINT32>(this->m_Desc.MaxAnisotropy), 1u);
 		this->m_SamplerDesc.ComparisonFunc = this->m_Desc.ReductionType == RHISamplerReductionType::Comparison ? D3D12_COMPARISON_FUNC_LESS : D3D12_COMPARISON_FUNC_NEVER;
 
-		this->m_SamplerDesc.BorderColor[0] = this->m_Desc.BorderColor.Get_R();
-		this->m_SamplerDesc.BorderColor[1] = this->m_Desc.BorderColor.Get_G();
-		this->m_SamplerDesc.BorderColor[2] = this->m_Desc.BorderColor.Get_B();
-		this->m_SamplerDesc.BorderColor[3] = this->m_Desc.BorderColor.Get_A();
+		this->m_SamplerDesc.BorderColor[0] = this->m_Desc.BorderColor.R;
+		this->m_SamplerDesc.BorderColor[1] = this->m_Desc.BorderColor.G;
+		this->m_SamplerDesc.BorderColor[2] = this->m_Desc.BorderColor.B;
+		this->m_SamplerDesc.BorderColor[3] = this->m_Desc.BorderColor.A;
 
 		this->m_SamplerDesc.MinLOD = 0.f;
 		this->m_SamplerDesc.MaxLOD = Max_Float;

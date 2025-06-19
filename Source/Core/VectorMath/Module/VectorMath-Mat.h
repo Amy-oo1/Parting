@@ -38,7 +38,7 @@ namespace Math {
 		operator ConstArray_T (void) const { return this->m_Data; } \
 		Vec<Type, ColCount> & operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, ColCount> &>(this->m_Data[RowIndex*ColCount]); } \
 		const Vec<Type, ColCount> & operator [] (Uint32 RowIndex) const { return reinterpret_cast<const Vec<Type, ColCount> &>(this->m_Data[RowIndex*ColCount]); } \
-		Vec<Type, RowCount> Col(int ColIndex) const { Vec<Type, RowCount> Value; for (Uint32 RowIndex = 0; RowIndex < RowCount; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * ColCount + ColIndex]; return Value; }
+		Vec<Type, RowCount> Col(Uint32 ColIndex) const { Vec<Type, RowCount> Value; for (Uint32 RowIndex = 0; RowIndex < RowCount; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * ColCount + ColIndex]; return Value; }
 
 #undef MATRIX_MEMBERS
 
@@ -63,7 +63,7 @@ namespace Math {
 		Vec<Type, ColCount>& operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, ColCount>&>(this->m_Data[RowIndex * ColCount]); }
 		const Vec<Type, ColCount>& operator [] (Uint32 RowIndex) const { return reinterpret_cast<const Vec<Type, ColCount>&>(this->m_Data[RowIndex * ColCount]); }
 
-		Vec<Type, RowCount> Col(int ColIndex) const { Vec<Type, RowCount> Value; for (Uint32 RowIndex = 0; RowIndex < RowCount; RowIndex++) Value[RowIndex] = this->m_Data[RowIndex * ColCount + ColIndex]; return Value; }
+		Vec<Type, RowCount> Col(Uint32 ColIndex) const { Vec<Type, RowCount> Value; for (Uint32 RowIndex = 0; RowIndex < RowCount; RowIndex++) Value[RowIndex] = this->m_Data[RowIndex * ColCount + ColIndex]; return Value; }
 
 		static Mat Diagonal(Vec<Type, (RowCount < ColCount) ? RowCount : ColCount> Value) {
 			Mat result;
@@ -124,7 +124,7 @@ namespace Math {
 		Vec<Type, 2>& operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, 2> &>(this->m_Data[RowIndex * 2]); }
 		const Vec<Type, 2>& operator [] (Uint32 RowIndex) const { reinterpret_cast<const Vec<Type, 2>&>(this->m_Data[RowIndex * 2]); }
 
-		Vec<Type, 2> Col(int ColIndex) const { Vec<Type, 2> Value; for (Uint32 RowIndex = 0; RowIndex < 2; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 2 + ColIndex]; return Value; }
+		Vec<Type, 2> Col(Uint32 ColIndex) const { Vec<Type, 2> Value; for (Uint32 RowIndex = 0; RowIndex < 2; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 2 + ColIndex]; return Value; }
 
 		constexpr static Mat FromCols(const Vec<Type, 2>& col0, const Vec<Type, 2>& col1) {
 			return Mat{
@@ -203,7 +203,7 @@ namespace Math {
 		Vec<Type, 3>& operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, 3> &>(this->m_Data[RowIndex * 3]); }
 		const Vec<Type, 3>& operator [] (Uint32 RowIndex) const { return reinterpret_cast<const Vec<Type, 3> &>(this->m_Data[RowIndex * 3]); }
 
-		Vec<Type, 3> Col(int ColIndex) const { Vec<Type, 3> Value; for (Uint32 RowIndex = 0; RowIndex < 3; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 3 + ColIndex]; return Value; }
+		Vec<Type, 3> Col(Uint32 ColIndex) const { Vec<Type, 3> Value; for (Uint32 RowIndex = 0; RowIndex < 3; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 3 + ColIndex]; return Value; }
 
 		constexpr static Mat FromCols(const Vec<Type, 3>& col0, const Vec<Type, 3>& col1, const Vec<Type, 3>& col2) {
 			return Mat{
@@ -289,7 +289,7 @@ namespace Math {
 		Vec<Type, 4>& operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, 4> &>(this->m_Data[RowIndex * 4]); }
 		const Vec<Type, 4>& operator [] (Uint32 RowIndex) const { return reinterpret_cast<const Vec<Type, 4> &>(this->m_Data[RowIndex * 4]); }
 
-		Vec<Type, 3> Col(int ColIndex) const { Vec<Type, 3> Value; for (Uint32 RowIndex = 0; RowIndex < 3; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 4 + ColIndex]; return Value; }
+		Vec<Type, 3> Col(Uint32 ColIndex) const { Vec<Type, 3> Value; for (Uint32 RowIndex = 0; RowIndex < 3; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 4 + ColIndex]; return Value; }
 
 		constexpr static Mat FromCols(const Vec<Type, 3>& col0, const Vec<Type, 3>& col1, const Vec<Type, 3>& col2, const Vec<Type, 3>& col3) {
 			return Mat{
@@ -373,7 +373,7 @@ namespace Math {
 		Vec<Type, 4>& operator [] (Uint32 RowIndex) { return reinterpret_cast<Vec<Type, 4> &>(this->m_Data[RowIndex * 4]); }
 		const Vec<Type, 4>& operator [] (Uint32 RowIndex) const { return reinterpret_cast<const Vec<Type, 4> &>(this->m_Data[RowIndex * 4]); }
 
-		Vec<Type, 4> Col(int ColIndex) const { Vec<Type, 4> Value; for (Uint32 RowIndex = 0; RowIndex < 4; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 4 + ColIndex]; return Value; }
+		Vec<Type, 4> Col(Uint32 ColIndex) const { Vec<Type, 4> Value; for (Uint32 RowIndex = 0; RowIndex < 4; ++RowIndex) Value[RowIndex] = this->m_Data[RowIndex * 4 + ColIndex]; return Value; }
 
 		constexpr static Mat FromCols(const Vec<Type, 4>& col0, const Vec<Type, 4>& col1, const Vec<Type, 4>& col2, const Vec<Type, 4>& col3) {
 			return Mat{
@@ -401,9 +401,9 @@ namespace Math {
 			};
 		}
 
-		constexpr static Mat Identity(void) { return Mat<Type, 4, 4>::Diagonal(static_cast<Type>(1)); }
+		static constexpr Mat Identity(void) { return Mat<Type, 4, 4>::Diagonal(static_cast<Type>(1)); }
 
-		constexpr static Mat Zero(void) { return Mat{ static_cast<Type>(0) }; }
+		static constexpr Mat Zero(void) { return Mat{ static_cast<Type>(0) }; }
 	};
 
 #pragma warning(pop)
@@ -1015,7 +1015,7 @@ namespace Math {
 		};
 	}
 
-	template <typename Type, int N>Type Trace(const Mat<Type, N, N>& a) {
+	template <typename Type, Uint32 N>Type Trace(const Mat<Type, N, N>& a) {
 		Type result{};//NOTE : default initialization "0" not static_cast
 		for (Uint32 RowIndex = 0; RowIndex < N; ++RowIndex)
 			result += a[RowIndex][RowIndex];

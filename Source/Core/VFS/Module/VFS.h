@@ -123,6 +123,11 @@ public:
 // An imp of VFS that directly maps to the OS files.
 class NativeFileSystem  final : public IFileSystem {
 public:
+	NativeFileSystem(void) = default;
+	~NativeFileSystem(void) override = default;
+
+public:
+
 	bool FolderExists(const Path& name) override { return std::filesystem::exists(name) && std::filesystem::is_directory(name); }
 
 	bool FileExists(const Path& name) override { return std::filesystem::exists(name) && std::filesystem::is_regular_file(name); }
@@ -176,7 +181,7 @@ public:
 			return NativeFileSystem::EnumerateNativeFiles(pattern.c_str(), false, callback);
 		}
 
-		Uint32 numEntries = 0;
+		Uint32 numEntries{ 0 };
 		for (const auto& ext : extensions) {
 			String pattern{ (path / ("*" + ext)).generic_string() };
 			auto Re{ NativeFileSystem::EnumerateNativeFiles(pattern.c_str(), false, callback) };
@@ -209,7 +214,7 @@ private:
 			return  Expected<Uint32, FileState>{ FileState::Failed };
 		}
 
-		Uint32 numEntries = 0;
+		Uint32 numEntries{ 0 };
 
 		do {
 			bool isDirectory{ (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0 };
@@ -243,6 +248,7 @@ public:
 		ASSERT(nullptr != this->m_UnderlyingFS);
 		ASSERT(!this->m_BasePath.empty());
 	}
+	~RelativeFileSystem(void) override = default;
 
 public:
 	STDNODISCARD Path const& Get_BasePath(void) const { return this->m_BasePath; }
@@ -270,7 +276,7 @@ private:
 
 // A virtual file system that allows mounting, or attaching, other VFS objects to paths.
 // Does not have any file systems by default, all of them must be mounted first.
-class RootFileSystem : public IFileSystem {
+class RootFileSystem final : public IFileSystem {
 public:
 	void Mount(const Path& path, const SharedPtr<IFileSystem>& fs) {
 		if (this->FindMountPoint(path, nullptr, nullptr)) {

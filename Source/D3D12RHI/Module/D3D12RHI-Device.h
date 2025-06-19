@@ -138,17 +138,9 @@ namespace RHI::D3D12 {
 		Vector<ID3D12CommandList*> m_CommandListsToExecute; // used locally in executeCommandLists, member to avoid re-allocations
 
 		D3D12_FEATURE_DATA_D3D12_OPTIONS  m_Options{};
-		D3D12_FEATURE_DATA_D3D12_OPTIONS5 m_Options5{};
-		D3D12_FEATURE_DATA_D3D12_OPTIONS6 m_Options6{};
 		D3D12_FEATURE_DATA_D3D12_OPTIONS7 m_Options7{};
 
-		bool m_SinglePassStereoSupported = false;//TODO Remove
-		bool m_FastGeometryShaderSupported = false;//TODO Remove
 		bool m_MeshletsSupported{ false };
-		bool m_VariableRateShadingSupported = false;
-		bool m_LinearSweptSpheresSupported = false;//TODO Remove
-		bool m_SpheresSupported = false;//TODO Remove
-		bool m_ShaderExecutionReorderingSupported = false;//TODO Remove
 
 	private:
 		RHIObject Imp_GetNativeObject(RHIObjectType type)const noexcept;
@@ -225,15 +217,10 @@ namespace RHI::D3D12 {
 		this->m_Resources.SamplerHeap.D3D12AllocateResources(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, desc.SamplerHeapSize, true);
 
 		this->m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &this->m_Options, sizeof(this->m_Options));
-		bool hasOptions5{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &this->m_Options5, sizeof(this->m_Options5)) };//TODO
-		bool hasOptions6{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &this->m_Options6, sizeof(this->m_Options6)) };//TODO
-		bool hasOptions7{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &this->m_Options7, sizeof(this->m_Options7)) };//TODO
+		bool hasOptions7{ HRusltSucccess == m_Context.Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &this->m_Options7, sizeof(decltype(this->m_Options7))) };
 
 		if (hasOptions7 && HRusltSucccess == this->m_Context.Device->QueryInterface(&this->m_Context.Device2))
 			this->m_MeshletsSupported = this->m_Options7.MeshShaderTier >= D3D12_MESH_SHADER_TIER_1;
-
-		if (hasOptions6)
-			this->m_VariableRateShadingSupported = this->m_Options6.VariableShadingRateTier >= D3D12_VARIABLE_SHADING_RATE_TIER_2;
 
 		{
 			D3D12_INDIRECT_ARGUMENT_DESC argDesc{};
@@ -343,11 +330,6 @@ namespace RHI::D3D12 {
 	}
 
 	RefCountPtr<ID3D12PipelineState> Device::CreatePipelineState(const RHIGraphicsPipelineDesc<D3D12Tag>& state, D3D12RootSignature* pRS, const RHIFrameBufferInfo<D3D12Tag>& fbinfo) const {
-		if (state.RenderState.SinglePassStereo.Enabled && !this->m_SinglePassStereoSupported) {
-			LOG_ERROR("Single pass stereo is not supported on this device");
-			return nullptr;
-		}
-
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{
 			.pRootSignature{ pRS->m_RootSignature },
 			.BlendState{ TranslateBlendState(state.RenderState.BlendState) },
@@ -454,17 +436,7 @@ namespace RHI::D3D12 {
 		D3D12_HEAP_PROPERTIES heapProps{};
 		D3D12_HEAP_FLAGS heapFlags{ D3D12_HEAP_FLAG_NONE };
 
-		bool isShared{ false };
-		if (RHISharedResourceFlag::None != (d.SharedResourceFlags & RHISharedResourceFlag::Shared)) {//TODO 
-			heapFlags |= D3D12_HEAP_FLAG_SHARED;
-			isShared = true;
-		}
-		if (RHISharedResourceFlag::None != (d.SharedResourceFlags & RHISharedResourceFlag::Shared_CrossAdapter)) {//TODO 
-			rd.Flags |= D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER;
-			heapFlags |= D3D12_HEAP_FLAG_SHARED_CROSS_ADAPTER;
-			isShared = true;
-		}
-		if (d.IsTiled)
+		if (d.IsTiled)//TODO : ?
 			rd.Layout = D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE;
 
 		Texture* texture{ new Texture(this->m_Context, this->m_Resources, d, rd) };
@@ -492,16 +464,6 @@ namespace RHI::D3D12 {
 				ConvertResourceStates(d.InitialState),
 				d.ClearValue.has_value() ? &clearValue : nullptr,
 				PARTING_IID_PPV_ARGS(&texture->m_Resource)
-			));
-		}
-
-		if (isShared) {
-			D3D12_CHECK(this->m_Context.Device->CreateSharedHandle(
-				texture->m_Resource,
-				nullptr,
-				PlatformWindowsAccessGenericAll,//TODO Trans
-				nullptr,
-				&texture->m_SharedHandle
 			));
 		}
 
@@ -801,7 +763,7 @@ namespace RHI::D3D12 {
 			D3D12_CHECK(this->m_Context.Device->CreateSharedHandle(
 				buffer->m_Resource,
 				nullptr,
-				PlatformWindowsAccessGenericAll,
+				0x10000000L /*GENERIC_ALL*/,
 				nullptr,
 				&buffer->m_SharedHandle
 			));
@@ -886,8 +848,8 @@ namespace RHI::D3D12 {
 		auto layout{ new InputLayout{} };
 		layout->m_Attributes.resize(attributeCount);
 
-		for (Uint32 index = 0; index < attributeCount; index++) {//TODO :Span....
-			auto& attr = layout->m_Attributes[index];
+		for (Uint32 index = 0; index < attributeCount; ++index) {//TODO :Span....
+			auto& attr{ layout->m_Attributes[index] };
 
 			// Copy the description to get a stable name pointer in desc
 			attr = attributes[index];
@@ -1204,28 +1166,10 @@ namespace RHI::D3D12 {
 	bool Device::Imp_QueryFeatureSupport(RHIFeature feature, void* pInfo, Uint64 infoSize) {
 		switch (feature) {
 			using enum RHIFeature;
-		case DeferredCommandLists:return true;
-		case SinglePassStereo:return this->m_SinglePassStereoSupported;
-		case FastGeometryShader:return this->m_FastGeometryShaderSupported;
-		case ShaderExecutionReordering:return this->m_ShaderExecutionReorderingSupported;
-		case Spheres:return this->m_SpheresSupported;
-		case LinearSweptSpheres:return this->m_LinearSweptSpheresSupported;
 		case Meshlets:return this->m_MeshletsSupported;
-		case VariableRateShading:
-			if (nullptr != pInfo) {
-				if (infoSize == sizeof(RHIVariableRateShadingFeatureInfo)) {
-					auto* pVrsInfo = reinterpret_cast<RHIVariableRateShadingFeatureInfo*>(pInfo);
-					pVrsInfo->ShadingRateImageTileSize = this->m_Options6.ShadingRateImageTileSize;
-				}
-				else
-					LOG_ERROR("Invalid size for RHIVariableRateShadingFeatureInfo");
-			}
-			return this->m_VariableRateShadingSupported;
-		case VirtualResources:return true;
 		case ComputeQueue:return (nullptr != this->Get_Queue(RHICommandQueue::Compute));
 		case CopyQueue:return (nullptr != this->Get_Queue(RHICommandQueue::Copy));
 		case ConservativeRasterization:return true;
-		case ConstantBufferRanges:return true;
 		default:return false;
 		}
 	}

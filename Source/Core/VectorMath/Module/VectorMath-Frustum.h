@@ -120,26 +120,26 @@ namespace Math {
 		void Set_Plane(PlaneType type, const Plane& plane) { this->m_Planes[Tounderlying(type)] = plane; }
 
 		//NOTE :not use it
-		Plane& Get_NearPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Near)]; }
-		Plane& Get_FarPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Far)]; }
-		Plane& Get_LeftPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Left)]; }
-		Plane& Get_RightPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Right)]; }
-		Plane& Get_TopPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Top)]; }
-		Plane& Get_BottomPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Bottom)]; }
+		//Plane& Get_NearPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Near)]; }
+		//Plane& Get_FarPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Far)]; }
+		//Plane& Get_LeftPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Left)]; }
+		//Plane& Get_RightPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Right)]; }
+		//Plane& Get_TopPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Top)]; }
+		//Plane& Get_BottomPlane(void) { return this->m_Planes[Tounderlying(PlaneType::Bottom)]; }
 
-		void Set_NearPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Near)] = plane; }
-		void Set_FarPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Far)] = plane; }
-		void Set_LeftPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Left)] = plane; }
-		void Set_RightPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Right)] = plane; }
-		void Set_TopPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Top)] = plane; }
-		void Set_BottomPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Bottom)] = plane; }
+		//void Set_NearPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Near)] = plane; }
+		//void Set_FarPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Far)] = plane; }
+		//void Set_LeftPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Left)] = plane; }
+		//void Set_RightPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Right)] = plane; }
+		//void Set_TopPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Top)] = plane; }
+		//void Set_BottomPlane(const Plane& plane) { this->m_Planes[Tounderlying(PlaneType::Bottom)] = plane; }
 
-		const Plane& Get_NearPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Near)]; }
-		const Plane& Get_FarPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Far)]; }
-		const Plane& Get_LeftPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Left)]; }
-		const Plane& Get_RightPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Right)]; }
-		const Plane& Get_TopPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Top)]; }
-		const Plane& Get_BottomPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Bottom)]; }
+		//const Plane& Get_NearPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Near)]; }
+		//const Plane& Get_FarPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Far)]; }
+		//const Plane& Get_LeftPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Left)]; }
+		//const Plane& Get_RightPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Right)]; }
+		//const Plane& Get_TopPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Top)]; }
+		//const Plane& Get_BottomPlane(void) const { return this->m_Planes[Tounderlying(PlaneType::Bottom)]; }
 
 		STDNODISCARD static Frustum Empty(void);    // a frustum that doesn't intersect with any points
 		STDNODISCARD static Frustum Infinite(void); // a frustum that intersects with all points

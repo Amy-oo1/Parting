@@ -25,7 +25,6 @@ PARTING_IMPORT Utility;
 
 #include "Core/Platform/Module/Platform.h"
 #include "Core/Utility/Module/Utility.h"
-#include "Core/Algorithm/Module/Algorithm.h"
 #endif // PARTING_MODULE_BUILD
 
 namespace Math {

@@ -61,39 +61,10 @@ namespace RHI {
 	};
 	EXPORT_ENUM_CLASS_OPERATORS(RHIShaderType);
 
-	PARTING_EXPORT enum class RHIFastGeometryShaderFlag : Uint8{
-		None = 0x00,
-		ForceFastGS = 0x01,
-		UseViewportMask = 0x02,
-		OffsetTargetIndexByViewportIndex = 0x04,
-		StrictApiOrder = 0x08
-	};
-	ENUM_CLASS_OPERATORS(RHIFastGeometryShaderFlag);
-
-	PARTING_EXPORT struct RHICustomSemantic final{
-		enum Type :Uint8 {
-			Undefined = 0,
-			XRight = 1,
-			ViewportMask = 2
-		};
-
-		Type Type;
-		WString Name;
-	};
-
 	PARTING_EXPORT struct RHIShaderDesc final {
 		RHIShaderType ShaderType{ RHIShaderType::None };
 		String DebugName;
 		String EntryName{ "main" };
-
-		Int32 HLSLExtensionsUAV{ -1 };//TODO Remove
-
-		bool UseSpecificShaderExt{ false };//TODO Remove
-		Uint32 CustomSemanticCount{ 0 };//TODO Remove
-		RHICustomSemantic* pCustomSemantics{ nullptr };//TODO Remove
-
-		RHIFastGeometryShaderFlag FastGSFlags;//TODO Remove
-		Uint32* pCoordinateSwizzling{ nullptr };//TODO Remove
 	};
 
 	PARTING_EXPORT class RHIShaderDescBuilder final {
@@ -103,12 +74,7 @@ namespace RHI {
 		STDNODISCARD constexpr RHIShaderDescBuilder& Set_ShaderType(const RHIShaderType shaderType) { this->m_Desc.ShaderType = shaderType; return *this; }
 		STDNODISCARD constexpr RHIShaderDescBuilder& Set_DebugName(const String& debugName) { this->m_Desc.DebugName = debugName; return *this; }
 		STDNODISCARD constexpr RHIShaderDescBuilder& Set_EntryName(const String& entryName) { this->m_Desc.EntryName = entryName; return *this; }
-		STDNODISCARD constexpr RHIShaderDescBuilder& Set_HLSLExtensionsUAV(const Int32 hlslextensionsUAV) { this->m_Desc.HLSLExtensionsUAV = hlslextensionsUAV; return *this; }
-		STDNODISCARD constexpr RHIShaderDescBuilder& Set_CustomSemanticCount(const Uint32 customSemanticCount) { this->m_Desc.CustomSemanticCount = customSemanticCount; return *this; }
-		STDNODISCARD constexpr RHIShaderDescBuilder& Set_CustomSemantics(RHICustomSemantic* pCustomSemantics) { this->m_Desc.pCustomSemantics = pCustomSemantics; return *this; }
-		STDNODISCARD constexpr RHIShaderDescBuilder& Set_FastGSFlags(const RHIFastGeometryShaderFlag fastGSFlags) { this->m_Desc.FastGSFlags = fastGSFlags; return *this; }
-		STDNODISCARD constexpr RHIShaderDescBuilder& Set_CoordinateSwizzling(Uint32* pCoordinateSwizzling) { this->m_Desc.pCoordinateSwizzling = pCoordinateSwizzling; return *this; }
-		
+	
 		STDNODISCARD constexpr const RHIShaderDesc& Build(void)const { return this->m_Desc; }
 	private:
 		RHIShaderDesc m_Desc{};

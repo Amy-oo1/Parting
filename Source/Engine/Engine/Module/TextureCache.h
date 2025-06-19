@@ -232,7 +232,7 @@ namespace Parting {
 		auto Filedata{ this->m_FS->ReadFile(path) };
 
 		if (nullptr == Filedata)
-			LOG_ERROR("Couldn't load texture file {1}"/*, path.generic_string().c_str()*/);
+			LOG_ERROR("Couldn't load texture file", path.generic_string().c_str());
 
 		return Filedata;
 	}
@@ -501,7 +501,7 @@ namespace Parting {
 			texture->Data = fileData;
 			if (!TextureCache<APITag>::LoadDDSTextureFromMemory(*texture)) {
 				texture->Data = nullptr;
-				LOG_ERROR("Couldn't load DDS texture {1}"/*, texture->Texture.path.c_str()*/);
+				LOG_ERROR("Couldn't load DDS texture "/*, texture->Texture.path.c_str()*/);
 				return false;
 			}
 		}

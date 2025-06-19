@@ -170,8 +170,8 @@ namespace Parting {
 	inline ToneMappingPass<APITag>::ToneMappingPass(Imp_Device* device, SharedPtr<ShaderFactory<APITag>> shaderFactory, SharedPtr<CommonRenderPasses<APITag>> commonPasses, SharedPtr<FrameBufferFactory<APITag>> framebufferFactory, const ICompositeView& compositeView, const CreateParameters& params) :
 		m_Device{ device },
 		m_HistogramBins{ params.HistogramBins },
-		m_CommonPasses{ commonPasses },
-		m_FrameBufferFactory{ framebufferFactory } {
+		m_CommonPasses{ ::MoveTemp(commonPasses) },
+		m_FrameBufferFactory{ ::MoveTemp(framebufferFactory) } {
 
 		ASSERT(params.HistogramBins <= 256);
 
@@ -184,9 +184,9 @@ namespace Parting {
 				ShaderMacro{.Name{ String{ "SOURCE_ARRAY" } }, .Definition{ String{ params.IsTextureArray ? "1" : "0" } } }
 			};
 
-			this->m_HistogramComputeShader = shaderFactory->CreateShader("Parting/Passes/histogram_cs.hlsl", "main", &Macros, RHI::RHIShaderType::Compute);
-			this->m_ExposureComputeShader = shaderFactory->CreateShader("Parting/Passes/exposure_cs.hlsl", "main", &Macros, RHI::RHIShaderType::Compute);
-			this->m_PixelShader = shaderFactory->CreateShader("Parting/Passes/tonemapping_ps.hlsl", "main", &Macros, RHI::RHIShaderType::Pixel);
+			this->m_HistogramComputeShader = shaderFactory->CreateShader(String{ "Parting/Passes/histogram_cs.hlsl" }, String{ "main" }, &Macros, RHI::RHIShaderType::Compute);
+			this->m_ExposureComputeShader = shaderFactory->CreateShader(String{ "Parting/Passes/exposure_cs.hlsl" }, String{ "main" }, &Macros, RHI::RHIShaderType::Compute);
+			this->m_PixelShader = shaderFactory->CreateShader(String{ "Parting/Passes/tonemapping_ps.hlsl" }, String{ "main" }, &Macros, RHI::RHIShaderType::Pixel);
 		}
 
 		this->m_ToneMappingCB = device->CreateBuffer(RHI::RHIBufferDescBuilder{}
@@ -223,7 +223,7 @@ namespace Parting {
 				.Build()
 			);
 
-		this->m_ColorLUT = commonPasses->m_BlackTexture;
+		this->m_ColorLUT = this->m_CommonPasses->m_BlackTexture;
 		if (nullptr != params.ColorLUT) {
 			const auto& desc{ params.ColorLUT->Get_Desc() };
 			this->m_ColorLUTSize = static_cast<float>(desc.Extent.Height);
@@ -288,7 +288,6 @@ namespace Parting {
 				.AddBindingLayout(this->m_RenderBindingLayout)
 				.Set_CullMode(RHI::RHIRasterCullMode::None)
 				.Set_DepthTestEnable(false)
-				.Set_DepthWriteEnable(false)
 				.Build(),
 				sampleFramebuffer
 				);
@@ -326,7 +325,7 @@ namespace Parting {
 					toneMappingConstants.SourceSlice = view->Get_Subresources().BaseArraySlice;
 				}
 
-				commandList->WriteBuffer(this->m_ToneMappingCB, &toneMappingConstants, sizeof(toneMappingConstants));
+				commandList->WriteBuffer(this->m_ToneMappingCB, &toneMappingConstants, sizeof(decltype(toneMappingConstants)));
 
 				commandList->SetComputeState(RHI::RHIComputeStateBuilder<APITag>{}
 				.Set_Pipeline(this->m_HistogramPSO)
@@ -334,7 +333,7 @@ namespace Parting {
 					.Build()
 					);
 
-				Math::VecU2 numGroups{ Math::DivCeil(toneMappingConstants.ViewSize,Math::VecU2{16}) };
+				Math::VecU2 numGroups{ Math::DivCeil(toneMappingConstants.ViewSize,Math::VecU2{ 16u }) };
 				commandList->Dispatch(numGroups.X, numGroups.Y, 1);
 			}
 		}
@@ -347,7 +346,7 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline void ToneMappingPass<APITag>::ResetExposure(Imp_CommandList* commandList, float initialExposure) {
-		commandList->ClearBufferUInt(this->m_ExposureBuffer, static_cast<Uint32>(initialExposure));
+		commandList->ClearBufferUInt(this->m_ExposureBuffer, *reinterpret_cast<Uint32*>(&initialExposure));//TODO : NOTE : float bit to int bit not value 
 	}
 
 	template<RHI::APITagConcept APITag>
@@ -370,7 +369,7 @@ namespace Parting {
 			toneMappingConstants.FrameTime = this->m_FrameTime;
 		}
 
-		commandList->WriteBuffer(this->m_ToneMappingCB, &toneMappingConstants, sizeof(toneMappingConstants));
+		commandList->WriteBuffer(this->m_ToneMappingCB, &toneMappingConstants, sizeof(decltype(toneMappingConstants)));
 
 		commandList->SetComputeState(RHI::RHIComputeStateBuilder<APITag>{}
 		.Set_Pipeline(this->m_ExposurePSO)
@@ -382,7 +381,7 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline void ToneMappingPass<APITag>::Render(Imp_CommandList* commandList, const ToneMappingPass<APITag>::Parameters& params, const ICompositeView& compositeView, Imp_Texture* sourceTexture) {
-		auto& bindingSet = this->m_RenderBindingSets[sourceTexture];
+		auto& bindingSet{ this->m_RenderBindingSets[sourceTexture] };
 		if (nullptr == bindingSet)
 			bindingSet = this->m_Device->CreateBindingSet(RHI::RHIBindingSetDescBuilder<APITag>{}
 		.AddBinding(RHI::RHIBindingSetItem<APITag>::ConstantBuffer(0, this->m_ToneMappingCB))
@@ -409,7 +408,7 @@ namespace Parting {
 				toneMappingConstants.ColorLUTTextureSize = enableColorLUT ? Math::VecF2(this->m_ColorLUTSize * this->m_ColorLUTSize, this->m_ColorLUTSize) : Math::VecF2::Zero();
 				toneMappingConstants.ColorLUTTextureSizeInv = enableColorLUT ? 1.f / toneMappingConstants.ColorLUTTextureSize : Math::VecF2::Zero();
 			}
-			commandList->WriteBuffer(this->m_ToneMappingCB, &toneMappingConstants, sizeof(toneMappingConstants));
+			commandList->WriteBuffer(this->m_ToneMappingCB, &toneMappingConstants, sizeof(decltype(toneMappingConstants)));
 
 			commandList->SetGraphicsState(RHI::RHIGraphicsStateBuilder<APITag>{}
 			.Set_Pipeline(this->m_RenderPSO)
@@ -432,6 +431,4 @@ namespace Parting {
 		this->Render(commandList, params, compositeView, sourceTexture);
 		commandList->EndMarker();
 	}
-
-
 }

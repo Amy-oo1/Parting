@@ -133,8 +133,8 @@ namespace Parting {
 		this->Device = device;
 		this->CommandList = device->CreateCommandList();
 
-		this->VS = shaderFactory->CreateShader("Parting/imgui_vertex", "main", nullptr, RHI::RHIShaderType::Vertex);
-		this->PS = shaderFactory->CreateShader("Parting/imgui_pixel", "main", nullptr, RHI::RHIShaderType::Pixel);
+		this->VS = shaderFactory->CreateShader(String{ "Parting/imgui_vertex" }, String{ "main" }, nullptr, RHI::RHIShaderType::Vertex);
+		this->PS = shaderFactory->CreateShader(String{ "Parting/imgui_pixel" }, String{ "main" }, nullptr, RHI::RHIShaderType::Pixel);
 
 		if (nullptr == this->VS || nullptr == this->PS) {
 			LOG_ERROR("Failed to create ImGui shaders");
@@ -142,11 +142,7 @@ namespace Parting {
 		}
 
 		// create attribute layout object
-		RHI::RHIVertexAttributeDescBuilder vertexAttribDescBuilder; vertexAttribDescBuilder
-			.Set_ArrayCount(1)
-			.Set_BufferIndex(0)
-			.Set_ElementStride(sizeof(ImDrawVert))
-			.Set_IsInstanced(false);
+		RHI::RHIVertexAttributeDescBuilder vertexAttribDescBuilder; vertexAttribDescBuilder.Set_ElementStride(sizeof(ImDrawVert));
 		Array<RHI::RHIVertexAttributeDesc, 3> vertexAttribLayout{
 			RHI::RHIVertexAttributeDesc{ vertexAttribDescBuilder.Set_Attribute(RHI::RHIVertexAttribute::Position).Set_Name("POSITION").Set_Format(RHI::RHIFormat::RG32_FLOAT).Set_Offset(offsetof(ImDrawVert,pos)).Build()},
 			RHI::RHIVertexAttributeDesc{ vertexAttribDescBuilder.Set_Attribute(RHI::RHIVertexAttribute::TexCoord1).Set_Name("TEXCOORD").Set_Format(RHI::RHIFormat::RG32_FLOAT).Set_Offset(offsetof(ImDrawVert,uv)).Build() },
@@ -340,7 +336,7 @@ namespace Parting {
 						.AddBindingSet(this->GetOrCreateBindingSet(static_cast<Imp_Texture*>(cmd.TextureId)))
 						.AddScissorRect(RHI::RHIRect2D{
 							.Offset{.X{ static_cast<Uint32>(cmd.ClipRect.x) }, .Y{ static_cast<Uint32>(cmd.ClipRect.y) } },
-							.Extent{.Width {static_cast<Uint32>(cmd.ClipRect.z) }, .Height{ static_cast<Uint32>(cmd.ClipRect.w) } }
+							.Extent{.Width {static_cast<Uint32>(cmd.ClipRect.z - cmd.ClipRect.x) }, .Height{ static_cast<Uint32>(cmd.ClipRect.w - cmd.ClipRect.y) } }
 							});
 
 					this->CommandList->SetGraphicsState(drawStateBuilder.Build());
@@ -349,7 +345,7 @@ namespace Parting {
 
 					drawStateBuilder.SubBindingSet().SubScissorRect();
 				}
-				IndexOffset += drawList->IdxBuffer.Size;
+				IndexOffset += cmd.ElemCount;
 			}
 			VertexOffset += drawList->VtxBuffer.Size;
 		}

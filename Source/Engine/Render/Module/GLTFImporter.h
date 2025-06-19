@@ -178,7 +178,7 @@ namespace Parting {
 			}
 
 		fail:
-			LOG_ERROR("Failed to parse the DDS glTF extension: {1}"/*, ext.data*/);
+			LOG_ERROR("Failed to parse the DDS glTF extension:"/*, ext.data*/);
 			return nullptr;
 		}
 
@@ -465,7 +465,7 @@ namespace Parting {
 		cgltf_data* objects{ nullptr };
 		cgltf_result res{ cgltf_parse_file(&options, normalizedFileName.c_str(), &objects) };
 		if (res != cgltf_result_success) {
-			LOG_ERROR("Couldn't load glTF file {1}:{2}"/*, normalizedFileName.c_str(), cgltf_error_to_string(res)*/);
+			LOG_ERROR("Couldn't load glTF file :"/*, normalizedFileName.c_str(), cgltf_error_to_string(res)*/);
 
 			return false;
 		}
@@ -643,7 +643,7 @@ namespace Parting {
 					(material.normal_texture.transform.rotation != 0.0f ||
 						material.normal_texture.transform.offset[0] != 0.0f ||
 						material.normal_texture.transform.offset[1] != 0.0f))) {
-				LOG_ERROR("Material {} uses the KHR_texture_transform extension, which is not supported on non-scale transformations and all textures except normal"/*, material.name ? material.name : "<Unnamed>"*/);
+				LOG_ERROR("Material  uses the KHR_texture_transform extension, which is not supported on non-scale transformations and all textures except normal"/*, material.name ? material.name : "<Unnamed>"*/);
 			}
 
 			switch (material.alpha_mode) {

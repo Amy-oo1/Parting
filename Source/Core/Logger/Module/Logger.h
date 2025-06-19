@@ -18,7 +18,10 @@ PARTING_MODULE(Logger)
 
 #include "ThirdParty/spdlog/Include/spdlog/spdlog.h"
 #include "ThirdParty/spdlog/Include/spdlog/async.h"
-#include "ThirdParty/spdlog/Include/spdlog/sinks/stdout_color_sinks.h"
+#include "ThirdParty/spdlog/Include/spdlog/sinks/msvc_sink.h"
+#include "ThirdParty/spdlog/Include/spdlog/sinks/basic_file_sink.h"
+#include<type_traits>
+
 
 #include "Core/ModuleBuild.h"
 
@@ -30,13 +33,13 @@ PARTING_MODULE(Logger)
 
 PARTING_EXPORT class Logger final :public  NonCopyAndMoveAble {
 public:
-	enum class Level : UnderlyingType<spdlog::level::level_enum> {
-		Trace = static_cast<UnderlyingType<spdlog::level::level_enum>>(spdlog::level::trace),
-		Debug = static_cast<UnderlyingType<spdlog::level::level_enum>>(spdlog::level::debug),
-		Info = static_cast<UnderlyingType<spdlog::level::level_enum>>(spdlog::level::info),
-		Warn = static_cast<UnderlyingType<spdlog::level::level_enum>>(spdlog::level::warn),
-		Err = static_cast<UnderlyingType<spdlog::level::level_enum>>(spdlog::level::err),
-		Critical = static_cast<UnderlyingType<spdlog::level::level_enum>>(spdlog::level::critical)
+	enum class Level : std::underlying_type_t<spdlog::level::level_enum> {
+		Trace = static_cast<std::underlying_type_t<spdlog::level::level_enum>>(spdlog::level::trace),
+		Debug = static_cast<std::underlying_type_t<spdlog::level::level_enum>>(spdlog::level::debug),
+		Info = static_cast<std::underlying_type_t<spdlog::level::level_enum>>(spdlog::level::info),
+		Warn = static_cast<std::underlying_type_t<spdlog::level::level_enum>>(spdlog::level::warn),
+		Err = static_cast<std::underlying_type_t<spdlog::level::level_enum>>(spdlog::level::err),
+		Critical = static_cast<std::underlying_type_t<spdlog::level::level_enum>>(spdlog::level::critical)
 	};
 
 private:
@@ -53,46 +56,24 @@ public:
 	}
 
 	template<typename... TARGS>
-	void Log(Level Level, TARGS&&... Args)const {
-		switch (Level) {
-			using enum Logger::Level;
-		case Trace:
-			this->m_Logger->trace(Forward<TARGS>(Args)...);
-			break;
-		case Debug:
-			this->m_Logger->debug(Forward<TARGS>(Args)...);
-			break;
-		case Info:
-			this->m_Logger->info(Forward<TARGS>(Args)...);
-			break;
-		case Warn:
-			this->m_Logger->warn(Forward<TARGS>(Args)...);
-			break;
-		case Err:
-			this->m_Logger->error(Forward<TARGS>(Args)...);
-			break;
-		case Critical:
-			this->m_Logger->critical(Forward<TARGS>(Args)...);
-			break;
-		default:
-			ASSERT(false);
-			break;
-		}
+	void Log(Level Level, const char* file, int32_t line, const char* function, fmt::format_string<TARGS...> fmt, TARGS&&... Args) const {
+		spdlog::source_loc src_loc{ file, line, function };
+		m_Logger->log(src_loc, static_cast<spdlog::level::level_enum>(Level), fmt, std::forward<TARGS>(Args)...);
 	}
 
-	SharedPtr<spdlog::logger> m_Logger{ nullptr };
+	std::shared_ptr<spdlog::logger> m_Logger{ nullptr };
 };
 
 Logger::Logger(void) {
 	//Consoule Sink
-	auto ConsoleSink{ std::make_shared<spdlog::sinks::wincolor_stderr_sink_mt>() };
+	auto ConsoleSink{ std::make_shared<spdlog::sinks::basic_file_sink_mt>(std::string{"Parting_Log"}) };//TODO :
 	ConsoleSink->set_level(spdlog::level::trace);
-	ConsoleSink->set_pattern("[%H:%M:%S %e] [%^%l%$] [thread %t] %v");
+	ConsoleSink->set_pattern("[%H:%M:%S %e] [%^%l%$] [thread %t] [%s:%# %!] %v");
 
 	//Default Get_Instance Thread Pool
 	spdlog::init_thread_pool(8192, 1);
 
-	this->m_Logger = MakeShared<spdlog::async_logger>("System_Logger", ConsoleSink, spdlog::thread_pool(), spdlog::async_overflow_policy::block);
+	this->m_Logger = std::make_shared<spdlog::async_logger>("System_Logger", ConsoleSink, spdlog::thread_pool(), spdlog::async_overflow_policy::block);
 	this->m_Logger->set_level(spdlog::level::trace);
 	spdlog::register_logger(this->m_Logger);
 }

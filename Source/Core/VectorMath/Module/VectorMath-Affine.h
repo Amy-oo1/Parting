@@ -164,7 +164,7 @@ namespace Math {
 		};
 	}
 
-	template <typename Type, int N>Affine<Type, N> Pow(const Affine<Type, N>& a, Int32 b) {
+	template <typename Type, Uint32 N>Affine<Type, N> Pow(const Affine<Type, N>& a, Int32 b) {
 		if (b <= 0)
 			return Affine<Type, N>::Identity();
 		if (b == 1)
@@ -180,7 +180,7 @@ namespace Math {
 		return oddpart * evenpart;
 	}
 
-	template <typename Type, int N>Affine<Type, N> Inverse(const Affine<Type, N>& a) {
+	template <typename Type, Uint32 N>Affine<Type, N> Inverse(const Affine<Type, N>& a) {
 		auto mInverted{ Inverse(a.m_Linear) };
 		return Affine<Type, N>{
 			mInverted,

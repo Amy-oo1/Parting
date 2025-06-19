@@ -596,7 +596,7 @@ namespace RHI::D3D12 {
 
 	public:
 		struct SliceRegion final {
-			FileOffset_T Offset{ 0 };
+			long /*_off_t*/ Offset{ 0 };
 			Uint64 Size{ 0 };
 
 			D3D12_PLACED_SUBRESOURCE_FOOTPRINT Footprint{};
@@ -648,7 +648,7 @@ namespace RHI::D3D12 {
 		Uint64 Size{};
 		device->GetCopyableFootprints(&this->m_ResourceDesc, Subresource, 1, this->m_SubresourceOffsets[Subresource], &Re.Footprint, nullptr, nullptr, &Size);
 
-		Re.Offset = static_cast<FileOffset_T>(Re.Footprint.Offset);
+		Re.Offset = static_cast<decltype(Re.Offset)>(Re.Footprint.Offset);
 		Re.Size = Size;
 
 		return Re;

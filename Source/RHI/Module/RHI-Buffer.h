@@ -61,7 +61,6 @@ namespace RHI {
 		bool IsIndexBuffer{ false };
 		bool IsConstantBuffer{ false };
 		bool IsDrawIndirectArgs{ false };
-		bool IsShaderBindingTable{ false };
 
 		// A dynamic/upload buffer whose contents only live in the current command list
 		bool IsVolatile{ false };
@@ -97,7 +96,6 @@ namespace RHI {
 		constexpr RHIBufferDescBuilder& Set_IsIndexBuffer(const bool isIndexBuffer) { this->m_Desc.IsIndexBuffer = isIndexBuffer; return *this; }
 		constexpr RHIBufferDescBuilder& Set_IsConstantBuffer(const bool isConstantBuffer) { this->m_Desc.IsConstantBuffer = isConstantBuffer; return *this; }
 		constexpr RHIBufferDescBuilder& Set_IsDrawIndirectArgs(const bool isDrawIndirectArgs) { this->m_Desc.IsDrawIndirectArgs = isDrawIndirectArgs; return *this; }
-		constexpr RHIBufferDescBuilder& Set_IsShaderBindingTable(const bool isShaderBindingTable) { this->m_Desc.IsShaderBindingTable = isShaderBindingTable; return *this; }
 		constexpr RHIBufferDescBuilder& Set_IsVolatile(const bool isVolatile) { this->m_Desc.IsVolatile = isVolatile; return *this; }
 		constexpr RHIBufferDescBuilder& Set_IsVirtual(const bool isVirtual) { this->m_Desc.IsVirtual = isVirtual; return *this; }
 		constexpr RHIBufferDescBuilder& Set_InitialState(const RHIResourceState initialState) { this->m_Desc.InitialState = initialState; return *this; }

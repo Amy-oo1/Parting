@@ -94,7 +94,7 @@ public:
 			.Set_SampleCount(sampleCount)
 			.Set_Dimension(sampleCount > 1 ? RHI::RHITextureDimension::Texture2DMS : RHI::RHITextureDimension::Texture2D)
 			.Set_IsRenderTarget(true)
-			.Set_IsVirtual(device->QueryFeatureSupport(RHI::RHIFeature::VirtualResources))
+			.Set_IsVirtual(true)
 			.Set_ClearValue(Color{ 0.f })
 			.Set_InitialState(RHI::RHIResourceState::RenderTarget)
 			.Set_KeepInitialState(true);
@@ -150,7 +150,7 @@ public:
 			.Build()
 		);
 
-		if (device->QueryFeatureSupport(RHI::RHIFeature::VirtualResources)) {
+		{
 			Uint64 heapSize{ 0 };
 
 			Array<Imp_Texture*, 7>textures{
@@ -177,7 +177,7 @@ public:
 			);
 
 			Uint64 offset{ 0 };
-			for (auto texture : textures) {
+			for (auto& texture : textures) {
 				RHI::RHIMemoryRequirements memReq{ device->Get_TextureMemoryRequirements(texture) };
 				offset = Math::Align(offset, memReq.Alignment);
 
@@ -232,26 +232,25 @@ struct SmaplerUIData final {
 	AntiAliasingMode												AntiAliasingMode{ AntiAliasingMode::TEMPORAL };
 	Parting::TemporalAntiAliasingJitter								TemporalAntiAliasingJitter{ Parting::TemporalAntiAliasingJitter::MSAA };
 
-	bool															ShowUI{ /*true*/false };
-	bool															ShowConsole{ false };
-	bool															UseDeferredShading{ /*true*/false };
+	bool															ShowUI{ true /*false*/ };
+	bool															UseDeferredShading{ true /*false*/ };
 	bool															Stereo{ false };
-	bool															EnableSSAO{ /*true*/false };
+	bool															EnableSSAO{ /*true*/ false };
 	bool															UseThirdPersonCamera{ false };
 	bool															EnableAnimations{ false };
 	bool															ShaderReloadRequested{ false };
 
 	bool															EnableVsync{ true };
 
-	bool															EnableProceduralSky{ /*true*/false };
-	bool															EnableBloom{ /*true*/false };
+	bool															EnableProceduralSky{ true /*false*/ };
+	bool															EnableBloom{ /*true*/ false };
 	float															BloomSigma{ 32.f };
 	float															BloomAlpha{ 0.05f };
-	bool															EnableTranslucency{ /*true*/false };
+	bool															EnableTranslucency{ /*true*/ false };
 	bool															EnableMaterialEvents{ false };
-	bool															EnableShadows{ /*true*/false };
+	bool															EnableShadows{ /*true*/ false };
 	float															AmbientIntensity{ 1.0f };
-	bool															EnableLightProbe{ /*true*/false };
+	bool															EnableLightProbe{ /*true*/ false };
 	float															LightProbeDiffuseScale{ 1.f };
 	float															LightProbeSpecularScale{ 1.f };
 	float															CsmExponent{ 4.f };
@@ -352,6 +351,8 @@ public:
 	const String& Get_CurrentSceneName(void) const { return this->m_CurrentSceneName; }
 
 	Span<const String> Get_AvailableScenes(void) const { return Span<const String>{this->m_SceneFilesAvailable.data(), this->m_SceneFilesAvailable.size()}; }
+
+	const Vector<SharedPtr<Parting::LightProbe<CurrentAPI>>>& Get_LightProbes(void) const { return this->m_LightProbes; }
 
 	bool Is_SceneLoading(void) const { return nullptr != this->m_SceneLoadingThread; }
 
@@ -626,52 +627,72 @@ public:
 
 
 public:
-	/*bool KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) {
+	bool KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) {
 		if (GLFW_KEY_ESCAPE == key && GLFW_PRESS == action) {
 			this->m_UIData.ShowUI = !this->m_UIData.ShowUI;
 			return true;
 		}
 
-		if (GLFW_KEY_GRAVE_ACCENT == key && GLFW_PRESS = action)
-		{
-			m_ui.ShowConsole = !m_ui.ShowConsole;
+		if (GLFW_KEY_SPACE == key && GLFW_PRESS == action) {
+			this->m_UIData.EnableAnimations = !this->m_UIData.EnableAnimations;
 			return true;
 		}
 
-		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-		{
-			m_ui.EnableAnimations = !m_ui.EnableAnimations;
-			return true;
-		}
-
-		if (key == GLFW_KEY_T && action == GLFW_PRESS)
-		{
-			CopyActiveCameraToFirstPerson();
-			if (m_ui.ActiveSceneCamera)
-			{
-				m_ui.UseThirdPersonCamera = false;
-				m_ui.ActiveSceneCamera = nullptr;
+		if (GLFW_KEY_T == key && GLFW_PRESS == action) {
+			this->CopyActiveCameraToFirstPerson();
+			if (nullptr != this->m_UIData.ActiveSceneCamera) {
+				this->m_UIData.UseThirdPersonCamera = false;
+				this->m_UIData.ActiveSceneCamera = nullptr;
 			}
 			else
-			{
-				m_ui.UseThirdPersonCamera = !m_ui.UseThirdPersonCamera;
-			}
+				this->m_UIData.UseThirdPersonCamera = !this->m_UIData.UseThirdPersonCamera;
 			return true;
 		}
 
-		if (!m_ui.ActiveSceneCamera)
-			GetActiveCamera().KeyboardUpdate(key, scancode, action, mods);
+		if (nullptr == this->m_UIData.ActiveSceneCamera) {
+			if (this->m_UIData.UseThirdPersonCamera)
+				this->m_ThirdPersonCamera.KeyboardUpdate(key, scancode, action, mods);
+			else
+				this->m_FirstPersonCamera.KeyboardUpdate(key, scancode, action, mods);
+		}
 		return true;
-	}*/
+	}
 
 	bool MousePosUpdate(double xpos, double ypos) {
+		if (nullptr == this->m_UIData.ActiveSceneCamera) {
+			if (this->m_UIData.UseThirdPersonCamera)
+				this->m_ThirdPersonCamera.MousePosUpdate(xpos, ypos);
+			else
+				this->m_FirstPersonCamera.MousePosUpdate(xpos, ypos);
+		}
+		this->m_PickPosition = Math::VecU2{ static_cast<Uint32>(xpos), static_cast<Uint32>(ypos) };
 
+		return true;
 	}
+
 	bool MouseScrollUpdate(double xoffset, double yoffset) {
+		if (nullptr == this->m_UIData.ActiveSceneCamera) {
+			if (this->m_UIData.UseThirdPersonCamera)
+				this->m_ThirdPersonCamera.MouseScrollUpdate(xoffset, yoffset);
+			else
+				this->m_FirstPersonCamera.MouseScrollUpdate(xoffset, yoffset);
+		}
 
+		return true;
 	}
-	bool MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) {
 
+	bool MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) {
+		if (nullptr == this->m_UIData.ActiveSceneCamera) {
+			if (this->m_UIData.UseThirdPersonCamera)
+				this->m_ThirdPersonCamera.MouseButtonUpdate(button, action, mods);
+			else
+				this->m_FirstPersonCamera.MouseButtonUpdate(button, action, mods);
+		}
+
+		if (GLFW_PRESS == action && GLFW_MOUSE_BUTTON_2 == button)
+			this->m_Pick = true;
+
+		return true;
 	}
 
 
@@ -1051,11 +1072,6 @@ public:
 		this->m_FontOpenSans = this->CreateFontFromFile(*(this->m_APP->Get_RootFS()), "/Media/Fonts/OpenSans/OpenSans-Regular.ttf", 17.f);
 		this->m_FontDroidMono = this->CreateFontFromFile(*(this->m_APP->Get_RootFS()), "/Media/Fonts/DroidSans/DroidSans-Mono.ttf", 14.f);
 
-		/*ImGui_Console::Options opts;
-		opts.font = m_FontDroidMono;
-		auto interpreter = std::make_shared<console::Interpreter>();*/
-		// m_console = std::make_unique<ImGui_Console>(interpreter,opts);
-
 		ImGui::GetIO().IniFilename = nullptr;
 	}
 
@@ -1092,7 +1108,7 @@ public:
 
 			String messageBuffer{ "TODO" };
 
-			this->DrawScreenCenteredText(messageBuffer.c_str());
+			this->DrawScreenCenteredText(messageBuffer);
 
 			ImGui::PopFont();
 			this->EndFullScreenWindow();
@@ -1108,7 +1124,7 @@ public:
 		ImGui::SetNextWindowPos(ImVec2{ fontSize * 0.6f, fontSize * 0.6f }, 0);
 		ImGui::Begin("Settings", 0, ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::Text("Renderer: %s", RHI::RHITypeTraits<CurrentAPI>::APIName);
-		double frameTime = this->m_DeviceManager->Get_AverageFrameTimeSeconds();
+		double frameTime{ this->m_DeviceManager->Get_AverageFrameTimeSeconds() };
 		if (frameTime > 0.0)
 			ImGui::Text("%.3f ms/frame (%.1f FPS)", frameTime * 1e3, 1.0 / frameTime);
 
@@ -1145,7 +1161,7 @@ public:
 		ImGui::Checkbox("Animations", &this->m_UIData.EnableAnimations);
 
 		if (ImGui::BeginCombo("Camera (T)",
-			this->m_UIData.ActiveSceneCamera
+			nullptr != this->m_UIData.ActiveSceneCamera
 			? this->m_UIData.ActiveSceneCamera->Get_Name().c_str()
 			: this->m_UIData.UseThirdPersonCamera ? "Third-Person" : "First-Person")) {
 			if (ImGui::Selectable("First-Person", nullptr == this->m_UIData.ActiveSceneCamera && !this->m_UIData.UseThirdPersonCamera)) {
@@ -1172,8 +1188,8 @@ public:
 
 		ImGui::Checkbox("Enable Light Probe", &this->m_UIData.EnableLightProbe);
 		if (this->m_UIData.EnableLightProbe && ImGui::CollapsingHeader("Light Probe")) {
-			ImGui::DragFloat("Diffuse Scale", &this->m_UIData.LightProbeDiffuseScale, 0.01f, 0.0f, 10.0f);
-			ImGui::DragFloat("Specular Scale", &this->m_UIData.LightProbeSpecularScale, 0.01f, 0.0f, 10.0f);
+			ImGui::DragFloat("Diffuse Scale", &this->m_UIData.LightProbeDiffuseScale, 0.01f, 0.f, 10.f);
+			ImGui::DragFloat("Specular Scale", &this->m_UIData.LightProbeSpecularScale, 0.01f, 0.f, 10.f);
 		}
 
 		ImGui::Checkbox("Enable Procedural Sky", &this->m_UIData.EnableProceduralSky);
@@ -1199,7 +1215,7 @@ public:
 		const auto& lights{ this->m_APP->Get_Scene()->Get_SceneGraph()->Get_Lights() };
 
 		if (!lights.empty() && ImGui::CollapsingHeader("Lights")) {
-			if (ImGui::BeginCombo("Select Light", this->m_SelectedLight ? this->m_SelectedLight->Get_Name().c_str() : "(None)")) {
+			if (ImGui::BeginCombo("Select Light", nullptr != this->m_SelectedLight ? this->m_SelectedLight->Get_Name().c_str() : "(None)")) {
 				for (const auto& light : lights) {
 					bool selected{ this->m_SelectedLight == light };
 					ImGui::Selectable(light->Get_Name().c_str(), &selected);
@@ -1217,21 +1233,17 @@ public:
 			LOG_ERROR("TODO");//TODO
 		}
 
-		/*ImGui::TextUnformatted("Render Light Probe: ");
-		for (auto probe : this->m_APP->Get_LightProbes()){
+		ImGui::TextUnformatted("Render Light Probe: ");
+		for (const auto& probe : this->m_APP->Get_LightProbes()) {
 			ImGui::SameLine();
-			if (ImGui::Button(probe->name.c_str()))
-				this->m_APP->RenderLightProbe(*probe);
-		}*/
+			if (ImGui::Button(probe->Name.c_str()))
+				ASSERT(false);
+		}
 
-		/*if (ImGui::Button("Screenshot"))
-		{
-			std::string fileName;
-			if (FileDialog(false, "BMP files\0*.bmp\0All files\0*.*\0\0", fileName))
-			{
-				m_ui.ScreenshotFileName = fileName;
-			}
-		}*/
+		if (ImGui::Button("Screenshot")) {
+			String fileName;
+			ASSERT(false);
+		}
 
 		ImGui::Separator();
 		ImGui::Checkbox("Test MipMapGen Pass", &this->m_UIData.TestMipMapGen);
@@ -1255,7 +1267,7 @@ public:
 			ImGui::End();
 		}*/
 
-		if (this->m_UIData.AntiAliasingMode != AntiAliasingMode::NONE && this->m_UIData.AntiAliasingMode != AntiAliasingMode::TEMPORAL)
+		if (AntiAliasingMode::NONE != this->m_UIData.AntiAliasingMode && AntiAliasingMode::TEMPORAL != this->m_UIData.AntiAliasingMode)
 			this->m_UIData.UseDeferredShading = false;
 
 		if (!this->m_UIData.UseDeferredShading)
@@ -1263,18 +1275,12 @@ public:
 
 		ImGui::PopFont();
 	}
-
-
-
-
 };
-
-
-
 
 
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
 
+	LOG_INFO("Parting Engine Sample Application Starting...");
 
 	Parting::DeviceCreationParameters deviceParams;
 
@@ -1284,8 +1290,9 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	deviceParams.VsyncEnabled = true;
 	deviceParams.EnablePerMonitorDPI = true;
 	deviceParams.SupportExplicitDisplayScaling = true;
-	deviceParams.EnableDebugRuntime = true;
-	deviceParams.EnableGPUValidation = true;
+
+	/*deviceParams.EnableDebugRuntime = true;
+	deviceParams.EnableGPUValidation = true;*/
 
 	String Title{ "Parting Engine" };
 

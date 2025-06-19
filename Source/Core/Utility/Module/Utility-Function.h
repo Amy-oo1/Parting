@@ -43,15 +43,3 @@ STDNODISCARD inline constexpr _Ty* Addressof(_Ty&& value) noexcept { return std:
 
 PARTING_EXPORT template<typename _Ty>
 STDNODISCARD inline constexpr void Swap(_Ty& lhs, _Ty& rhs) noexcept { std::swap(lhs, rhs); }//TODO to use in single type
-
-// Advance a pointer by a given number of bytes, regardless of pointer's type
-// (note: number of bytes can be negative)
-template <typename Type>
-inline decltype(auto) AdvanceBytes(Type* ptr, Int32 bytes) { return static_cast<Type*>(reinterpret_cast<char*>(ptr) + bytes); }
-
-template<typename _Ty>
-constexpr _Ty InsertBits(_Ty value, Int32 width, Int32 offset) { return _Ty{ (value & ((static_cast<_Ty>(1) << width) - 1)) << offset }; }
-
-template<typename _Ty>
-constexpr _Ty ExtractBits(_Ty value, Int32 width, Int32 offset) { return _Ty{ (value >> offset) & ((static_cast<_Ty>(1) << width) - 1) }; }
-

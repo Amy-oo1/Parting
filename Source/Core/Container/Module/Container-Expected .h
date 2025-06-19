@@ -40,7 +40,7 @@ public:
 
 	Expected(ErrorType&& error) : m_Data(std::move(error)) {}
 
-	STDNODISCARD bool HasValue() const noexcept { return std::holds_alternative<ValueType>(this->m_Data); }
+	STDNODISCARD bool HasValue(void) const noexcept { return std::holds_alternative<ValueType>(this->m_Data); }
 
 	ValueType& Value(void) {
 		ASSERT(this->HasValue());
@@ -57,7 +57,7 @@ public:
 		return std::get<ErrorType>(this->m_Data);
 	}
 
-	const ErrorType& Error() const {
+	const ErrorType& Error(void) const {
 		ASSERT(!this->HasValue());
 		return std::get<ErrorType>(this->m_Data);
 	}

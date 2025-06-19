@@ -83,20 +83,10 @@ namespace RHI {
 		PatchList
 	};
 
-	PARTING_EXPORT struct RHISinglePassStereoState final {
-		bool Enabled{ false };
-		bool IndependentViewportMask{ false };
-		Uint16 RenderTargetIndexOffset{ 0 };
-
-		STDNODISCARD constexpr bool operator==(const RHISinglePassStereoState&) const noexcept = default;
-		STDNODISCARD constexpr bool operator!=(const RHISinglePassStereoState&) const noexcept = default;
-	};
-
 	PARTING_EXPORT struct RHIRenderState final {
 		RHIBlendState BlendState;
 		RHIDepthStencilState DepthStencilState;
 		RHIRasterState RasterState;
-		RHISinglePassStereoState SinglePassStereo;
 	};
 
 	PARTING_EXPORT enum class RHIVariableShadingRate : Uint8 {

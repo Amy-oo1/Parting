@@ -107,8 +107,6 @@ namespace Parting {
 
 		STDNODISCARD virtual SceneContentFlags Get_ContentFlags(void) const { return SceneContentFlags::None; }
 
-		virtual void Load(const JSON::Value& node) { LOG_ERROR("empty Imp"); }
-
 		virtual bool Set_Property(const String& name, const Math::VecF4& value) { return false; }
 
 		STDNODISCARD virtual SharedPtr<SceneGraphLeaf<APITag>> Clone(void) = 0;
@@ -283,7 +281,6 @@ namespace Parting {
 		Optional<float> AspectRatio;
 
 	public:
-		void Load(const JSON::Value& node) override {}
 		bool Set_Property(const String& name, const Math::VecF4& value) override { return false; }
 
 		STDNODISCARD SharedPtr<SceneGraphLeaf<APITag>> Clone(void) override {
@@ -305,7 +302,6 @@ namespace Parting {
 		float YMag{ 1.f };
 
 	public:
-		void Load(const JSON::Value& node) override {}
 		bool Set_Property(const String& name, const Math::VecF4& value) override { return false; }
 
 		STDNODISCARD SharedPtr<SceneGraphLeaf<APITag>> Clone(void) override {
@@ -343,7 +339,6 @@ namespace Parting {
 		STDNODISCARD  virtual Int32 Get_LightType(void) const = 0;
 
 		virtual void FillLightConstants(LightConstants& lightConstants) const;
-		virtual void Store(JSON::Value& node) const { LOG_ERROR("Empty Imp"); }
 
 	};
 
@@ -364,15 +359,10 @@ namespace Parting {
 		}
 
 		bool Set_Property(const String& name, const Math::VecF4& value) override { return false; }
-		void Load(const JSON::Value& node) override {}
-
 	public:
 		STDNODISCARD Int32 Get_LightType(void) const override { return LightType_Directional; }
 
 		void FillLightConstants(LightConstants& lightConstants) const override;
-
-		void Store(JSON::Value& node) const override {}
-
 	};
 
 	template<RHI::APITagConcept APITag>
@@ -393,15 +383,10 @@ namespace Parting {
 			return nullptr;
 		}
 		bool Set_Property(const String& name, const Math::VecF4& value) override { return false; }
-		void Load(const JSON::Value& node) override {}
-
 	public:
 		STDNODISCARD Int32 Get_LightType(void) const override { return LightType_Spot; }
 
 		void FillLightConstants(LightConstants& lightConstants) const override {}
-
-		void Store(JSON::Value& node) const override {}
-
 	};
 
 	template<RHI::APITagConcept APITag>
@@ -421,17 +406,11 @@ namespace Parting {
 		}
 
 		bool Set_Property(const String& name, const Math::VecF4& value) override { return false; }
-
-		void Load(const JSON::Value& node) override {}
-
-
 	public:
 
 		STDNODISCARD Int32 Get_LightType(void) const override { return LightType_Point; }
 
 		void FillLightConstants(LightConstants& lightConstants) const override {}
-
-		void Store(JSON::Value& node) const override {}
 
 	};
 

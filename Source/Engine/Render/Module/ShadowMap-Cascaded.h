@@ -184,20 +184,20 @@ namespace Parting {
 	inline bool CascadedShadowMap<APITag>::SetupForPlanarViewStable(const DirectionalLight<APITag>& light, Math::Frustum projectionFrustum, Math::AffineF3 inverseViewMatrix, float maxShadowDistance, float lightSpaceZUp, float lightSpaceZDown, float exponent, Math::VecF3 preViewTranslation, Uint32 numberOfCascades) {
 		ASSERT(exponent > 1);
 
-		ASSERT(Math::Length(projectionFrustum.Get_NearPlane().m_Normal) > 0.f);
+		ASSERT(Math::Length(projectionFrustum.Get_Pline(Math::Frustum::PlaneType::Near ).m_Normal) > 0.f);
 
 		this->m_CascadeCount = Math::Min(numberOfCascades, static_cast<Uint32>(this->m_Cascades.size()));
 
 		ASSERT(this->m_CascadeCount > 0);
 
 		if (maxShadowDistance > 0.f) {
-			auto& nearPlane{ projectionFrustum.Get_NearPlane() };
-			auto& farPlane{ projectionFrustum.Get_FarPlane() };
+			auto& nearPlane{ projectionFrustum.Get_Pline(Math::Frustum::PlaneType::Near) };
+			auto& farPlane{ projectionFrustum.Get_Pline(Math::Frustum::PlaneType::Far) };
 			farPlane.m_Normal = -nearPlane.m_Normal;
 			farPlane.m_Distance = -nearPlane.m_Distance + maxShadowDistance;
 		}
 		else
-			ASSERT(Math::Length(projectionFrustum.Get_FarPlane().m_Normal) > 0.f);
+			ASSERT(Math::Length(projectionFrustum.Get_Pline(Math::Frustum::PlaneType::Far).m_Normal) > 0.f);
 
 		Array<Math::VecF3, Math::Frustum::NumCorners> corners{};
 		for (Uint32 Index = 0; Index < Math::Frustum::NumCorners; Index++)

@@ -66,7 +66,7 @@ namespace Parting {
 		WhiteNoise
 	};
 
-	float VanDerCorput(Uint64 base, size_t index) {
+	float VanDerCorput(Uint64 base, Uint64 index) {
 		/*float ret = 0.0f;
 		float denominator = float(base);
 		while (index > 0)
@@ -193,7 +193,7 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline TemporalAntiAliasingPass<APITag>::TemporalAntiAliasingPass(Imp_Device* device, SharedPtr<ShaderFactory<APITag>> shaderFactory, SharedPtr<CommonRenderPasses<APITag>> commonPasses, const ICompositeView& compositeView, const CreateParameters& params) :
-		m_CommonPasses{ commonPasses },
+		m_CommonPasses{ ::MoveTemp(commonPasses) },
 		m_StencilMask{ params.MotionVectorStencilMask } {
 
 		const IView* sampleView{ compositeView.Get_ChildView(ViewType::PLANAR, 0) };
@@ -230,13 +230,13 @@ namespace Parting {
 		Vector<ShaderMacro> MotionVectorMacros{
 			ShaderMacro{.Name{ String{ "USE_STENCIL" } }, .Definition{ String{ useStencil ? "1" : "0" } } }
 		};
-		this->m_MotionVectorPS = shaderFactory->CreateShader("Parting/Passes/motion_vectors_ps.hlsl", "main", &MotionVectorMacros, RHI::RHIShaderType::Pixel);
+		this->m_MotionVectorPS = shaderFactory->CreateShader(String{ "Parting/Passes/motion_vectors_ps.hlsl" }, String{ "main" }, &MotionVectorMacros, RHI::RHIShaderType::Pixel);
 
 		Vector<ShaderMacro> ResolveMacros{
 			ShaderMacro{.Name{ "SAMPLE_COUNT" }, .Definition{::IntegralToString(unresolvedColorDesc.SampleCount) } },
 			ShaderMacro{.Name{ "USE_CATMULL_ROM_FILTER" },.Definition{ params.UseCatmullRomFilter ? "1" : "0" } }
 		};
-		this->m_TemporalAntiAliasingCS = shaderFactory->CreateShader("Parting/Passes/taa_cs.hlsl", "main", &ResolveMacros, RHI::RHIShaderType::Compute);
+		this->m_TemporalAntiAliasingCS = shaderFactory->CreateShader(String{ "Parting/Passes/taa_cs.hlsl" }, String{ "main" }, &ResolveMacros, RHI::RHIShaderType::Compute);
 
 		this->m_BilinearSampler = device->CreateSampler(RHI::RHISamplerDescBuilder{}
 			.Set_BorderColor(Color{ 0.f })
@@ -272,7 +272,6 @@ namespace Parting {
 				.AddBindingLayout(this->m_MotionVectorsBindingLayout)
 				.Set_CullMode(RHI::RHIRasterCullMode::None)
 				.Set_DepthTestEnable(false)
-				.Set_StencilEnable(false)
 				.Build(),
 
 				this->m_MotionVectorsFrameBufferFactory->Get_FrameBuffer(*sampleView)
@@ -373,7 +372,7 @@ namespace Parting {
 				taaConstants.OutputViewOrigin = Math::VecF2{ viewportOutput.MinX, viewportOutput.MinY };
 				taaConstants.OutputViewSize = Math::VecF2{ viewportOutput.Width(), viewportOutput.Height() };
 				taaConstants.InputPixelOffset = viewInput->Get_PixelOffset();
-				taaConstants.OutputTextureSizeInv = 1.0f / this->m_ResolvedColorSize;
+				taaConstants.OutputTextureSizeInv = 1.f / this->m_ResolvedColorSize;
 				taaConstants.InputOverOutputViewSize = taaConstants.InputViewSize / taaConstants.OutputViewSize;
 				taaConstants.OutputOverInputViewSize = taaConstants.OutputViewSize / taaConstants.InputViewSize;
 				taaConstants.ClampingFactor = params.EnableHistoryClamping ? params.ClampingFactor : -1.f;
