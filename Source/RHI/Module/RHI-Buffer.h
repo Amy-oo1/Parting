@@ -76,8 +76,6 @@ namespace RHI {
 		bool KeepInitialState{ false };
 
 		RHICPUAccessMode CPUAccess{ RHICPUAccessMode::None };
-
-		RHISharedResourceFlag sharedResourceFlags{ RHISharedResourceFlag::None };
 	};
 
 	PARTING_EXPORT class RHIBufferDescBuilder final {
@@ -101,8 +99,7 @@ namespace RHI {
 		constexpr RHIBufferDescBuilder& Set_InitialState(const RHIResourceState initialState) { this->m_Desc.InitialState = initialState; return *this; }
 		constexpr RHIBufferDescBuilder& Set_KeepInitialState(const bool keepInitialState) { this->m_Desc.KeepInitialState = keepInitialState; return *this; }
 		constexpr RHIBufferDescBuilder& Set_CPUAccess(const RHICPUAccessMode cpuAccess) { this->m_Desc.CPUAccess = cpuAccess; return *this; }
-		constexpr RHIBufferDescBuilder& Set_SharedResourceFlags(const RHISharedResourceFlag sharedResourceFlags) { this->m_Desc.sharedResourceFlags = sharedResourceFlags; return *this; }
-		
+	
 		constexpr const RHIBufferDesc& Build(void) const { return this->m_Desc; }
 
 		STDNODISCARD static RHIBufferDesc CreateVolatileConstantBufferDesc(Uint32 ByteSize, Uint32 MaxVersions) {
@@ -135,13 +132,14 @@ namespace RHI {
 
 			return Re;
 		}
-		STDNODISCARD bool Is_EntireBuffer(const RHIBufferDesc& desc) const { return this->Offset == 0 && (~0ull == this->ByteSize || this->ByteSize == desc.ByteSize); }
-	
+		
+		STDNODISCARD bool Is_EntireBuffer(const RHIBufferDesc& desc) const { return 0 == this->Offset && (Max_Uint64 == this->ByteSize || this->ByteSize == desc.ByteSize); }
+		
 		STDNODISCARD constexpr bool operator==(const RHIBufferRange&) const noexcept = default;
 		STDNODISCARD constexpr bool operator!=(const RHIBufferRange&) const noexcept = default;
 	};
 
-	PARTING_EXPORT HEADER_INLINE constexpr RHIBufferRange g_EntireBuffer{ .Offset{ 0ull }, .ByteSize{ ~0ull } };
+	PARTING_EXPORT HEADER_INLINE constexpr RHIBufferRange g_EntireBuffer{ .Offset{ 0ull }, .ByteSize{ Max_Uint64 } };
 
 	PARTING_EXPORT template<typename Derived>
 	class RHIBuffer :public RHIResource<Derived> {

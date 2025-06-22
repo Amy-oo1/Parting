@@ -23,19 +23,19 @@
 #ifndef DEPTH_CB_H
 #define DEPTH_CB_H
 
-const Uint32 DepthSpaceMaterial = 0;
-const Uint32 DepthBindingMaterialDiffuseTexture = 0;
-const Uint32 DepthBindingMaterialOpacityTexture = 1;
-const Uint32 DepthBindingMaterialConstants = 0;
+constexpr Uint32 DepthSpaceMaterial{ 0 };
+constexpr Uint32 DepthBindingMaterialDiffuseTexture{ 0 };
+constexpr Uint32 DepthBindingMaterialOpacityTexture{ 1 };
+constexpr Uint32 DepthBindingMaterialConstants{ 0 };
 
-const Uint32 DepthSapceInput = 1;
-const Uint32 DepthBindingPushConstants = 1;
-const Uint32 DepthBindingInstanceBuffer = 10;
-const Uint32 DepthBindingVertexBuffer = 11;
+constexpr Uint32 DepthSapceInput{ 1 };
+constexpr Uint32 DepthBindingPushConstants{ 1 };
+constexpr Uint32 DepthBindingInstanceBuffer{ 10 };
+constexpr Uint32 DepthBindingVertexBuffer{ 11 };
 
-const Uint32 DepthSpaceView = 2;
-const Uint32 DepthBindingViewConstants = 2;
-const Uint32 DepthBindingMaterialSampler = 0;
+constexpr Uint32 DepthSpaceView{ 2 };
+constexpr Uint32 DepthBindingViewConstants{ 2 };
+constexpr Uint32 DepthBindingMaterialSampler{ 0 };
 
 struct DepthPassConstants {
 	Math::MatF44 MatWorldToClip;
@@ -49,5 +49,26 @@ struct DepthPushConstants {
 	Uint32			PositionOffset;
 	Uint32			TexCoordOffset;
 };
+
+namespace Shader {
+	constexpr Uint32 DepthSpaceMaterial{ 0 };
+	constexpr Uint32 DepthBindingMaterialDiffuseTexture{ 0 };
+	constexpr Uint32 DepthBindingMaterialOpacityTexture{ 1 };
+	constexpr Uint32 DepthBindingMaterialConstants{ 0 };
+
+	constexpr Uint32 DepthSapceInput{ 1 };
+	constexpr Uint32 DepthBindingPushConstants{ 1 };
+	constexpr Uint32 DepthBindingInstanceBuffer{ 10 };
+	constexpr Uint32 DepthBindingVertexBuffer{ 11 };
+
+	constexpr Uint32 DepthSpaceView{ 2 };
+	constexpr Uint32 DepthBindingViewConstants{ 2 };
+	constexpr Uint32 DepthBindingMaterialSampler{ 0 };
+
+
+	using DepthPassConstants = DepthPassConstants;
+	using DepthPushConstants = DepthPushConstants;
+}
+
 
 #endif // DEPTH_CB_H

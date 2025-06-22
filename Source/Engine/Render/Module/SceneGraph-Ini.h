@@ -47,7 +47,7 @@ PARTING_MODULE(DrawStrategy)
 namespace Parting {
 
 	template<RHI::APITagConcept APITag>
-	inline void Light<APITag>::FillLightConstants(LightConstants& lightConstants) const {
+	inline void Light<APITag>::FillLightConstants(Shader::LightConstants& lightConstants) const {
 		lightConstants.Color = this->LightColor;
 		lightConstants.ShadowCascades = Math::VecI4{ -1 };
 		lightConstants.PerObjectShadows = Math::VecI4{ -1 };

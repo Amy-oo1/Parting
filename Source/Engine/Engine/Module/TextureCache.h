@@ -186,12 +186,6 @@ namespace Parting {
 		Atomic<Uint32> m_TexturesLoaded{ 0 };
 	};
 
-
-	Uint32 GetMipLevelsNum(Uint32 width, Uint32 height) {//TODO Into Utility
-		Uint32 size{ Math::Min(width, height) };
-		return static_cast<Uint32>(Math::Log2f(static_cast<float>(size)) / Math::Log2f(2.0f)) + 1;
-	}
-
 	template<RHI::APITagConcept APITag>
 	inline void TextureCache<APITag>::Reset(void) {
 		{
@@ -326,7 +320,7 @@ namespace Parting {
 		RHI::RHITextureDesc textureDesc{
 			.Extent{.Width{ scaledWidth }, .Height{ scaledHeight }, .Depth{ texture->Extent.Depth } },
 			.ArrayCount{ texture->ArrayCount },
-			.MipLevelCount{ this->m_GenerateMipmaps && texture->IsRenderTarget && nullptr != passes ? GetMipLevelsNum(scaledWidth, scaledHeight) : texture->MipLevelCount },
+			.MipLevelCount{ this->m_GenerateMipmaps && texture->IsRenderTarget && nullptr != passes ? Math::Get_MipLevelsNum(scaledWidth, scaledHeight) : texture->MipLevelCount },
 			.Format { texture->Format },
 			.Dimension{ texture->Dimension },
 			.DebugName{ texture->FilePath },

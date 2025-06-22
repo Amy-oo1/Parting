@@ -112,7 +112,6 @@ namespace RHI {
 		Imp_GraphicsPipeline* Pipeline{ nullptr };
 		Imp_FrameBuffer* FrameBuffer{ nullptr };
 		RHIViewportState Viewport;
-		RHIVariableRateShadingState ShadingRateState;
 		Color BlendConstantColor;
 		Uint8 DynamicStencilRefValue{ 0 };
 
@@ -139,7 +138,6 @@ namespace RHI {
 			constexpr RHIGraphicsStateBuilder& Set_Pipeline(Imp_GraphicsPipeline* pipeline) { this->m_State.Pipeline = pipeline; return *this; }
 			constexpr RHIGraphicsStateBuilder& Set_FrameBuffer(Imp_FrameBuffer* framebuffer) { this->m_State.FrameBuffer = framebuffer; return *this; }
 			constexpr RHIGraphicsStateBuilder& Set_ViewportState(const RHIViewportState& viewport) { this->m_State.Viewport = viewport; return *this; }
-			constexpr RHIGraphicsStateBuilder& Set_ShadingRateState(const RHIVariableRateShadingState& shadingRateState) { this->m_State.ShadingRateState = shadingRateState; return *this; }
 			constexpr RHIGraphicsStateBuilder& Set_BlendConstantColor(const Color& color) { this->m_State.BlendConstantColor = color; return *this; }
 			constexpr RHIGraphicsStateBuilder& Set_DynamicStencilRefValue(Uint8 stencilRefValue) { this->m_State.DynamicStencilRefValue = stencilRefValue; return *this; }
 			constexpr RHIGraphicsStateBuilder& Set_IndexBuffer(const RHIIndexBufferBinding<APITag>& indexBuffer) { this->m_State.IndexBuffer = indexBuffer; return *this; }

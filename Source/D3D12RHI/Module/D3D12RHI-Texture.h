@@ -111,10 +111,10 @@ namespace RHI::D3D12 {
 
 		RefCountPtr<Heap> m_Heap;
 
-		RHITextureBindingMap<D3D12DescriptorIndex> m_RenderTargetViews{ 0, g_TextureBindingKeyHash };//TODO :function to class 
-		RHITextureBindingMap<D3D12DescriptorIndex> m_DepthStencilViews{ 0, g_TextureBindingKeyHash };
-		RHITextureBindingMap<D3D12DescriptorIndex> m_CustomSRVs{ 0, g_TextureBindingKeyHash };
-		RHITextureBindingMap<D3D12DescriptorIndex> m_CustomUAVs{ 0, g_TextureBindingKeyHash };
+		RHITextureBindingMap<D3D12DescriptorIndex> m_RenderTargetViews;//TODO :function to class 
+		RHITextureBindingMap<D3D12DescriptorIndex> m_DepthStencilViews;
+		RHITextureBindingMap<D3D12DescriptorIndex> m_CustomSRVs;
+		RHITextureBindingMap<D3D12DescriptorIndex> m_CustomUAVs;
 		Vector<D3D12DescriptorIndex> m_ClearMipLevelUAVs;
 
 	private:

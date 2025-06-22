@@ -87,7 +87,7 @@ namespace Parting {
 		using Mode = _NameSpace_MipMapGenPass::Mode;
 
 		struct NullTextures final {
-			Array<RHI::RefCountPtr<Imp_Texture>, NUM_LODS> Lods;
+			Array<RHI::RefCountPtr<Imp_Texture>, Shader::NumLODs> Lods;
 
 			static SharedPtr<NullTextures> Get(Imp_Device* device) {
 				static Mutex _mutex;
@@ -99,7 +99,7 @@ namespace Parting {
 
 					if (nullptr == result) {
 						result = ::MakeShared<NullTextures>();
-						for (Uint32 Index = 0; Index < NUM_LODS; ++Index)
+						for (Uint32 Index = 0; Index < Shader::NumLODs; ++Index)
 							result->Lods[Index] = NullTextures::CreateNullTexture(device);
 						_nullTextures = result;
 					}
@@ -138,7 +138,7 @@ namespace Parting {
 		RHI::RefCountPtr<Imp_Texture> m_Texture;
 		RHI::RefCountPtr<Imp_Buffer> m_ConstantBuffer;
 		RHI::RefCountPtr<Imp_BindingLayout> m_BindingLayout;
-		Array<RHI::RefCountPtr<Imp_BindingSet>, MAX_PASSES> m_BindingSets;
+		Array<RHI::RefCountPtr<Imp_BindingSet>, Shader::MaxPasses> m_BindingSets;
 		RHI::RefCountPtr<Imp_ComputePipeline> m_PSO;
 
 		// Set of unique dummy textures - see details in class implementation
@@ -169,7 +169,7 @@ namespace Parting {
 
 		// Constants
 		this->m_ConstantBuffer = this->m_Device->CreateBuffer(RHI::RHIBufferDescBuilder{}
-			.Set_ByteSize(sizeof(MipmmapGenConstants))
+			.Set_ByteSize(sizeof(Shader::MipmmapGenConstants))
 			.Set_MaxVersions(c_MaxRenderPassConstantBufferVersions)
 			.Set_DebugName(_W("MipMapGenPass/Constants"))
 			.Set_IsConstantBuffer(true)
@@ -181,7 +181,7 @@ namespace Parting {
 			.Set_Visibility(RHI::RHIShaderType::Compute)
 			.AddBinding(RHI::RHIBindingLayoutItem::VolatileConstantBuffer(0))
 			.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(0));
-		for (Uint32 MipLevel = 0; MipLevel < NUM_LODS; ++MipLevel)
+		for (Uint32 MipLevel = 0; MipLevel < Shader::NumLODs; ++MipLevel)
 			bindingLayoutDescBuilder.AddBinding(RHI::RHIBindingLayoutItem::Texture_UAV(MipLevel));
 		this->m_BindingLayout = this->m_Device->CreateBindingLayout(bindingLayoutDescBuilder.Build());
 
@@ -190,16 +190,16 @@ namespace Parting {
 		RHI::RHIBindingSetDescBuilder<APITag> bindingSetDescBuilder;
 
 		for (Uint32 Index = 0; auto & bindingSet : this->m_BindingSets) {
-			if (Index * NUM_LODS >= nmipLevels)// Create a unique binding set for each compute pass
+			if (Index * Shader::NumLODs >= nmipLevels)// Create a unique binding set for each compute pass
 				break;
 
 			bindingSetDescBuilder.Reset()
 				.AddBinding(RHI::RHIBindingSetItem<APITag>::ConstantBuffer(0, this->m_ConstantBuffer))
-				.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(0, this->m_Texture, RHI::RHIFormat::UNKNOWN, RHI::RHITextureSubresourceSet{.BaseMipLevel{ Index * NUM_LODS } }));
+				.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(0, this->m_Texture, RHI::RHIFormat::UNKNOWN, RHI::RHITextureSubresourceSet{.BaseMipLevel{ Index * Shader::NumLODs } }));
 
-			for (Uint32 MipLevel = 1; MipLevel <= NUM_LODS; ++MipLevel) {
-				if (Index * NUM_LODS + MipLevel < nmipLevels)
-					bindingSetDescBuilder.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_UAV(MipLevel - 1, this->m_Texture, RHI::RHIFormat::UNKNOWN, RHI::RHITextureSubresourceSet{.BaseMipLevel{ Index * NUM_LODS + MipLevel } }));
+			for (Uint32 MipLevel = 1; MipLevel <= Shader::NumLODs; ++MipLevel) {
+				if (Index * Shader::NumLODs + MipLevel < nmipLevels)
+					bindingSetDescBuilder.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_UAV(MipLevel - 1, this->m_Texture, RHI::RHIFormat::UNKNOWN, RHI::RHITextureSubresourceSet{.BaseMipLevel{ Index * Shader::NumLODs + MipLevel } }));
 				else
 					bindingSetDescBuilder.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_UAV(MipLevel - 1, this->m_NullTextures->Lods[MipLevel - 1]));
 			}

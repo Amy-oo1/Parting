@@ -189,7 +189,7 @@ namespace RHI {
 		friend class RHIResource<Derived>;
 		protected:
 			RHIFrameBuffer(void) = default;
-			virtual ~RHIFrameBuffer(void) = default;
+			~RHIFrameBuffer(void) = default;
 
 		public:
 			STDNODISCARD const RHIFrameBufferDesc<APITag>& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }

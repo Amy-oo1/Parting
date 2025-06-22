@@ -81,25 +81,12 @@ namespace RHI {
 
 	};
 
-	PARTING_EXPORT struct RHIShaderSpecialization final {
-		Uint32 ConstantID {};
-		union{
-			Uint32 u = 0;
-			Int32 i;
-			float f;
-		} Value;
-
-		STDNODISCARD static constexpr RHIShaderSpecialization UInt32(Uint32 constantID, Uint32 u) { return RHIShaderSpecialization{ constantID, {.u = u } }; }
-		STDNODISCARD static constexpr RHIShaderSpecialization Int32(Uint32 constantID, Int32 i) { return RHIShaderSpecialization{ constantID, {.i = i } }; }
-		STDNODISCARD static constexpr RHIShaderSpecialization Float(Uint32 constantID, float f) { return RHIShaderSpecialization{ constantID, {.f = f } }; }
-	};
-
 	PARTING_EXPORT template<typename Derived>
 	class RHIShader :public RHIResource<Derived> {
 		friend class RHIResource<Derived>;
 	protected:
 		RHIShader(void) = default;
-		virtual ~RHIShader(void) = default;
+		~RHIShader(void) = default;
 
 	public:
 		STDNODISCARD const RHIShaderDesc& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }

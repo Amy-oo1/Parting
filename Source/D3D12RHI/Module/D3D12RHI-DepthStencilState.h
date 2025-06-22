@@ -50,6 +50,21 @@ namespace RHI::D3D12 {
 		}
 	}
 
+	D3D12_COMPARISON_FUNC ConvertComparisonFunc(RHIComparisonFunc value) {
+		switch (value) {
+			using enum RHIComparisonFunc;
+		case Never:return D3D12_COMPARISON_FUNC_NEVER;
+		case Less:return D3D12_COMPARISON_FUNC_LESS;
+		case Equal:return D3D12_COMPARISON_FUNC_EQUAL;
+		case LessOrEqual:return D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		case Greater:return D3D12_COMPARISON_FUNC_GREATER;
+		case NotEqual:return D3D12_COMPARISON_FUNC_NOT_EQUAL;
+		case GreaterOrEqual:return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+		case Always:return D3D12_COMPARISON_FUNC_ALWAYS;
+		default:ASSERT(false); return D3D12_COMPARISON_FUNC_NEVER;
+		}
+	}
+
 
 	D3D12_DEPTH_STENCIL_DESC TranslateDepthStencilState(const RHIDepthStencilState& inState) {
 		return D3D12_DEPTH_STENCIL_DESC{

@@ -29,25 +29,36 @@
 #define SkinningFlag_TexCoord1      0x08
 #define SkinningFlag_TexCoord2      0x10
 
-struct SkinningConstants {
-	Uint32 numVertices;
-	Uint32 Flags;
-	Uint32 InputPositionOffset;
-	Uint32 InputNormalOffset;
 
-	Uint32 InputTangentOffset;
-	Uint32 InputTexCoord1Offset;
-	Uint32 InputTexCoord2Offset;
-	Uint32 InputJointIndexOffset;
 
-	Uint32 InputJointWeightOffset;
-	Uint32 OutputPositionOffset;
-	Uint32 OutputPrevPositionOffset;
-	Uint32 OutputNormalOffset;
+namespace Shader {
+	constexpr Uint32 SkinningFlagFirstFrame{ SkinningFlag_FirstFrame };
+	constexpr Uint32 SkinningFlagNormals{ SkinningFlag_Normals };
+	constexpr Uint32 SkinningFlagTangents{ SkinningFlag_Tangents };
+	constexpr Uint32 SkinningFlagTexCoord1{ SkinningFlag_TexCoord1 };
+	constexpr Uint32 SkinningFlagTexCoord2{ SkinningFlag_TexCoord2 };
 
-	Uint32 OutputTangentOffset;
-	Uint32 OutputTexCoord1Offset;
-	Uint32 OutputTexCoord2Offset;
-};
+	struct SkinningConstants {
+		Uint32 numVertices;
+		Uint32 Flags;
+		Uint32 InputPositionOffset;
+		Uint32 InputNormalOffset;
+
+		Uint32 InputTangentOffset;
+		Uint32 InputTexCoord1Offset;
+		Uint32 InputTexCoord2Offset;
+		Uint32 InputJointIndexOffset;
+
+		Uint32 InputJointWeightOffset;
+		Uint32 OutputPositionOffset;
+		Uint32 OutputPrevPositionOffset;
+		Uint32 OutputNormalOffset;
+
+		Uint32 OutputTangentOffset;
+		Uint32 OutputTexCoord1Offset;
+		Uint32 OutputTexCoord2Offset;
+	};
+}
+
 
 #endif // SKINNING_CB_H

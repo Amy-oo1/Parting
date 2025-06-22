@@ -407,7 +407,7 @@ namespace Parting {
 
 		}
 
-		D3D12_CHECK(WaitForSingleObject(this->m_FrameFenceEvents[this->m_SwapChain->GetCurrentBackBufferIndex()], 0xFFFFFFFF));
+		WaitForSingleObject(this->m_FrameFenceEvents[this->m_SwapChain->GetCurrentBackBufferIndex()], 0xFFFFFFFF);
 
 		return true;
 	}

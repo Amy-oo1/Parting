@@ -25,20 +25,25 @@
 
 #include "view_cb.h"
 
-struct SsaoConstants {
-	PlanarViewConstants View;
 
-	Math::VecF2			ClipToView;
-	Math::VecF2			InvQuantizedGbufferSize;
 
-	Math::VecI2			QuantizedViewportOrigin;
-	float				Amount;
-	float				InvBackgroundViewDepth;
-	float				RadiusWorld;
-	float				SurfaceBias;
+namespace Shader {
+	struct SsaoConstants {
+		PlanarViewConstants View;
 
-	float				RadiusToScreen;
-	float				PowerExponent;
-};
+		Math::VecF2			ClipToView;
+		Math::VecF2			InvQuantizedGbufferSize;
+
+		Math::VecI2			QuantizedViewportOrigin;
+		float				Amount;
+		float				InvBackgroundViewDepth;
+		float				RadiusWorld;
+		float				SurfaceBias;
+
+		float				RadiusToScreen;
+		float				PowerExponent;
+	};
+}
+
 
 #endif // SSAO_CB_H

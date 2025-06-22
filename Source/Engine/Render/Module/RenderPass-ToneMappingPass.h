@@ -190,7 +190,7 @@ namespace Parting {
 		}
 
 		this->m_ToneMappingCB = device->CreateBuffer(RHI::RHIBufferDescBuilder{}
-			.Set_ByteSize(sizeof(::ToneMappingConstants))
+			.Set_ByteSize(sizeof(Shader::ToneMappingConstants))
 			.Set_MaxVersions(params.NumConstantBufferVersions)
 			.Set_DebugName(_W("ToneMappingConstants"))
 			.Set_IsConstantBuffer(true)
@@ -314,7 +314,7 @@ namespace Parting {
 			const auto& viewportState{ view->Get_ViewportState() };
 
 			for (Uint32 viewportIndex = 0; viewportIndex < viewportState.ScissorCount; ++viewportIndex) {
-				ToneMappingConstants toneMappingConstants{};
+				Shader::ToneMappingConstants toneMappingConstants{};
 				{
 					toneMappingConstants.LogLuminanceScale = 1.0f / (_NameSpace_ToneMappingPass::MaxLogLuminamce - _NameSpace_ToneMappingPass::MinLogLuminance);
 					toneMappingConstants.LogLuminanceBias = -_NameSpace_ToneMappingPass::MinLogLuminance * toneMappingConstants.LogLuminanceScale;
@@ -356,7 +356,7 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline void ToneMappingPass<APITag>::ComputeExposure(Imp_CommandList* commandList, const ToneMappingPass<APITag>::Parameters& params) {
-		ToneMappingConstants toneMappingConstants{};
+		Shader::ToneMappingConstants toneMappingConstants{};
 		{
 			toneMappingConstants.LogLuminanceScale = _NameSpace_ToneMappingPass::MaxLogLuminamce - _NameSpace_ToneMappingPass::MinLogLuminance;
 			toneMappingConstants.LogLuminanceBias = _NameSpace_ToneMappingPass::MinLogLuminance;
@@ -398,7 +398,7 @@ namespace Parting {
 		for (Uint32 viewIndex = 0; viewIndex < compositeView.Get_NumChildViews(ViewType::PLANAR); ++viewIndex) {
 			const IView* view{ compositeView.Get_ChildView(ViewType::PLANAR, viewIndex) };
 
-			ToneMappingConstants toneMappingConstants{};
+			Shader::ToneMappingConstants toneMappingConstants{};
 			{
 				toneMappingConstants.ExposureScale = Math::Exp2f(params.ExposureBias);//TODO :
 				toneMappingConstants.WhitePointInvSquared = 1.f / Math::Pow(params.WhitePoint, 2.f);

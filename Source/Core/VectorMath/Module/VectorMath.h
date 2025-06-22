@@ -57,6 +57,11 @@ namespace Math {
 	using BoxI2 = Box<Int32, 2>;
 	using BoxI3 = Box<Int32, 3>;
 
+	PARTING_EXPORT STDNODISCARD Uint32 Get_MipLevelsNum(Uint32 width, Uint32 height) {
+		Uint32 size{ Math::Min(width, height) };
+		return static_cast<Uint32>(Math::Log2f(static_cast<float>(size)) / Math::Log2f(2.0f)) + 1;
+	}
+
 
 
 	MatF44 OrthoProjD3DStyle(float left, float right, float bottom, float top, float zNear, float zFar) {

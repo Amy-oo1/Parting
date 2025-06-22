@@ -49,11 +49,11 @@ namespace Parting {
 	public:
 		Vector<RHI::RefCountPtr<Imp_Texture>> RenderTargets;
 		RHI::RefCountPtr<Imp_Texture> DepthStencil;
-		RHI::RefCountPtr<Imp_Texture> ShadingRateSurface;
+
 
 	private:
 		RHI::RefCountPtr<Imp_Device> m_Device;
-		UnorderedMap<RHI::RHITextureSubresourceSet, RHI::RefCountPtr<Imp_FrameBuffer>, decltype(RHI::g_TextureSubresourceSetHash)> m_FrameBufferCache{ 0, RHI::g_TextureSubresourceSetHash };//TODO :
+		UnorderedMap<RHI::RHITextureSubresourceSet, RHI::RefCountPtr<Imp_FrameBuffer>, RHI::RHITextureSubresourceSet::Hash> m_FrameBufferCache;//TODO :
 
 
 	};
@@ -69,9 +69,6 @@ namespace Parting {
 
 			if (nullptr != this->DepthStencil)
 				descBuilder.Set_DepthStencilAttachment(RHI::RHIFrameBufferAttachment<APITag>{.Texture{ this->DepthStencil }, .Subresources{ subresources } });
-
-			if (nullptr != ShadingRateSurface)
-				descBuilder.Set_ShadingRateAttachment(RHI::RHIFrameBufferAttachment<APITag>{.Texture{ this->ShadingRateSurface }, .Subresources{ subresources } });
 
 			item = this->m_Device->CreateFrameBuffer(descBuilder.Build());
 		}

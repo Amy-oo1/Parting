@@ -129,7 +129,6 @@ namespace Parting {
 		RHI::RHIGraphicsState<APITag> graphicsState;
 		graphicsState.FrameBuffer = framebuffer;
 		graphicsState.Viewport = view->Get_ViewportState();
-		graphicsState.ShadingRateState = view->Get_VariableRateShadingState();
 
 		RHI::RHIDrawArguments currentDraw{ .InstanceCount{ 0 } };
 

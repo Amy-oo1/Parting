@@ -154,7 +154,7 @@ namespace Parting {
 		this->m_ShadowSamplerComparison = this->m_Device->CreateSampler(samplerDescBuilder.Set_ReductionType(RHI::RHISamplerReductionType::Comparison).Build());
 
 		this->m_DeferredLightingCB = this->m_Device->CreateBuffer(RHI::RHIBufferDescBuilder{}
-			.Set_ByteSize(sizeof(DeferredLightingConstants))
+			.Set_ByteSize(sizeof(Shader::DeferredLightingConstants))
 			.Set_MaxVersions(c_MaxRenderPassConstantBufferVersions)
 			.Set_DebugName(_W("DeferredLightingPass/Constants"))
 			.Set_IsConstantBuffer(true)
@@ -209,7 +209,7 @@ namespace Parting {
 
 		commandList->BeginMarker("DeferredLighting");
 
-		DeferredLightingConstants deferredConstants{};
+		Shader::DeferredLightingConstants deferredConstants{};
 		deferredConstants.RandomOffset = randomOffset;
 		deferredConstants.NoisePattern[0] = Math::VecF4{ 0.059f, 0.529f, 0.176f, 0.647f };
 		deferredConstants.NoisePattern[1] = Math::VecF4{ 0.765f, 0.294f, 0.882f, 0.412f };
@@ -238,25 +238,25 @@ namespace Parting {
 					}
 				}
 
-				if (deferredConstants.NumLights >= DEFERRED_MAX_LIGHTS) {//TODO :
+				if (deferredConstants.NumLights >= Shader::DeferredMaxLights) {//TODO :
 					LOG_ERROR("Maximum number of active lights (%d) exceeded in DeferredLightingPass" /*,DEFERRED_MAX_LIGHTS*/);
 					break;
 
 				}
 
-				LightConstants& lightConstants{ deferredConstants.Lights[deferredConstants.NumLights] };
+				auto& lightConstants{ deferredConstants.Lights[deferredConstants.NumLights] };
 				light->FillLightConstants(lightConstants);
 
 				if (nullptr != light->ShadowMap) {
 					for (Uint32 cascade = 0; cascade < light->ShadowMap->Get_NumberOfCascades(); ++cascade)
-						if (numShadows < DEFERRED_MAX_SHADOWS) {
+						if (numShadows < Shader::DeferredMaxShadows) {
 							light->ShadowMap->Get_Cascade(cascade)->FillShadowConstants(deferredConstants.Shadows[numShadows]);
 							lightConstants.ShadowCascades[cascade] = numShadows;
 							++numShadows;
 						}
 
 					for (Uint32 perObjectShadow = 0; perObjectShadow < light->ShadowMap->Get_NumberOfPerObjectShadows(); ++perObjectShadow)
-						if (numShadows < DEFERRED_MAX_SHADOWS) {
+						if (numShadows < Shader::DeferredMaxShadows) {
 							light->ShadowMap->Get_PerObjectShadow(perObjectShadow)->FillShadowConstants(deferredConstants.Shadows[numShadows]);
 							lightConstants.PerObjectShadows[perObjectShadow] = numShadows;
 							++numShadows;
@@ -276,12 +276,12 @@ namespace Parting {
 				if (!probe->Is_Active())
 					continue;
 
-				LightProbeConstants& lightProbeConstants{ deferredConstants.LightProbes[deferredConstants.NumLightProbes] };
+				auto& lightProbeConstants{ deferredConstants.LightProbes[deferredConstants.NumLightProbes] };
 				probe->FillLightProbeConstants(lightProbeConstants);
 
 				++deferredConstants.NumLightProbes;
 
-				if (deferredConstants.NumLightProbes >= DEFERRED_MAX_LIGHT_PROBES) {
+				if (deferredConstants.NumLightProbes >= Shader::DeferredMaxLightProbes) {
 					LOG_ERROR("Maximum number of active light probes (%d) exceeded in DeferredLightingPass"/*, DEFERRED_MAX_LIGHT_PROBES*/);
 
 					break;
@@ -329,7 +329,7 @@ namespace Parting {
 			) };
 
 			view->FillPlanarViewConstants(deferredConstants.View);
-			commandList->WriteBuffer(this->m_DeferredLightingCB, &deferredConstants, sizeof(DeferredLightingConstants));
+			commandList->WriteBuffer(this->m_DeferredLightingCB, &deferredConstants, sizeof(Shader::DeferredLightingConstants));
 
 			commandList->SetComputeState(RHI::RHIComputeStateBuilder<APITag>{}
 			.Set_Pipeline(this->m_PSO)

@@ -119,7 +119,7 @@ public:
 		this->ResolvedColor = device->CreateTexture(textureBuilder
 			.Set_Format(RHI::RHIFormat::RGBA16_FLOAT)
 			.Set_DebugName("ResolvedColor")
-			.Set_MipLevels(Parting::GetMipLevelsNum(size.X, size.Y))
+			.Set_MipLevels(Math::Get_MipLevelsNum(size.X, size.Y))
 			.Set_IsUAV(true)
 			.Build()
 		);
@@ -636,7 +636,7 @@ public:
 		if (GLFW_KEY_SPACE == key && GLFW_PRESS == action) {
 			this->m_UIData.EnableAnimations = !this->m_UIData.EnableAnimations;
 			return true;
-		}
+		}//TODO :Remove
 
 		if (GLFW_KEY_T == key && GLFW_PRESS == action) {
 			this->CopyActiveCameraToFirstPerson();
@@ -1016,7 +1016,7 @@ public:
 		this->m_PreviousViewsValid = false;
 
 		for (const auto& Light : this->m_Scene->Get_SceneGraph()->Get_Lights())
-			if (LightType_Directional == Light->Get_LightType()) {
+			if (Shader::LightType_Directional == Light->Get_LightType()) {
 				this->m_SunLight = StaticPointerCast<Parting::DirectionalLight<CurrentAPI>>(Light);
 				if (this->m_SunLight->Irradiance <= 0.f)
 					this->m_SunLight->Irradiance = 1.f;

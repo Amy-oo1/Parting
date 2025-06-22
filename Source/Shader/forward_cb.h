@@ -39,33 +39,68 @@
 #define FORWARD_BINDING_LIGHT_PROBE_SAMPLER 2
 #define FORWARD_BINDING_ENVIRONMENT_BRDF_SAMPLER 3
 
+namespace Shader {
+	constexpr Uint32 ForwardMaxLights{ FORWARD_MAX_LIGHTS };
+	constexpr Uint32 ForwardMaxShadows{ FORWARD_MAX_SHADOWS };
+	constexpr Uint32 ForwardMaxLightProbes{ FORWARD_MAX_LIGHT_PROBES };
 
-struct ForwardShadingViewConstants {
-	PlanarViewConstants		View;
-};
+	constexpr Uint32 ForwardSpaceMaterial{ FORWARD_SPACE_MATERIAL };
+	constexpr Uint32 ForwardBindingMaterialConstants{ FORWARD_BINDING_MATERIAL_CONSTANTS };
+	constexpr Uint32 ForwardBindingMaterialDiffuseTexture{ FORWARD_BINDING_MATERIAL_DIFFUSE_TEXTURE };
+	constexpr Uint32 ForwardBindingMaterialSpecularTexture{ FORWARD_BINDING_MATERIAL_SPECULAR_TEXTURE };
+	constexpr Uint32 ForwardBindingMaterialNormalTexture{ FORWARD_BINDING_MATERIAL_NORMAL_TEXTURE };
+	constexpr Uint32 ForwardBindingMaterialEmissiveTexture{ FORWARD_BINDING_MATERIAL_EMISSIVE_TEXTURE };
+	constexpr Uint32 ForwardBindingMaterialOcclusionTexture{ FORWARD_BINDING_MATERIAL_OCCLUSION_TEXTURE };
+	constexpr Uint32 ForwardBindingMaterialTransmissionTexture{ FORWARD_BINDING_MATERIAL_TRANSMISSION_TEXTURE };
+	constexpr Uint32 ForwardBindingMaterialOpacityTexture{ FORWARD_BINDING_MATERIAL_OPACITY_TEXTURE };
+	
+	constexpr Uint32 ForwardSpaceInput{ FORWARD_SPACE_INPUT };
+	constexpr Uint32 ForwardBindingPushConstants{ FORWARD_BINDING_PUSH_CONSTANTS };
+	constexpr Uint32 ForwardBindingInstanceBuffer{ FORWARD_BINDING_INSTANCE_BUFFER };
+	constexpr Uint32 ForwardBindingVertexBuffer{ FORWARD_BINDING_VERTEX_BUFFER };
 
-struct ForwardShadingLightConstants {
-	Math::VecF2				ShadowMapTextureSize;
-	Math::VecF2				ShadowMapTextureSizeInv;
-	Math::VecF4				AmbientColorTop;
-	Math::VecF4				AmbientColorBottom;
+	constexpr Uint32 ForwardSpaceView{ FORWARD_SPACE_VIEW };
+	constexpr Uint32 ForwardBindingViewConstants{ FORWARD_BINDING_VIEW_CONSTANTS };
 
-	Math::VecU2				Padding;
-	Uint32					NumLights;
-	Uint32					NumLightProbes;
+	constexpr Uint32 ForwardSpaceShading{ FORWARD_SPACE_SHADING };
+	constexpr Uint32 ForwardBindingLightConstants{ FORWARD_BINDING_LIGHT_CONSTANTS };
+	constexpr Uint32 ForwardBindingShadowMapTexture{ FORWARD_BINDING_SHADOW_MAP_TEXTURE };
+	constexpr Uint32 ForwardBindingDiffuseLightProbeTexture{ FORWARD_BINDING_DIFFUSE_LIGHT_PROBE_TEXTURE };
+	constexpr Uint32 ForwardBindingSpecularLightProbeTexture{ FORWARD_BINDING_SPECULAR_LIGHT_PROBE_TEXTURE };
+	constexpr Uint32 ForwardBindingEnvironmentBRDFTexture{ FORWARD_BINDING_ENVIRONMENT_BRDF_TEXTURE };
+	constexpr Uint32 ForwardBindingMaterialSampler{ FORWARD_BINDING_MATERIAL_SAMPLER };
+	constexpr Uint32 ForwardBindingShadowMapSampler{ FORWARD_BINDING_SHADOW_MAP_SAMPLER };
+	constexpr Uint32 ForwardBindingLightProbeSampler{ FORWARD_BINDING_LIGHT_PROBE_SAMPLER };
+	constexpr Uint32 ForwardBindingEnvironmentBRDFSampler{ FORWARD_BINDING_ENVIRONMENT_BRDF_SAMPLER };
 
-	LightConstants			Lights[FORWARD_MAX_LIGHTS];
-	ShadowConstants			Shadows[FORWARD_MAX_SHADOWS];
-	LightProbeConstants		LightProbes[FORWARD_MAX_LIGHT_PROBES];
-};
+	struct ForwardShadingViewConstants {
+		PlanarViewConstants		View;
+	};
 
-struct ForwardPushConstants {
-	Uint32					StartInstanceLocation;
-	Uint32					StartVertexLocation;
-	Uint32					PositionOffset;
-	Uint32					TexCoordOffset;
-	Uint32					NormalOffset;
-	Uint32					TangentOffset;
-};
+	struct ForwardShadingLightConstants {
+		Math::VecF2				ShadowMapTextureSize;
+		Math::VecF2				ShadowMapTextureSizeInv;
+		Math::VecF4				AmbientColorTop;
+		Math::VecF4				AmbientColorBottom;
+
+		Math::VecU2				Padding;
+		Uint32					NumLights;
+		Uint32					NumLightProbes;
+
+		LightConstants			Lights[ForwardMaxLights];
+		ShadowConstants			Shadows[ForwardMaxShadows];
+		LightProbeConstants		LightProbes[ForwardMaxLightProbes];
+	};
+
+	struct ForwardPushConstants {
+		Uint32					StartInstanceLocation;
+		Uint32					StartVertexLocation;
+		Uint32					PositionOffset;
+		Uint32					TexCoordOffset;
+		Uint32					NormalOffset;
+		Uint32					TangentOffset;
+	};
+}
+
 
 #endif // FORWARD_CB_H

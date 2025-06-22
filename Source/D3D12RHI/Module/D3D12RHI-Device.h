@@ -161,7 +161,6 @@ namespace RHI::D3D12 {
 		RHIMemoryRequirements Imp_Get_BufferMemoryRequirements(Buffer* buffer);
 		bool Imp_BindBufferMemory(Buffer* buffer, Heap* heap, Uint64 offset);
 		RefCountPtr<Shader> Imp_CreateShader(const RHIShaderDesc& desc, const void* binary, Uint64 binarySize);
-		RefCountPtr<Shader> Imp_CreateShaderSpecialization(Shader* baseshader, const RHIShaderSpecialization* Constants, Uint32 ConstantCount) { LOG_ERROR("Imp But Empty"); return nullptr; }
 		RefCountPtr<Sampler> Imp_CreateSampler(const RHISamplerDesc& desc);
 		RefCountPtr<InputLayout> Imp_CreateInputLayout(const RHIVertexAttributeDesc* attributes, Uint32 attributeCount);
 		RefCountPtr<EventQuery> Imp_CreateEventQuery(void);
@@ -713,17 +712,6 @@ namespace RHI::D3D12 {
 		D3D12_HEAP_FLAGS heapFlags{ D3D12_HEAP_FLAG_NONE };
 		D3D12_RESOURCE_STATES initialState{ D3D12_RESOURCE_STATE_COMMON };
 
-		bool isShared{ false };
-		if (RHISharedResourceFlag::None != (d.sharedResourceFlags & RHISharedResourceFlag::Shared)) {
-			heapFlags |= D3D12_HEAP_FLAG_SHARED;
-			isShared = true;
-		}
-		if (RHISharedResourceFlag::None != (d.sharedResourceFlags & RHISharedResourceFlag::Shared_CrossAdapter)) {
-			resourceDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER;
-			heapFlags |= D3D12_HEAP_FLAG_SHARED_CROSS_ADAPTER;
-			isShared = true;
-		}
-
 		switch (buffer->m_Desc.CPUAccess) {
 			using enum RHICPUAccessMode;
 		case None:
@@ -758,15 +746,6 @@ namespace RHI::D3D12 {
 			nullptr,
 			PARTING_IID_PPV_ARGS(&buffer->m_Resource)
 		));
-
-		if (isShared)
-			D3D12_CHECK(this->m_Context.Device->CreateSharedHandle(
-				buffer->m_Resource,
-				nullptr,
-				0x10000000L /*GENERIC_ALL*/,
-				nullptr,
-				&buffer->m_SharedHandle
-			));
 
 		buffer->PostCreate();
 

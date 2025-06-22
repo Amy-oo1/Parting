@@ -8,7 +8,13 @@ struct BLITConstants final{
 	Math::VecF2 TargetOrigin;
 	Math::VecF2 TargetSize;
 	
-	float sharpenFactor;
+	float SharpenFactor;
 };
+
+namespace Shader {
+	using BLITConstants = BLITConstants;
+}
+
+
 
 #endif // BLIT_CB_H

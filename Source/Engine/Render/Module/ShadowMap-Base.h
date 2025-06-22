@@ -76,7 +76,7 @@ namespace Parting {
 
 		virtual bool Is_LitOutOfBounds(void) const = 0;
 
-		virtual void FillShadowConstants(ShadowConstants& constants) const = 0;
+		virtual void FillShadowConstants(Shader::ShadowConstants& constants) const = 0;
 
 	};
 }

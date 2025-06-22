@@ -209,7 +209,7 @@ namespace Parting {
 
 			this->m_BLITBindingLayout = this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 				.Set_Visibility(RHI::RHIShaderType::All)
-				.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(0, sizeof(BLITConstants)))
+				.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(0, sizeof(Shader::BLITConstants)))
 				.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(0))
 				.AddBinding(RHI::RHIBindingLayoutItem::Sampler(0))
 				.Build()
@@ -275,7 +275,7 @@ namespace Parting {
 
 				//TODO : TODO ?
 				bindingSetDescBuilder
-					.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(0, sizeof(BLITConstants)))
+					.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(0, sizeof(Shader::BLITConstants)))
 					.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(0, params.SourceTexture, params.SourceFormat, sourceSubresources, sourceDimension))
 					.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(0, params.Sampler == BLITSampler::Point ? this->m_PointClampSampler : this->m_LinearClampSampler));
 			}
@@ -297,7 +297,7 @@ namespace Parting {
 				.Build()
 				);
 
-			BLITConstants blitConstants{
+			Shader::BLITConstants blitConstants{
 				.SourceOrigin { params.SourceBox.m_Mins },
 				.SourceSize { params.SourceBox.Diagonal() },
 

@@ -150,7 +150,7 @@ namespace Parting {
 		bool Dirty{ true }; // set this to true to make Scene update the material data
 
 
-		void FillConstantBuffer(typename ::MaterialConstants& constants) const;
+		void FillConstantBuffer(typename Shader::MaterialConstants& constants) const;
 	};
 
 
@@ -252,7 +252,7 @@ namespace Parting {
 
 		STDNODISCARD bool Is_Active(void) const;
 
-		void FillLightProbeConstants(::LightProbeConstants& lightProbeConstants) const;
+		void FillLightProbeConstants(typename Shader::LightProbeConstants& lightProbeConstants) const;
 	};
 
 
@@ -284,16 +284,16 @@ namespace Parting {
 			break;
 
 		case Transform:
-			builder.Set_Format(RHI::RHIFormat::RGBA32_FLOAT).Set_ElementStride(sizeof(InstanceData))
+			builder.Set_Format(RHI::RHIFormat::RGBA32_FLOAT).Set_ElementStride(sizeof(Shader::InstanceData))
 				.Set_ArrayCount(3)
-				.Set_Offset(offsetof(InstanceData, Transform))
+				.Set_Offset(offsetof(Shader::InstanceData, Transform))
 				.Set_IsInstanced(true);
 			break;
 
 		case PrevTransform:
-			builder.Set_Format(RHI::RHIFormat::RGBA32_FLOAT).Set_ElementStride(sizeof(InstanceData))
+			builder.Set_Format(RHI::RHIFormat::RGBA32_FLOAT).Set_ElementStride(sizeof(Shader::InstanceData))
 				.Set_ArrayCount(3)
-				.Set_Offset(offsetof(InstanceData, PrevTransform))
+				.Set_Offset(offsetof(Shader::InstanceData, PrevTransform))
 				.Set_IsInstanced(true);
 			break;
 
@@ -306,38 +306,38 @@ namespace Parting {
 	}
 
 	template<RHI::APITagConcept APITag>
-	inline void Material<APITag>::FillConstantBuffer(typename ::MaterialConstants& constants) const {
+	inline void Material<APITag>::FillConstantBuffer(typename Shader::MaterialConstants& constants) const {
 		constants.Flags = 0;
 
 		if (this->UseSpecularGlossModel)
-			constants.Flags |= MaterialFlags_UseSpecularGlossModel;
+			constants.Flags |= Shader::MaterialFlags_UseSpecularGlossModel;
 
 		if (nullptr != this->BaseOrDiffuseTexture && this->EnableBaseOrDiffuseTexture)
-			constants.Flags |= MaterialFlags_UseBaseOrDiffuseTexture;
+			constants.Flags |= Shader::MaterialFlags_UseBaseOrDiffuseTexture;
 
 		if (nullptr != this->MetalRoughOrSpecularTexture && this->EnableMetalRoughOrSpecularTexture)
-			constants.Flags |= MaterialFlags_UseMetalRoughOrSpecularTexture;
+			constants.Flags |= Shader::MaterialFlags_UseMetalRoughOrSpecularTexture;
 
 		if (nullptr != EmissiveTexture && this->EnableEmissiveTexture)
-			constants.Flags |= MaterialFlags_UseEmissiveTexture;
+			constants.Flags |= Shader::MaterialFlags_UseEmissiveTexture;
 
 		if (nullptr != this->NormalTexture && this->EnableNormalTexture)
-			constants.Flags |= MaterialFlags_UseNormalTexture;
+			constants.Flags |= Shader::MaterialFlags_UseNormalTexture;
 
 		if (nullptr != this->OcclusionTexture && this->EnableOcclusionTexture)
-			constants.Flags |= MaterialFlags_UseOcclusionTexture;
+			constants.Flags |= Shader::MaterialFlags_UseOcclusionTexture;
 
 		if (nullptr != this->TransmissionTexture && this->EnableTransmissionTexture)
-			constants.Flags |= MaterialFlags_UseTransmissionTexture;
+			constants.Flags |= Shader::MaterialFlags_UseTransmissionTexture;
 
 		if (nullptr != this->OpacityTexture && this->EnableOpacityTexture)
-			constants.Flags |= MaterialFlags_UseOpacityTexture;
+			constants.Flags |= Shader::MaterialFlags_UseOpacityTexture;
 
 		if (this->DoubleSided)
-			constants.Flags |= MaterialFlags_DoubleSided;
+			constants.Flags |= Shader::MaterialFlags_DoubleSided;
 
 		if (this->MetalnessInRedChannel)
-			constants.Flags |= MaterialFlags_MetalnessInRedChannel;
+			constants.Flags |= Shader::MaterialFlags_MetalnessInRedChannel;
 
 		// free parameters
 
@@ -384,7 +384,7 @@ namespace Parting {
 		}
 
 		if (this->EnableSubsurfaceScattering) {
-			constants.Flags |= MaterialFlags_SubsurfaceScattering;
+			constants.Flags |= Shader::MaterialFlags_SubsurfaceScattering;
 
 			constants.SSSTransmissionColor = this->Subsurface.TransmissionColor;
 			constants.SSSScatteringColor = this->Subsurface.ScatteringColor;
@@ -393,7 +393,7 @@ namespace Parting {
 		}
 
 		if (this->EnableHair) {
-			constants.Flags |= MaterialFlags_Hair;
+			constants.Flags |= Shader::MaterialFlags_Hair;
 
 			constants.HairBaseColor = this->Hair.BaseColor;
 			constants.HairMelanin = this->Hair.Melanin;
@@ -420,7 +420,7 @@ namespace Parting {
 	}
 
 	template<RHI::APITagConcept APITag>
-	inline void LightProbe<APITag>::FillLightProbeConstants(::LightProbeConstants& lightProbeConstants) const {
+	inline void LightProbe<APITag>::FillLightProbeConstants(Shader::LightProbeConstants& lightProbeConstants) const {
 		lightProbeConstants.DiffuseArrayIndex = this->DiffuseArrayIndex;
 		lightProbeConstants.SpecularArrayIndex = this->SpecularArrayIndex;
 		lightProbeConstants.DiffuseScale = this->DiffuseScale;

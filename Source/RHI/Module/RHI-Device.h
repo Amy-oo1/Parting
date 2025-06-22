@@ -170,8 +170,6 @@ namespace RHI {
 
 		STDNODISCARD RefCountPtr<Imp_Shader> CreateShader(const RHIShaderDesc& desc, const void* binary, Uint64 binarySize) { return this->Get_Derived()->Imp_CreateShader(desc, binary, binarySize); }
 
-		STDNODISCARD RefCountPtr<Imp_Shader> CreateShaderSpecialization(Imp_Shader* baseshader, const RHIShaderSpecialization* Constants, Uint32 ConstantCount) { return this->Get_Derived()->Imp_CreateShaderSpecialization(baseshader, Constants, ConstantCount); }
-
 		STDNODISCARD RefCountPtr<Imp_Sampler> CreateSampler(const RHISamplerDesc& desc) { return this->Get_Derived()->Imp_CreateSampler(desc); }
 		//TODO :constexpr if to do d3d11
 		STDNODISCARD RefCountPtr<Imp_InputLayout> CreateInputLayout(const RHIVertexAttributeDesc* attributes, Uint32 attributeCount) { return this->Get_Derived()->Imp_CreateInputLayout(attributes, attributeCount); }
@@ -253,7 +251,6 @@ namespace RHI {
 		bool Imp_BindBufferMemory(Imp_Buffer*, Imp_Heap*, Uint64) { LOG_ERROR("No Imp"); return false; }
 		RefCountPtr<Imp_Buffer> Imp_CreateHandleForNativeBuffer(RHIObjectType, RHIObject, const RHIBufferDesc&) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_Shader> Imp_CreateShader(const RHIShaderDesc&, const void*, Uint64) { LOG_ERROR("No Imp"); return nullptr; }
-		RefCountPtr<Imp_Shader> Imp_CreateShaderSpecialization(Imp_Shader*, const RHIShaderSpecialization*, Uint32) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_Sampler> Imp_CreateSampler(const RHISamplerDesc&) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_InputLayout> Imp_CreateInputLayout(const RHIVertexAttributeDesc*, Uint32) { LOG_ERROR("No Imp"); return nullptr; }
 		RefCountPtr<Imp_EventQuery> Imp_CreateEventQuery(void) { LOG_ERROR("No Imp"); return nullptr; }

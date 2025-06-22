@@ -53,7 +53,7 @@ namespace RHI {
 		RHIHeap(void) = default;
 		PARTING_VIRTUAL ~RHIHeap(void) = default;
 
-	protected:
+	public:
 		const RHIHeapDesc& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }
 	
 	private:

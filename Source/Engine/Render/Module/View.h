@@ -80,12 +80,11 @@ namespace Parting {
 		STDNODISCARD const IView* Get_ChildView(ViewType supportedTypes, Uint32 index) const override;
 
 	public:
-		virtual	void FillPlanarViewConstants(PlanarViewConstants& constants) const;
+		virtual	void FillPlanarViewConstants(Shader::PlanarViewConstants& constants) const;
 
 	public:
 
 		STDNODISCARD virtual RHI::RHIViewportState Get_ViewportState(void) const = 0;
-		STDNODISCARD virtual RHI::RHIVariableRateShadingState Get_VariableRateShadingState(void) const = 0;
 		STDNODISCARD virtual RHI::RHITextureSubresourceSet Get_Subresources(void) const = 0;
 		STDNODISCARD virtual bool Is_ReverseDepth(void) const = 0;
 		STDNODISCARD virtual bool Is_OrthographicProjection(void) const = 0;
@@ -130,7 +129,6 @@ namespace Parting {
 		RHI::RHIViewport m_Viewport;
 		RHI::RHIRect2D m_ScissorRect;
 		Uint32 m_ArraySlice{ 0 };
-		RHI::RHIVariableRateShadingState m_ShadingRateState;
 		Math::AffineF3 m_ViewMatrix{ Math::AffineF3::Identity() };
 		Math::MatF44 m_ProjMatrix{ Math::MatF44::Identity() };
 		Math::VecF2 m_PixelOffset{ Math::VecF2::Zero() };
@@ -154,7 +152,6 @@ namespace Parting {
 
 	public:
 		STDNODISCARD RHI::RHIViewportState Get_ViewportState(void) const override;
-		STDNODISCARD RHI::RHIVariableRateShadingState Get_VariableRateShadingState(void) const override;
 		STDNODISCARD RHI::RHITextureSubresourceSet Get_Subresources(void) const override;
 		STDNODISCARD bool Is_ReverseDepth(void) const override;
 		STDNODISCARD bool Is_OrthographicProjection(void) const override;
@@ -209,7 +206,6 @@ namespace Parting {
 
 	public:
 		STDNODISCARD RHI::RHIViewportState Get_ViewportState(void) const override;
-		STDNODISCARD RHI::RHIVariableRateShadingState Get_VariableRateShadingState(void) const override;
 		STDNODISCARD RHI::RHITextureSubresourceSet Get_Subresources(void) const override;
 		STDNODISCARD bool Is_ReverseDepth(void) const override;
 		STDNODISCARD bool Is_OrthographicProjection(void) const override;
@@ -276,7 +272,6 @@ namespace Parting {
 
 	public:
 		STDNODISCARD virtual RHI::RHIViewportState Get_ViewportState(void) const override;
-		STDNODISCARD virtual RHI::RHIVariableRateShadingState Get_VariableRateShadingState(void) const override;
 		STDNODISCARD virtual RHI::RHITextureSubresourceSet Get_Subresources(void) const override;
 		STDNODISCARD virtual bool Is_ReverseDepth(void) const override;
 		STDNODISCARD virtual bool Is_OrthographicProjection(void) const override;
@@ -339,7 +334,7 @@ namespace Parting {
 	inline const IView* IView::Get_ChildView(ViewType supportedTypes, Uint32 index) const { return this; }
 
 
-	inline void IView::FillPlanarViewConstants(PlanarViewConstants& constants) const {
+	inline void IView::FillPlanarViewConstants(Shader::PlanarViewConstants& constants) const {
 		constants.MatWorldToView = Math::AffineToHomogeneous(this->Get_ViewMatrix());
 		constants.MatViewToClip = this->Get_ProjectionMatrix(true);
 		constants.MatWorldToClip = this->Get_ViewProjectionMatrix(true);
@@ -383,8 +378,6 @@ namespace Parting {
 
 
 	inline RHI::RHIViewportState PlanarView::Get_ViewportState(void) const { return RHI::RHIViewportStateBuilder{}.AddViewport(this->m_Viewport).AddScissorRect(this->m_ScissorRect).Build(); }
-
-	inline RHI::RHIVariableRateShadingState PlanarView::Get_VariableRateShadingState(void) const { return this->m_ShadingRateState; }
 
 	inline RHI::RHITextureSubresourceSet PlanarView::Get_Subresources(void) const { return RHI::RHITextureSubresourceSet{ .BaseArraySlice{ this->m_ArraySlice } }; }
 
@@ -500,8 +493,6 @@ namespace Parting {
 		return left;
 	}
 
-	template<typename ChildType> inline RHI::RHIVariableRateShadingState StereoView<ChildType>::Get_VariableRateShadingState(void) const { return this->LeftView.Get_VariableRateShadingState(); }
-
 	template<typename ChildType> inline RHI::RHITextureSubresourceSet StereoView<ChildType>::Get_Subresources(void) const { return this->LeftView.Get_Subresources();/*TODO */ }
 
 	template<typename ChildType> inline bool StereoView<ChildType>::Is_ReverseDepth(void) const { return this->LeftView.Is_ReverseDepth(); }
@@ -541,10 +532,12 @@ namespace Parting {
 	}
 
 	template<typename ChildType> inline RHI::RHIRect2D StereoView<ChildType>::Get_ViewExtent(void) const {
-		auto left{ this->LeftView.Get_ViewExtent() };
-		auto right{ this->RightView.Get_ViewExtent() };
+		//auto left{ this->LeftView.Get_ViewExtent() };
+		//auto right{ this->RightView.Get_ViewExtent() };
 
-		return RHI::RHIRect2D::Merge(left, right);//TODO 
+		//return RHI::RHIRect2D::Merge(left, right);//TODO 
+
+		ASSERT(false);
 	}
 
 	template<typename ChildType> inline Math::VecF2 StereoView<ChildType>::Get_PixelOffset(void) const { return this->LeftView.Get_PixelOffset(); }
@@ -633,12 +626,6 @@ namespace Parting {
 		}
 
 		return result.Build();
-	}
-
-	inline RHI::RHIVariableRateShadingState CubemapView::Get_VariableRateShadingState(void) const {
-		ASSERT(false);
-
-		return RHI::RHIVariableRateShadingState{};
 	}
 
 	inline RHI::RHITextureSubresourceSet CubemapView::Get_Subresources(void) const { return RHI::RHITextureSubresourceSet{ .BaseArraySlice{ this->m_FirstArraySlice }, .ArraySliceCount{ 6 } }; }

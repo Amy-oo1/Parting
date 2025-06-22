@@ -106,10 +106,10 @@ public:
 		commandList->WriteBuffer(this->m_Buffers->VertexBuffer, g_Tangents, sizeof(g_Tangents), this->m_Buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Tangent).Offset);
 		commandList->SetPermanentBufferState(this->m_Buffers->VertexBuffer, RHI::RHIResourceState::ShaderResource);
 
-		InstanceData instance{};
+		Shader::InstanceData instance{};
 		instance.Transform = Math::MatF34{ Math::Transpose(Math::AffineToHomogeneous(Math::AffineF3::Identity())) };
 		instance.PrevTransform = instance.Transform;
-		this->m_Buffers->InstanceBuffer = CreateGeometryBuffer(device, commandList, _W("VertexBufferTransform"), &instance, sizeof(InstanceData), false, true);
+		this->m_Buffers->InstanceBuffer = CreateGeometryBuffer(device, commandList, _W("VertexBufferTransform"), &instance, sizeof(Shader::InstanceData), false, true);
 
 		Path textureFileName{ ::Get_CatallogDirectory().parent_path() / "media/Amy-Logo.jpg" };
 
@@ -174,7 +174,7 @@ private:
 	RHI::RefCountPtr<Imp_Buffer> CreateGeometryBuffer(Imp_Device* device, Imp_CommandList* commandList, const WString& debugName, const void* data, Uint64 dataSize, bool isVertexBuffer, bool isInstanceBuffer) {
 		auto bufHandle = device->CreateBuffer(RHI::RHIBufferDescBuilder{}
 			.Set_ByteSize(dataSize)
-			.Set_StructStride(isInstanceBuffer ? sizeof(InstanceData) : 0)
+			.Set_StructStride(isInstanceBuffer ? sizeof(Shader::InstanceData) : 0)
 			.Set_DebugName(debugName)
 			.Set_CanHaveRawViews(isVertexBuffer || isInstanceBuffer)
 			.Set_IsIndexBuffer(!isVertexBuffer && !isInstanceBuffer)
@@ -193,7 +193,7 @@ private:
 
 	RHI::RefCountPtr<Imp_Buffer> CreateMaterialConstantBuffer(Imp_Device* device, Imp_CommandList* commandList, const SharedPtr<Parting::Material<CurrentAPI>> material) {
 		auto buffer{ device->CreateBuffer(RHI::RHIBufferDescBuilder{}
-			.Set_ByteSize(sizeof(MaterialConstants))
+			.Set_ByteSize(sizeof(Shader::MaterialConstants))
 			.Set_DebugName(_W("Material_Constants"))
 			.Set_IsConstantBuffer(true)
 			.Set_InitialState(RHI::RHIResourceState::ConstantBuffer)
@@ -202,9 +202,9 @@ private:
 
 		) };
 
-		MaterialConstants constants;
+		Shader::MaterialConstants constants;
 		material->FillConstantBuffer(constants);
-		commandList->WriteBuffer(buffer, &constants, sizeof(MaterialConstants));
+		commandList->WriteBuffer(buffer, &constants, sizeof(Shader::MaterialConstants));
 
 		return buffer;
 	}

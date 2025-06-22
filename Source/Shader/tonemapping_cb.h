@@ -24,4 +24,8 @@ struct ToneMappingConstants {
 	Math::VecF2			ColorLUTTextureSizeInv;
 };
 
+namespace Shader {
+	using ToneMappingConstants = ::ToneMappingConstants;
+}
+
 #endif // TONE_MAPPING_CB_H

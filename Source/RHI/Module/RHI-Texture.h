@@ -220,6 +220,18 @@ namespace RHI {
 		STDNODISCARD constexpr bool operator==(const RHITextureSubresourceSet&)const noexcept = default;
 		STDNODISCARD constexpr bool operator!=(const RHITextureSubresourceSet&)const noexcept = default;
 
+		struct Hash final {
+			Uint64 operator()(const RHITextureSubresourceSet& set) const noexcept {
+				Uint64 hash{ 0 };
+				hash = HashCombine(hash, HashUint32{}(set.BaseMipLevel));
+				hash = HashCombine(hash, HashUint32{}(set.MipLevelCount));
+				hash = HashCombine(hash, HashUint32{}(set.BaseArraySlice));
+				hash = HashCombine(hash, HashUint32{}(set.ArraySliceCount));
+
+				return hash;
+			}
+		};;
+
 	};
 
 	struct RHITextureBindingKey final {
@@ -229,32 +241,20 @@ namespace RHI {
 
 		STDNODISCARD constexpr bool operator==(const RHITextureBindingKey&)const noexcept = default;
 		STDNODISCARD constexpr bool operator!=(const RHITextureBindingKey&)const noexcept = default;
+
+		struct Hash final {
+			Uint64 operator()(const RHITextureBindingKey& key) const noexcept {
+				Uint64 hash{ 0 };
+				hash = HashCombine(hash, RHITextureSubresourceSet::Hash{}(key.SubresourceSet));
+				hash = HashCombine(hash, ::Hash<UnderlyingType<RHIFormat>>()(Tounderlying(key.Format)));
+				hash = HashCombine(hash, ::Hash<bool>()(key.IsReadOnlyDSV));
+				return hash;
+			}
+		};
 	};
 
-	Function<Uint64(const RHITextureSubresourceSet&)> g_TextureSubresourceSetHash = [](const RHITextureSubresourceSet& set) noexcept {
-		Uint64 hash{ 0 };
-		hash = HashCombine(hash, HashUint32{}(set.BaseMipLevel));
-		hash = HashCombine(hash, HashUint32{}(set.MipLevelCount));
-		hash = HashCombine(hash, HashUint32{}(set.BaseArraySlice));
-		hash = HashCombine(hash, HashUint32{}(set.ArraySliceCount));
-
-		return hash;
-		};
-
-	Function<Uint64(const RHITextureBindingKey&)> g_TextureBindingKeyHash = [](const RHITextureBindingKey& key)noexcept {
-		// Hash function for RHITextureBindingKey
-		Uint64 hash = 0;
-
-		hash = HashCombine(hash, g_TextureSubresourceSetHash(key.SubresourceSet));
-
-		hash = HashCombine(hash, Hash<UnderlyingType<RHIFormat>>()(Tounderlying(key.Format)));
-		hash = HashCombine(hash, Hash<bool>()(key.IsReadOnlyDSV));
-
-		return hash;
-		};
-
 	template<typename Value>
-	using RHITextureBindingMap = UnorderedMap<RHITextureBindingKey, Value, decltype(g_TextureBindingKeyHash)>;
+	using RHITextureBindingMap = UnorderedMap<RHITextureBindingKey, Value, RHI::RHITextureBindingKey::Hash>;
 
 	template<APITagConcept APITag>
 	struct RHITextureSubresourcesKey final {
@@ -269,7 +269,7 @@ namespace RHI {
 			Uint64 operator()(const RHITextureSubresourcesKey<APITag>& key) const noexcept {
 				Uint64 hash{ 0 };
 				hash = ::HashCombine(hash, ::HashVoidPtr{}(key.Texture));
-				hash = ::HashCombine(hash, g_TextureSubresourceSetHash(key.Subresources));
+				hash = ::HashCombine(hash, RHITextureSubresourceSet::Hash{}(key.Subresources));
 				return hash;
 			}
 		};
@@ -315,7 +315,9 @@ namespace RHI {
 			STDNODISCARD const RHITextureDesc& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }
 
 		private:
-			Derived* Get_Derived(void) { return static_cast<Derived*>(this); }
+			STDNODISCARD Derived* Get_Derived(void)noexcept { return static_cast<Derived*>(this); }
+			STDNODISCARD const Derived* Get_Derived(void)const noexcept { return static_cast<const Derived*>(this); }
+
 		private:
 			const RHITextureDesc& Imp_Get_Desc(void)const { LOG_ERROR("No Imp"); return RHITextureDesc{}; }
 

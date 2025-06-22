@@ -239,7 +239,7 @@ namespace RHI::D3D12 {
 
 		Uint64 m_Hash{ 0 };//TODO :
 
-		Array<Pair<RefCountPtr<BindingLayout>, D3D12RootParameterIndex>, g_MaxBindingLayoutCount> m_BindLayouts;
+		Array<Pair<BindingLayout*, D3D12RootParameterIndex>, g_MaxBindingLayoutCount> m_BindLayouts;
 		RemoveCV<decltype(g_MaxBindingLayoutCount)>::type m_BindLayoutCount{ 0 };
 
 		RefCountPtr<ID3D12RootSignature> m_RootSignature;
@@ -378,20 +378,6 @@ namespace RHI::D3D12 {
 		Vector<RefCountPtr<TimerQuery>> ReferencedTimerQueries;
 	};
 
-	//Convert TODO trans to a table
-	STDNODISCARD constexpr D3D12_SHADER_VISIBILITY ConvertShaderStage(RHIShaderType s) {
-		switch (s) {
-			using enum RHIShaderType;
-		case Vertex:return D3D12_SHADER_VISIBILITY_VERTEX;
-		case Hull:return D3D12_SHADER_VISIBILITY_HULL;
-		case Domain:return D3D12_SHADER_VISIBILITY_DOMAIN;
-		case Geometry:return D3D12_SHADER_VISIBILITY_GEOMETRY;
-		case Pixel:return D3D12_SHADER_VISIBILITY_PIXEL;
-		case Amplification:return D3D12_SHADER_VISIBILITY_AMPLIFICATION;
-		case Mesh:return D3D12_SHADER_VISIBILITY_MESH;
-		default:return D3D12_SHADER_VISIBILITY_ALL;
-		}
-	}
 
 	STDNODISCARD D3D12_RESOURCE_STATES ConvertResourceStates(RHIResourceState stateBits) {
 		using enum RHIResourceState;
@@ -418,45 +404,6 @@ namespace RHI::D3D12 {
 		if ((stateBits & ShadingRateSurface) != Unknown) result |= D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE;
 
 		return result;
-	}
-
-	STDNODISCARD D3D12_SHADING_RATE_COMBINER ConvertShadingRateCombiner(RHIShadingRateCombiner combiner) {
-		switch (combiner) {
-			using enum RHIShadingRateCombiner;
-		case Override:return D3D12_SHADING_RATE_COMBINER_OVERRIDE;
-		case Min:return D3D12_SHADING_RATE_COMBINER_MIN;
-		case Max:return D3D12_SHADING_RATE_COMBINER_MAX;
-		case ApplyRelative:return D3D12_SHADING_RATE_COMBINER_SUM;
-		case Passthrough:default:return D3D12_SHADING_RATE_COMBINER_PASSTHROUGH;
-		}
-	}
-
-	D3D12_SHADING_RATE ConvertPixelShadingRate(RHIVariableShadingRate shadingRate) {
-		switch (shadingRate) {
-			using enum RHIVariableShadingRate;
-		case e1x2:return D3D12_SHADING_RATE_1X2;
-		case e2x1:return D3D12_SHADING_RATE_2X1;
-		case e2x2:return D3D12_SHADING_RATE_2X2;
-		case e2x4:return D3D12_SHADING_RATE_2X4;
-		case e4x2:return D3D12_SHADING_RATE_4X2;
-		case e4x4:return D3D12_SHADING_RATE_4X4;
-		case e1x1:default:return D3D12_SHADING_RATE_1X1;
-		}
-	}
-
-	D3D12_COMPARISON_FUNC ConvertComparisonFunc(RHIComparisonFunc value) {
-		switch (value) {
-			using enum RHIComparisonFunc;
-		case Never:return D3D12_COMPARISON_FUNC_NEVER;
-		case Less:return D3D12_COMPARISON_FUNC_LESS;
-		case Equal:return D3D12_COMPARISON_FUNC_EQUAL;
-		case LessOrEqual:return D3D12_COMPARISON_FUNC_LESS_EQUAL;
-		case Greater:return D3D12_COMPARISON_FUNC_GREATER;
-		case NotEqual:return D3D12_COMPARISON_FUNC_NOT_EQUAL;
-		case GreaterOrEqual:return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
-		case Always:return D3D12_COMPARISON_FUNC_ALWAYS;
-		default:ASSERT(false); return D3D12_COMPARISON_FUNC_NEVER;
-		}
 	}
 
 	void D3D12WaitForFence(ID3D12Fence* fence, uint64_t value, HANDLE event) {
@@ -497,15 +444,15 @@ namespace RHI::D3D12 {
 		RHIObject Imp_GetNativeObject(RHIObjectType)const noexcept { LOG_ERROR("Imp But Empty");  return RHIObject{}; };
 	};
 
-	class TimerQuery final : public RHIEventQuery<TimerQuery> {
+	class TimerQuery final : public RHITimerQuery<TimerQuery> {
 		friend class RHIResource<TimerQuery>;
-		friend class RHIEventQuery<TimerQuery>;
+		friend class RHITimerQuery<TimerQuery>;
 
 		friend class CommandList;
 		friend class Device;
 	public:
 		TimerQuery(D3D12DeviceResources& deviceResources) :
-			RHIEventQuery<TimerQuery>{},
+			RHITimerQuery<TimerQuery>{},
 			m_DeviceResourcesRef{ deviceResources } {
 		}
 

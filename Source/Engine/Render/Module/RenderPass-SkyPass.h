@@ -102,7 +102,7 @@ namespace Parting {
 		void Render(Imp_CommandList* commandList, const ICompositeView& compositeView, const DirectionalLight<APITag>& light, const SkyPass<APITag>::Parameters& params);
 
 	private:
-		void FillShaderParameters(const DirectionalLight<APITag>& light, const SkyPass<APITag>::Parameters& input, ::ProceduralSkyShaderParameters& output);
+		void FillShaderParameters(const DirectionalLight<APITag>& light, const SkyPass<APITag>::Parameters& input, Shader::ProceduralSkyShaderParameters& output);
 
 
 	private:
@@ -126,7 +126,7 @@ namespace Parting {
 		this->m_PixelShader = shaderFactory->CreateShader(String{ "Parting/Passes/sky_ps.hlsl" }, String{ "main" }, nullptr, RHI::RHIShaderType::Pixel);
 
 		this->m_SkyCB = device->CreateBuffer(RHI::RHIBufferDescBuilder{}
-			.Set_ByteSize(sizeof(SkyConstants))
+			.Set_ByteSize(sizeof(Shader::SkyConstants))
 			.Set_MaxVersions(c_MaxRenderPassConstantBufferVersions)
 			.Set_DebugName(_W("SkyPass/SkyConstants"))
 			.Set_IsConstantBuffer(true)
@@ -168,7 +168,7 @@ namespace Parting {
 			Math::AffineF3 viewToWorld{ view->Get_InverseViewMatrix() };
 			viewToWorld.m_Translation = 0.f;
 
-			SkyConstants skyConstants{ .MatClipToTranslatedWorld{ view->Get_InverseProjectionMatrix(true) * Math::AffineToHomogeneous(viewToWorld) } };
+			Shader::SkyConstants skyConstants{ .MatClipToTranslatedWorld{ view->Get_InverseProjectionMatrix(true) * Math::AffineToHomogeneous(viewToWorld) } };
 			this->FillShaderParameters(light, params, skyConstants.Params);
 			commandList->WriteBuffer(this->m_SkyCB, &skyConstants, sizeof(decltype(skyConstants)));
 
@@ -187,7 +187,7 @@ namespace Parting {
 	}
 
 	template<RHI::APITagConcept APITag>
-	inline void SkyPass<APITag>::FillShaderParameters(const DirectionalLight<APITag>& light, const SkyPass<APITag>::Parameters& input, ::ProceduralSkyShaderParameters& output) {
+	inline void SkyPass<APITag>::FillShaderParameters(const DirectionalLight<APITag>& light, const SkyPass<APITag>::Parameters& input, Shader::ProceduralSkyShaderParameters& output) {
 		float lightAngularSize{ Math::Radians(Math::Clamp(light.AngularSize, 0.1f, 90.f)) };
 		float lightSolidAngle{ 4 * Math::PI_F * Math::Square(Math::Sin(lightAngularSize * 0.5f)) };
 		float lightRadiance{ light.Irradiance / lightSolidAngle };

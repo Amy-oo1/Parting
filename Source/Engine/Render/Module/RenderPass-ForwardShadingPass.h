@@ -231,13 +231,13 @@ namespace Parting {
 			.Set_MaxVersions(params.NumConstantBufferVersions);
 
 		this->m_ForwardViewCB = this->m_Device->CreateBuffer(VolatileConstantBufferDescBuilder
-			.Set_ByteSize(sizeof(ForwardShadingViewConstants))
+			.Set_ByteSize(sizeof(Shader::ForwardShadingViewConstants))
 			.Set_DebugName(_W("ForwardShadingViewConstants"))
 			.Build()
 		);
 
 		this->m_ForwardLightCB = this->m_Device->CreateBuffer(VolatileConstantBufferDescBuilder
-			.Set_ByteSize(sizeof(ForwardShadingLightConstants))
+			.Set_ByteSize(sizeof(Shader::ForwardShadingLightConstants))
 			.Set_DebugName(_W("ForwardShadingLightConstants"))
 			.Build()
 		);
@@ -297,29 +297,29 @@ namespace Parting {
 		}
 
 
-		ForwardShadingLightConstants constants{};
+		Shader::ForwardShadingLightConstants constants{};
 
 		constants.ShadowMapTextureSize = Math::VecF2{ shadowMapTextureSize };
 		constants.ShadowMapTextureSizeInv = 1.f / constants.ShadowMapTextureSize;
 
 		Uint32 numShadows{ 0 };//TODO :
 
-		for (Uint32 nLight = 0; nLight < Math::Min<Uint32>(static_cast<Uint32>(lights.size()), FORWARD_MAX_LIGHTS); ++nLight) {
+		for (Uint32 nLight = 0; nLight < Math::Min<Uint32>(static_cast<Uint32>(lights.size()), Shader::ForwardMaxLights); ++nLight) {
 			const auto& light{ lights[nLight] };
 
-			LightConstants& lightConstants{ constants.Lights[constants.NumLights] };
+			auto& lightConstants{ constants.Lights[constants.NumLights] };
 			light->FillLightConstants(lightConstants);
 
 			if (nullptr != light->ShadowMap) {
 				for (Uint32 cascade = 0; cascade < light->ShadowMap->Get_NumberOfCascades(); ++cascade)
-					if (numShadows < FORWARD_MAX_SHADOWS) {
+					if (numShadows < Shader::ForwardMaxShadows) {
 						light->ShadowMap->Get_Cascade(cascade)->FillShadowConstants(constants.Shadows[numShadows]);
 						lightConstants.ShadowCascades[cascade] = static_cast<Int32>(numShadows);//TODO :
 						++numShadows;
 					}
 
 				for (Uint32 perObjectShadow = 0; perObjectShadow < light->ShadowMap->Get_NumberOfPerObjectShadows(); ++perObjectShadow)
-					if (numShadows < FORWARD_MAX_SHADOWS) {
+					if (numShadows < Shader::ForwardMaxShadows) {
 						light->ShadowMap->Get_PerObjectShadow(perObjectShadow)->FillShadowConstants(constants.Shadows[numShadows]);
 						lightConstants.PerObjectShadows[perObjectShadow] = static_cast<Int32>(numShadows);//TODO :
 						++numShadows;
@@ -336,12 +336,12 @@ namespace Parting {
 			if (!probe->Is_Active())
 				continue;
 
-			LightProbeConstants& lightProbeConstants = constants.LightProbes[constants.NumLightProbes];
+			auto& lightProbeConstants{ constants.LightProbes[constants.NumLightProbes] };
 			probe->FillLightProbeConstants(lightProbeConstants);
 
 			++constants.NumLightProbes;
 
-			if (constants.NumLightProbes >= FORWARD_MAX_LIGHT_PROBES)
+			if (constants.NumLightProbes >= Shader::ForwardMaxLightProbes)
 				break;
 		}
 
@@ -403,8 +403,8 @@ namespace Parting {
 	inline auto ForwardShadingPass<APITag>::CreateViewBindingLayout(void) -> RHI::RefCountPtr<Imp_BindingLayout> {
 		return this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Vertex | RHI::RHIShaderType::Pixel)
-			.Set_RegisterSpace(FORWARD_SPACE_VIEW)
-			.AddBinding(RHI::RHIBindingLayoutItem::VolatileConstantBuffer(FORWARD_BINDING_VIEW_CONSTANTS))
+			.Set_RegisterSpace(Shader::ForwardSpaceView)
+			.AddBinding(RHI::RHIBindingLayoutItem::VolatileConstantBuffer(Shader::ForwardBindingViewConstants))
 			.Build()
 		);
 	}
@@ -413,7 +413,7 @@ namespace Parting {
 	inline auto ForwardShadingPass<APITag>::CreateViewBindingSet(void) -> RHI::RefCountPtr<Imp_BindingSet> {
 		return this->m_Device->CreateBindingSet(RHI::RHIBindingSetDescBuilder<APITag>{}
 		.Set_TrackLiveness(this->m_TrackLiveness)
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::ConstantBuffer(FORWARD_BINDING_VIEW_CONSTANTS, this->m_ForwardViewCB))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::ConstantBuffer(Shader::ForwardBindingViewConstants, this->m_ForwardViewCB))
 			.Build(),
 			this->m_ViewBindingLayout
 			);
@@ -423,16 +423,16 @@ namespace Parting {
 	inline auto ForwardShadingPass<APITag>::CreateShadingBindingLayout(void) -> RHI::RefCountPtr<Imp_BindingLayout> {
 		return this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Pixel)
-			.Set_RegisterSpace(FORWARD_SPACE_SHADING)
-			.AddBinding(RHI::RHIBindingLayoutItem::VolatileConstantBuffer(FORWARD_BINDING_LIGHT_CONSTANTS))
-			.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(FORWARD_BINDING_SHADOW_MAP_TEXTURE))
-			.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(FORWARD_BINDING_DIFFUSE_LIGHT_PROBE_TEXTURE))
-			.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(FORWARD_BINDING_SPECULAR_LIGHT_PROBE_TEXTURE))
-			.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(FORWARD_BINDING_ENVIRONMENT_BRDF_TEXTURE))
-			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(FORWARD_BINDING_MATERIAL_SAMPLER))
-			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(FORWARD_BINDING_SHADOW_MAP_SAMPLER))
-			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(FORWARD_BINDING_LIGHT_PROBE_SAMPLER))
-			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(FORWARD_BINDING_ENVIRONMENT_BRDF_SAMPLER))
+			.Set_RegisterSpace(Shader::ForwardSpaceShading)
+			.AddBinding(RHI::RHIBindingLayoutItem::VolatileConstantBuffer(Shader::ForwardBindingLightConstants))
+			.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(Shader::ForwardBindingShadowMapTexture))
+			.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(Shader::ForwardBindingDiffuseLightProbeTexture))
+			.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(Shader::ForwardBindingSpecularLightProbeTexture))
+			.AddBinding(RHI::RHIBindingLayoutItem::Texture_SRV(Shader::ForwardBindingEnvironmentBRDFTexture))
+			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(Shader::ForwardBindingMaterialSampler))
+			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(Shader::ForwardBindingShadowMapSampler))
+			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(Shader::ForwardBindingLightProbeSampler))
+			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(Shader::ForwardBindingEnvironmentBRDFSampler))
 			.Build()
 		);
 	}
@@ -441,15 +441,15 @@ namespace Parting {
 	inline auto ForwardShadingPass<APITag>::CreateShadingBindingSet(Imp_Texture* shadowMapTexture, Imp_Texture* diffuse, Imp_Texture* specular, Imp_Texture* environmentBrdf) -> RHI::RefCountPtr<Imp_BindingSet> {
 		return this->m_Device->CreateBindingSet(RHI::RHIBindingSetDescBuilder<APITag>{}
 		.Set_TrackLiveness(this->m_TrackLiveness)
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::ConstantBuffer(FORWARD_BINDING_LIGHT_CONSTANTS, this->m_ForwardLightCB))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(FORWARD_BINDING_SHADOW_MAP_TEXTURE, nullptr != shadowMapTexture ? shadowMapTexture : this->m_CommonPasses->m_BlackTexture2DArray.Get()))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(FORWARD_BINDING_DIFFUSE_LIGHT_PROBE_TEXTURE, nullptr != diffuse ? diffuse : this->m_CommonPasses->m_BlackCubeMapArray.Get()))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(FORWARD_BINDING_SPECULAR_LIGHT_PROBE_TEXTURE, nullptr != specular ? specular : this->m_CommonPasses->m_BlackCubeMapArray.Get()))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(FORWARD_BINDING_ENVIRONMENT_BRDF_TEXTURE, nullptr != environmentBrdf ? environmentBrdf : this->m_CommonPasses->m_BlackTexture.Get()))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(FORWARD_BINDING_MATERIAL_SAMPLER, this->m_CommonPasses->m_AnisotropicWrapSampler.Get()))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(FORWARD_BINDING_SHADOW_MAP_SAMPLER, this->m_ShadowSampler.Get()))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(FORWARD_BINDING_LIGHT_PROBE_SAMPLER, this->m_CommonPasses->m_LinearWrapSampler.Get()))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(FORWARD_BINDING_ENVIRONMENT_BRDF_SAMPLER, this->m_CommonPasses->m_LinearClampSampler.Get()))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::ConstantBuffer(Shader::ForwardBindingLightConstants, this->m_ForwardLightCB))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(Shader::ForwardBindingShadowMapTexture, nullptr != shadowMapTexture ? shadowMapTexture : this->m_CommonPasses->m_BlackTexture2DArray.Get()))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(Shader::ForwardBindingDiffuseLightProbeTexture, nullptr != diffuse ? diffuse : this->m_CommonPasses->m_BlackCubeMapArray.Get()))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(Shader::ForwardBindingSpecularLightProbeTexture, nullptr != specular ? specular : this->m_CommonPasses->m_BlackCubeMapArray.Get()))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::Texture_SRV(Shader::ForwardBindingEnvironmentBRDFTexture, nullptr != environmentBrdf ? environmentBrdf : this->m_CommonPasses->m_BlackTexture.Get()))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(Shader::ForwardBindingMaterialSampler, this->m_CommonPasses->m_AnisotropicWrapSampler.Get()))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(Shader::ForwardBindingShadowMapSampler, this->m_ShadowSampler.Get()))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(Shader::ForwardBindingLightProbeSampler, this->m_CommonPasses->m_LinearWrapSampler.Get()))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(Shader::ForwardBindingEnvironmentBRDFSampler, this->m_CommonPasses->m_LinearClampSampler.Get()))
 			.Build(),
 			this->m_ShadingBindingLayout
 			);
@@ -462,10 +462,10 @@ namespace Parting {
 
 		return this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Vertex)
-			.Set_RegisterSpace(FORWARD_SPACE_INPUT)
-			.AddBinding(RHI::RHIBindingLayoutItem::StructuredBuffer_SRV(FORWARD_BINDING_INSTANCE_BUFFER))
-			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(FORWARD_BINDING_VERTEX_BUFFER))
-			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(FORWARD_BINDING_PUSH_CONSTANTS, sizeof(ForwardPushConstants)))
+			.Set_RegisterSpace(Shader::ForwardSpaceInput)
+			.AddBinding(RHI::RHIBindingLayoutItem::StructuredBuffer_SRV(Shader::ForwardBindingInstanceBuffer))
+			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(Shader::ForwardBindingVertexBuffer))
+			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(Shader::ForwardBindingPushConstants, sizeof(Shader::ForwardPushConstants)))
 			.Build()
 		);
 	}
@@ -473,9 +473,9 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	inline auto ForwardShadingPass<APITag>::CreateInputBindingSet(const BufferGroup<APITag>* bufferGroup) -> RHI::RefCountPtr<Imp_BindingSet> {
 		return this->m_Device->CreateBindingSet(RHI::RHIBindingSetDescBuilder<APITag>{}
-		.AddBinding(RHI::RHIBindingSetItem<APITag>::StructuredBuffer_SRV(FORWARD_BINDING_INSTANCE_BUFFER, bufferGroup->InstanceBuffer))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(FORWARD_BINDING_VERTEX_BUFFER, bufferGroup->VertexBuffer))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(FORWARD_BINDING_PUSH_CONSTANTS, sizeof(ForwardPushConstants)))
+		.AddBinding(RHI::RHIBindingSetItem<APITag>::StructuredBuffer_SRV(Shader::ForwardBindingInstanceBuffer, bufferGroup->InstanceBuffer))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(Shader::ForwardBindingVertexBuffer, bufferGroup->VertexBuffer))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(Shader::ForwardBindingPushConstants, sizeof(Shader::ForwardPushConstants)))
 			.Build(),
 			this->m_InputBindingLayout
 			);
@@ -485,20 +485,20 @@ namespace Parting {
 	inline auto ForwardShadingPass<APITag>::CreateMaterialBindingCache(CommonRenderPasses<APITag>& commonPasses) -> SharedPtr<MaterialBindingCache<APITag>> {
 		using enum MaterialResource;
 		Vector<MaterialResourceBinding> materialBindings{
-			MaterialResourceBinding{.Resource{ ConstantBuffer },			.Slot{ FORWARD_BINDING_MATERIAL_CONSTANTS } },
-			MaterialResourceBinding{.Resource{ DiffuseTexture },			.Slot{ FORWARD_BINDING_MATERIAL_DIFFUSE_TEXTURE } },
-			MaterialResourceBinding{.Resource{ SpecularTexture },			.Slot{ FORWARD_BINDING_MATERIAL_SPECULAR_TEXTURE } },
-			MaterialResourceBinding{.Resource{ NormalTexture },				.Slot{ FORWARD_BINDING_MATERIAL_NORMAL_TEXTURE } },
-			MaterialResourceBinding{.Resource{ EmissiveTexture },			.Slot{ FORWARD_BINDING_MATERIAL_EMISSIVE_TEXTURE } },
-			MaterialResourceBinding{.Resource{ OcclusionTexture },			.Slot{ FORWARD_BINDING_MATERIAL_OCCLUSION_TEXTURE } },
-			MaterialResourceBinding{.Resource{ TransmissionTexture },		.Slot{ FORWARD_BINDING_MATERIAL_TRANSMISSION_TEXTURE } },
-			MaterialResourceBinding{.Resource{ OpacityTexture },			.Slot{ FORWARD_BINDING_MATERIAL_OPACITY_TEXTURE } }
+			MaterialResourceBinding{.Resource{ ConstantBuffer },			.Slot{ Shader::ForwardBindingMaterialConstants } },
+			MaterialResourceBinding{.Resource{ DiffuseTexture },			.Slot{ Shader::ForwardBindingMaterialDiffuseTexture } },
+			MaterialResourceBinding{.Resource{ SpecularTexture },			.Slot{ Shader::ForwardBindingMaterialSpecularTexture } },
+			MaterialResourceBinding{.Resource{ NormalTexture },				.Slot{ Shader::ForwardBindingMaterialNormalTexture } },
+			MaterialResourceBinding{.Resource{ EmissiveTexture },			.Slot{ Shader::ForwardBindingMaterialEmissiveTexture } },
+			MaterialResourceBinding{.Resource{ OcclusionTexture },			.Slot{ Shader::ForwardBindingMaterialOcclusionTexture } },
+			MaterialResourceBinding{.Resource{ TransmissionTexture },		.Slot{ Shader::ForwardBindingMaterialTransmissionTexture } },
+			MaterialResourceBinding{.Resource{ OpacityTexture },			.Slot{ Shader::ForwardBindingMaterialOpacityTexture } }
 		};
 
 		return MakeShared<MaterialBindingCache<APITag>>(
 			this->m_Device,
 			RHI::RHIShaderType::Pixel,
-			/* registerSpace = */ FORWARD_SPACE_MATERIAL,
+			/* registerSpace = */ Shader::ForwardSpaceMaterial,
 			/* registerSpaceIsDescriptorSet = */ true,//TODO :Rempve
 			materialBindings,
 			commonPasses.m_AnisotropicWrapSampler.Get(),
@@ -590,7 +590,7 @@ namespace Parting {
 	inline void ForwardShadingPass<APITag>::SetupView(GeometryPassContext& abstractContext, Imp_CommandList* commandList, const IView* view, const IView* viewPrev) {
 		auto& context{ static_cast<Context&>(abstractContext) };
 
-		ForwardShadingViewConstants viewConstants{};
+		Shader::ForwardShadingViewConstants viewConstants{};
 		view->FillPlanarViewConstants(viewConstants.View);
 		commandList->WriteBuffer(this->m_ForwardViewCB, &viewConstants, sizeof(decltype(viewConstants)));
 
@@ -668,7 +668,7 @@ namespace Parting {
 
 		auto& context{ static_cast<Context&>(abstractContext) };
 
-		ForwardPushConstants constants{};
+		Shader::ForwardPushConstants constants{};
 		constants.StartInstanceLocation = args.StartInstanceLocation;
 		constants.StartVertexLocation = args.StartVertexLocation;
 		constants.PositionOffset = context.PositionOffset;

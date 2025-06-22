@@ -128,7 +128,7 @@ namespace Parting {
 		this->m_BloomBlurPixelShader = shaderFactory->CreateShader("Parting/Passes/bloom_ps.hlsl", "main", nullptr, RHI::RHIShaderType::Pixel);
 
 		RHI::RHIBufferDescBuilder CBbufferDescBuilder{}; CBbufferDescBuilder
-			.Set_ByteSize(sizeof(BloomConstants))
+			.Set_ByteSize(sizeof(Shader::BloomConstants))
 			.Set_MaxVersions(c_MaxRenderPassConstantBufferVersions)
 			.Set_IsConstantBuffer(true)
 			.Set_IsVolatile(true);
@@ -273,7 +273,7 @@ namespace Parting {
 			{
 				commandList->BeginMarker("Blur");
 
-				BloomConstants bloomHorizonal{};
+				Shader::BloomConstants bloomHorizonal{};
 				{
 					bloomHorizonal.Pixstep.X = 1.f / perViewData.TexturePass1Blur->Get_Desc().Extent.Width;
 					bloomHorizonal.Pixstep.Y = 0.f;
@@ -281,7 +281,7 @@ namespace Parting {
 					bloomHorizonal.NormalizationScale = 1.f / (Math::Sqrt(2 * Math::PI_F) * effectiveSigma);
 					bloomHorizonal.NumSamples = Math::Round(effectiveSigma * 4.f);
 				}
-				BloomConstants bloomVertical = bloomHorizonal;
+				auto bloomVertical{ bloomHorizonal };
 				bloomVertical.Pixstep.X = 0.f;
 				bloomVertical.Pixstep.Y = 1.f / perViewData.TexturePass1Blur->Get_Desc().Extent.Height;
 				commandList->WriteBuffer(this->m_BloomHBlurCB, &bloomHorizonal, sizeof(bloomHorizonal));

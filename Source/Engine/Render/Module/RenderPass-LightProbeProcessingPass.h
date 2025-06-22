@@ -125,7 +125,7 @@ namespace Parting {
 	inline LightProbeProcessingPass<APITag>::LightProbeProcessingPass(Imp_Device* device, SharedPtr<ShaderFactory<APITag>> shaderFactory, SharedPtr<CommonRenderPasses<APITag>> commonPasses, Uint32 intermediateTextureSize, RHI::RHIFormat intermediateTextureFormat) :
 		m_Device{ device },
 		m_IntermediateTextureSize{ intermediateTextureSize },
-		m_CommonPasses{ commonPasses } {
+		m_CommonPasses{ ::MoveTemp(commonPasses) } {
 
 		ASSERT(intermediateTextureSize > 0);
 
@@ -144,7 +144,7 @@ namespace Parting {
 		);
 
 		this->m_LightProbeCB = device->CreateBuffer(RHI::RHIBufferDescBuilder{}
-			.Set_ByteSize(sizeof(LightProbeProcessingConstants))
+			.Set_ByteSize(sizeof(Shader::LightProbeProcessingConstants))
 			.Set_MaxVersions(64)//TODO :
 			.Set_DebugName(_W("LightProbeProcessingConstants"))
 			.Set_IsConstantBuffer(true)
@@ -160,7 +160,7 @@ namespace Parting {
 		this->m_IntermediateTexture = this->m_Device->CreateTexture(textureDescBuilder
 			.Set_Width(intermediateTextureSize).Set_Height(intermediateTextureSize)
 			.Set_ArraySize(6)
-			.Set_MipLevels(Parting::GetMipLevelsNum(intermediateTextureSize, intermediateTextureSize))
+			.Set_MipLevels(Math::Get_MipLevelsNum(intermediateTextureSize, intermediateTextureSize))
 			.Set_Format(intermediateTextureFormat)
 			.Set_Dimension(RHI::RHITextureDimension::TextureCube)
 			.Set_DebugName("LightProbeIntermediate")

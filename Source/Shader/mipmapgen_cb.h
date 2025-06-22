@@ -37,10 +37,25 @@
 #define MODE_MAX    2
 #define MODE_MINMAX 3
 
-struct MipmmapGenConstants {
-	Uint32 Dispatch;
-	Uint32 NumLODs;
-	Math::VecU2 Padding;
-};
+namespace Shader {
+	constexpr Uint32 GroupSize{ GROUP_SIZE };
+	constexpr Uint32 Lod0TileSize{ LOD0_TILE_SIZE };
+	constexpr Uint32 NumLODs{ NUM_LODS };
+
+	constexpr Uint32 MaxPasses{ MAX_PASSES };
+
+	constexpr Uint32 ModeColor{ MODE_COLOR };
+	constexpr Uint32 ModeMin{ MODE_MIN };
+	constexpr Uint32 ModeMax{ MODE_MAX };
+	constexpr Uint32 ModeMinMax{ MODE_MINMAX };
+
+
+	struct MipmmapGenConstants {
+		Uint32 Dispatch;
+		Uint32 NumLODs;
+		Math::VecU2 Padding;
+	};
+}
+
 
 #endif // MIPMAP_GEN_CB_H

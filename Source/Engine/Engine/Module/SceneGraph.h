@@ -338,7 +338,7 @@ namespace Parting {
 	public:
 		STDNODISCARD  virtual Int32 Get_LightType(void) const = 0;
 
-		virtual void FillLightConstants(LightConstants& lightConstants) const;
+		virtual void FillLightConstants(Shader::LightConstants& lightConstants) const;
 
 	};
 
@@ -360,9 +360,9 @@ namespace Parting {
 
 		bool Set_Property(const String& name, const Math::VecF4& value) override { return false; }
 	public:
-		STDNODISCARD Int32 Get_LightType(void) const override { return LightType_Directional; }
+		STDNODISCARD Int32 Get_LightType(void) const override { return Shader::LightType_Directional; }
 
-		void FillLightConstants(LightConstants& lightConstants) const override;
+		void FillLightConstants(Shader::LightConstants& lightConstants) const override;
 	};
 
 	template<RHI::APITagConcept APITag>
@@ -384,9 +384,9 @@ namespace Parting {
 		}
 		bool Set_Property(const String& name, const Math::VecF4& value) override { return false; }
 	public:
-		STDNODISCARD Int32 Get_LightType(void) const override { return LightType_Spot; }
+		STDNODISCARD Int32 Get_LightType(void) const override { return Shader::LightType_Spot; }
 
-		void FillLightConstants(LightConstants& lightConstants) const override {}
+		void FillLightConstants(Shader::LightConstants& lightConstants) const override {}
 	};
 
 	template<RHI::APITagConcept APITag>
@@ -408,9 +408,9 @@ namespace Parting {
 		bool Set_Property(const String& name, const Math::VecF4& value) override { return false; }
 	public:
 
-		STDNODISCARD Int32 Get_LightType(void) const override { return LightType_Point; }
+		STDNODISCARD Int32 Get_LightType(void) const override { return Shader::LightType_Point; }
 
-		void FillLightConstants(LightConstants& lightConstants) const override {}
+		void FillLightConstants(Shader::LightConstants& lightConstants) const override {}
 
 	};
 
@@ -439,13 +439,7 @@ namespace Parting {
 	};
 
 
-
-
-
-	template<RHI::APITagConcept APITag>
-	class SceneGraphNode final : public EnableSharedFromThis<SceneGraphNode<APITag>> {
-		friend class SceneGraph<APITag>;
-	public://TODO : out of class ....
+	namespace _NameSpace_SceneGraphNode {
 		enum class DirtyFlags : Uint32 {
 			None = 0,
 			LocalTransform = 0x01,
@@ -457,7 +451,14 @@ namespace Parting {
 			SubgraphContentUpdate = 0x40,
 			SubgraphMask = (SubgraphStructure | SubgraphTransforms | SubgraphPrevTransforms | SubgraphContentUpdate)
 		};
-		FRIEDND_ENUM_CLASS_OPERATORS(DirtyFlags)
+		EXPORT_ENUM_CLASS_OPERATORS(DirtyFlags)
+	}
+
+	template<RHI::APITagConcept APITag>
+	class SceneGraphNode final : public EnableSharedFromThis<SceneGraphNode<APITag>> {
+		friend class SceneGraph<APITag>;
+	public://TODO : out of class ....
+		using DirtyFlags = _NameSpace_SceneGraphNode::DirtyFlags;
 
 	public:
 		SceneGraphNode(void) = default;
@@ -472,7 +473,7 @@ namespace Parting {
 		STDNODISCARD Uint64 Get_NumChildren(void) const { return this->m_Children.size(); }
 		STDNODISCARD const SharedPtr<SceneGraphLeaf<APITag>>& Get_Leaf(void) const { return this->m_Leaf; }
 
-		/*STDNODISCARD const dm::dquat& GetRotation() const { return m_Rotation; }*/
+		STDNODISCARD const Math::QuatF& Get_Rotation(void) const { return m_Rotation; }
 		STDNODISCARD const Math::VecD3& Get_Scaling(void) const { return this->m_Scaling; }
 		STDNODISCARD const Math::VecD3& Get_Translation(void) const { return this->m_Translation; }
 
@@ -1339,10 +1340,10 @@ namespace Parting {
 	}
 
 	template<RHI::APITagConcept APITag>
-	inline void DirectionalLight<APITag>::FillLightConstants(LightConstants& lightConstants) const {
+	inline void DirectionalLight<APITag>::FillLightConstants(Shader::LightConstants& lightConstants) const {
 		this->Light<APITag>::FillLightConstants(lightConstants);
 
-		lightConstants.LightType = ::LightType_Directional;//TODO :
+		lightConstants.LightType = Shader::LightType_Directional;//TODO :
 		lightConstants.Direction = Math::VecF3{ Math::Normalize(this->Get_Direction()) };
 		float clampedAngularSize{ Math::Clamp(this->AngularSize, 0.f, 90.f) };
 		lightConstants.AngularSizeOrInvRange = Math::Radians(clampedAngularSize);

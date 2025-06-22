@@ -159,7 +159,7 @@ namespace Parting {
 
 		this->m_ConstantBuffer = this->m_Device->CreateBuffer(bufferDescBuilder
 			.Reset()
-			.Set_ByteSize(sizeof(PixelReadbackConstants))
+			.Set_ByteSize(sizeof(Shader::PixelReadbackConstants))
 			.Set_MaxVersions(Parting::c_MaxRenderPassConstantBufferVersions)
 			.Set_DebugName(_W("PixelReadbackPass/Constants"))
 			.Set_IsConstantBuffer(true)
@@ -186,7 +186,7 @@ namespace Parting {
 
 	template<RHI::APITagConcept APITag>
 	inline void PixelReadbackPass<APITag>::Capture(Imp_CommandList* commandList, Math::VecU2 pixelPosition) {
-		PixelReadbackConstants constants{};
+		Shader::PixelReadbackConstants constants{};
 		constants.PixelPosition = Math::VecI2{ pixelPosition };
 		commandList->WriteBuffer(this->m_ConstantBuffer, &constants, sizeof(constants));
 

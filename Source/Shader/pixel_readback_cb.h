@@ -23,9 +23,12 @@
 #ifndef PIXEL_READBACK_CB_H
 #define PIXEL_READBACK_CB_H
 
-struct PixelReadbackConstants {
-	Math::VecI2	PixelPosition;
-	Math::VecI2	Dummy;
-};
+namespace Shader {
+
+	struct PixelReadbackConstants {
+		Math::VecI2	PixelPosition;
+		Math::VecI2	Dummy;
+	};
+}
 
 #endif // PIXEL_READBACK_CB_H

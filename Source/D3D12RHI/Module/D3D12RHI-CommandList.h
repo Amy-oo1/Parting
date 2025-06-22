@@ -137,8 +137,6 @@ namespace RHI::D3D12 {
 
 		void SetComputeBindings(const Array<BindingSet*, g_MaxBindingLayoutCount> bindings, Uint32 BindingSetCount, Uint32 bindingUpdateMask, Buffer* indirectParams, bool updateIndirectParams, const D3D12RootSignature* rootSignature);
 
-		void UnbindShadingRateState(void);
-
 		void UpdateGraphicsVolatileBuffers(void);
 
 		void UpdateComputeVolatileBuffers(void);
@@ -548,15 +546,6 @@ namespace RHI::D3D12 {
 		if ((bindingUpdateMask & bindingMask) == bindingMask)
 			this->m_AnyVolatileBufferWrites = false;
 		// Only reset this flag when this function has gone over all the binging sets
-	}
-
-	inline void CommandList::UnbindShadingRateState(void) {
-		if (this->m_CurrentGraphicsStateValid && this->m_CurrentGraphicsState.ShadingRateState.Enabled) {
-			this->m_ActiveCommandList->CommandList6->RSSetShadingRateImage(nullptr);
-			this->m_ActiveCommandList->CommandList6->RSSetShadingRate(D3D12_SHADING_RATE_1X1, nullptr);
-			this->m_CurrentGraphicsState.ShadingRateState.Enabled = false;
-			this->m_CurrentGraphicsState.FrameBuffer = nullptr;
-		}
 	}
 
 	inline void CommandList::UpdateGraphicsVolatileBuffers(void) {
@@ -1165,11 +1154,6 @@ namespace RHI::D3D12 {
 			)
 		};
 
-		const bool updateShadingRate{
-			!this->m_CurrentGraphicsStateValid ||
-			this->m_CurrentGraphicsState.ShadingRateState != State.ShadingRateState
-		};
-
 		Uint32 bindingUpdateMask{ 0 };
 		if (!this->m_CurrentGraphicsStateValid || updateRootSignature)
 			bindingUpdateMask = ~0u;
@@ -1247,43 +1231,6 @@ namespace RHI::D3D12 {
 						maxVbIndex = Math::Max(maxVbIndex, binding.Slot);
 				}
 			this->m_ActiveCommandList->CommandList->IASetVertexBuffers(0, maxVbIndex + 1, VBVs);
-		}
-
-		if (updateShadingRate || updateFramebuffer) {
-			const auto& framebufferDesc{ framebuffer->Get_Desc() };
-			bool shouldEnableVariableRateShading{ framebufferDesc.ShadingRateAttachment.Is_Valid() && State.ShadingRateState.Enabled };
-			bool variableRateShadingCurrentlyEnabled{
-				this->m_CurrentGraphicsStateValid &&
-				this->m_CurrentGraphicsState.FrameBuffer->Get_Desc().ShadingRateAttachment.Is_Valid() &&
-				this->m_CurrentGraphicsState.ShadingRateState.Enabled
-			};
-
-			if (shouldEnableVariableRateShading) {
-				this->m_StateTracker.RequireTextureState(
-					&framebufferDesc.ShadingRateAttachment.Texture->m_StateExtension,
-					RHITextureSubresourceSet{/*default single*/ },
-					RHIResourceState::ShadingRateSurface
-				);
-				if (nullptr != this->m_Instance)
-					this->m_Instance->ReferencedResources.push_back(framebufferDesc.ShadingRateAttachment.Texture);
-
-				this->m_ActiveCommandList->CommandList6->RSSetShadingRateImage(framebufferDesc.ShadingRateAttachment.Texture->m_Resource);
-			}
-			else if (variableRateShadingCurrentlyEnabled)
-				this->m_ActiveCommandList->CommandList6->RSSetShadingRateImage(nullptr);
-			// shading rate attachment is not enabled in framebuffer, or VRS is turned off, so unbind VRS image
-		}
-
-		if (updateShadingRate) {
-			if (State.ShadingRateState.Enabled) {//TODO :Remove
-				D3D12_SHADING_RATE_COMBINER combiners[g_D3D12ReSetShadingRateCombinerCount]{};
-				combiners[0] = ConvertShadingRateCombiner(State.ShadingRateState.PipelinePrimitiveCombiner);
-				combiners[1] = ConvertShadingRateCombiner(State.ShadingRateState.ImageCombiner);
-				this->m_ActiveCommandList->CommandList6->RSSetShadingRate(ConvertPixelShadingRate(State.ShadingRateState.ShadingRate), combiners);
-			}
-			else if (this->m_CurrentGraphicsStateValid && this->m_CurrentGraphicsState.ShadingRateState.Enabled)
-				this->m_ActiveCommandList->CommandList6->RSSetShadingRate(D3D12_SHADING_RATE_1X1, nullptr);
-			// only call if the old state had VRS enabled and we need to disable it
 		}
 
 		this->CommitBarriers();
@@ -1379,8 +1326,6 @@ namespace RHI::D3D12 {
 
 		this->SetComputeBindings(State.BindingSets, State.BindingSetCount, bindingUpdateMask, State.IndirectParams, updateIndirectParams, pso->m_RootSignature);
 
-		this->UnbindShadingRateState();
-
 		this->m_CurrentGraphicsStateValid = false;
 		this->m_CurrentComputeStateValid = true;
 		this->m_CurrentMeshletStateValid = false;
@@ -1404,8 +1349,6 @@ namespace RHI::D3D12 {
 	void CommandList::Imp_SetMeshletState(const RHIMeshletState<D3D12Tag>& State) {
 		auto pso{ State.Pipeline };
 		auto framebuffer{ State.FrameBuffer };
-
-		this->UnbindShadingRateState();
 
 		const bool updateFramebuffer{
 			!this->m_CurrentMeshletStateValid ||

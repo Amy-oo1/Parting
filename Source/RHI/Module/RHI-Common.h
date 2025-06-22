@@ -45,8 +45,7 @@ namespace RHI {
 	PARTING_EXPORT HEADER_INLINE constexpr Uint32 g_MaxBindingLayoutCount{ 5 };
 	PARTING_EXPORT HEADER_INLINE constexpr Uint32 g_MaxBindingsPerLayout{ 128 };
 	PARTING_EXPORT HEADER_INLINE constexpr Uint32 g_MaxVolatileConstantBuffers{ 32 };
-	PARTING_EXPORT HEADER_INLINE constexpr Uint32 g_MaxVolatileConstantBufferCountPerLayout{ 6 };
-	PARTING_EXPORT HEADER_INLINE constexpr Uint32 g_MaxBindlessLayoutCount{ 16 };
+	PARTING_EXPORT HEADER_INLINE constexpr Uint32 g_MaxVolatileConstantBufferCountPerLayout{ 6 };;
 	PARTING_EXPORT HEADER_INLINE constexpr Uint32 g_ConstantBufferOffsetSizeAlignment{ 256 };
 
 
@@ -137,28 +136,11 @@ namespace RHI {
 	};
 	EXPORT_ENUM_CLASS_OPERATORS(RHIResourceState);
 
-	PARTING_EXPORT enum class RHISharedResourceFlag : Uint32 {
-		None = 0,
-
-		// D3D12: adds D3D12_HEAP_FLAG_SHARED
-		// Vulkan: adds vk::ExternalMemoryImageCreateInfo and vk::ExportMemoryAllocateInfo/vk::ExternalMemoryBufferCreateInfo
-		Shared = 0x01,
-
-		// D3D12: adds D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER and D3D12_HEAP_FLAG_SHARED_CROSS_ADAPTER
-		// Vulkan: ignored
-		Shared_CrossAdapter = 0x02,
-	};
-	EXPORT_ENUM_CLASS_OPERATORS(RHISharedResourceFlag);
-
 	PARTING_EXPORT enum class RHIFeature : Uint8 {
 		Meshlets,
 		ConservativeRasterization,
 		ComputeQueue,
 		CopyQueue,
-	};
-
-	PARTING_EXPORT struct RHIVariableRateShadingFeatureInfo {
-		Uint32 ShadingRateImageTileSize;
 	};
 
 	PARTING_EXPORT template<typename Derived>

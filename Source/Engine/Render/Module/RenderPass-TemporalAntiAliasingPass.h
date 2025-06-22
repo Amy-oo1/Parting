@@ -245,7 +245,7 @@ namespace Parting {
 		);
 
 		this->m_TemporalAntiAliasingCB = device->CreateBuffer(RHI::RHIBufferDescBuilder{}
-			.Set_ByteSize(sizeof(TemporalAntiAliasingConstants))
+			.Set_ByteSize(sizeof(Shader::TemporalAntiAliasingConstants))
 			.Set_MaxVersions(params.NumConstantBufferVersions)
 			.Set_DebugName(_W("TemporalAntiAliasingConstants"))
 			.Set_IsConstantBuffer(true)
@@ -327,7 +327,7 @@ namespace Parting {
 
 			const auto& inputViewport{ viewportState.Viewports[0] };
 
-			TemporalAntiAliasingConstants taaConstants{};
+			Shader::TemporalAntiAliasingConstants taaConstants{};
 			{
 				Math::AffineF3 viewReprojection{ Math::Inverse(view->Get_ViewMatrix()) * Math::Translation(-preViewTranslationDifference) * viewPrevious->Get_ViewMatrix() };
 				taaConstants.ReprojectionMatrix = Math::Inverse(view->Get_ProjectionMatrix(false)) * Math::AffineToHomogeneous(viewReprojection) * viewPrevious->Get_ProjectionMatrix(false);
@@ -365,7 +365,7 @@ namespace Parting {
 			const auto& viewportInput{ viewInput->Get_ViewportState().Viewports[0] };
 			const auto& viewportOutput{ viewOutput->Get_ViewportState().Viewports[0] };
 
-			TemporalAntiAliasingConstants taaConstants{};
+			Shader::TemporalAntiAliasingConstants taaConstants{};
 			{
 				taaConstants.InputViewOrigin = Math::VecF2{ viewportInput.MinX, viewportInput.MinY };
 				taaConstants.InputViewSize = Math::VecF2{ viewportInput.Width(), viewportInput.Height() };

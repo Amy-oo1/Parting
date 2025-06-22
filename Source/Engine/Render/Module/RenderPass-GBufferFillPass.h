@@ -251,7 +251,7 @@ namespace Parting {
 	inline void GBufferFillPass<APITag>::SetupView(GeometryPassContext& abstractContext, Imp_CommandList* commandList, const IView* view, const IView* viewPrev) {
 		auto& context{ static_cast<Context&>(abstractContext) };
 
-		GBufferFillConstants gbufferConstants{};
+		Shader::GBufferFillConstants gbufferConstants{};
 		view->FillPlanarViewConstants(gbufferConstants.View);
 		viewPrev->FillPlanarViewConstants(gbufferConstants.ViewPrev);
 		commandList->WriteBuffer(this->m_GBufferCB, &gbufferConstants, sizeof(decltype(gbufferConstants)));
@@ -344,7 +344,7 @@ namespace Parting {
 
 		auto& context{ static_cast<Context&>(abstractContext) };
 
-		GBufferPushConstants constants{};
+		Shader::GBufferPushConstants constants{};
 		constants.StartInstanceLocation = args.StartInstanceLocation;
 		constants.StartVertexLocation = args.StartVertexLocation;
 		constants.PositionOffset = context.PositionOffset;
@@ -439,10 +439,10 @@ namespace Parting {
 
 		return this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Vertex | RHI::RHIShaderType::Pixel)
-			.Set_RegisterSpace(GBUFFER_SPACE_INPUT)
-			.AddBinding(RHI::RHIBindingLayoutItem::StructuredBuffer_SRV(GBUFFER_BINDING_INSTANCE_BUFFER))
-			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(GBUFFER_BINDING_VERTEX_BUFFER))
-			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(GBUFFER_BINDING_PUSH_CONSTANTS, sizeof(GBufferPushConstants)))
+			.Set_RegisterSpace(Shader::GBufferSpaceInput)
+			.AddBinding(RHI::RHIBindingLayoutItem::StructuredBuffer_SRV(Shader::GBufferBindingInstanceBuffer))
+			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(Shader::GBufferBindingVertexBuffer))
+			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(Shader::GBufferBindingPushConstants, sizeof(Shader::GBufferPushConstants)))
 			.Build()
 		);
 	}
@@ -450,9 +450,9 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	inline auto GBufferFillPass<APITag>::CreateInputBindingSet(const BufferGroup<APITag>* bufferGroup) -> RHI::RefCountPtr<Imp_BindingSet> {
 		return this->m_Device->CreateBindingSet(RHI::RHIBindingSetDescBuilder<APITag>{}
-		.AddBinding(RHI::RHIBindingSetItem<APITag>::StructuredBuffer_SRV(GBUFFER_BINDING_INSTANCE_BUFFER, bufferGroup->InstanceBuffer))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(GBUFFER_BINDING_VERTEX_BUFFER, bufferGroup->VertexBuffer))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(GBUFFER_BINDING_PUSH_CONSTANTS, sizeof(GBufferPushConstants)))
+		.AddBinding(RHI::RHIBindingSetItem<APITag>::StructuredBuffer_SRV(Shader::GBufferBindingInstanceBuffer, bufferGroup->InstanceBuffer))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(Shader::GBufferBindingVertexBuffer, bufferGroup->VertexBuffer))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(Shader::GBufferBindingPushConstants, sizeof(Shader::GBufferPushConstants)))
 			.Build(),
 			this->m_InputBindingLayout
 			);
@@ -462,10 +462,10 @@ namespace Parting {
 	inline auto GBufferFillPass<APITag>::CreateViewBindings(const CreateParameters& params) -> Tuple<RHI::RefCountPtr<Imp_BindingLayout>, RHI::RefCountPtr<Imp_BindingSet>> {
 		return this->m_Device->CreateBindingLayoutAndSet(
 			RHI::RHIShaderType::Vertex | RHI::RHIShaderType::Pixel,
-			GBUFFER_SPACE_VIEW,
+			Shader::GBufferSpaceView,
 			RHI::RHIBindingSetDescBuilder<APITag>{}
-		.AddBinding(RHI::RHIBindingSetItem<APITag>::ConstantBuffer(GBUFFER_BINDING_VIEW_CONSTANTS, this->m_GBufferCB))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(GBUFFER_BINDING_MATERIAL_SAMPLER, this->m_CommonPasses->m_AnisotropicWrapSampler))
+		.AddBinding(RHI::RHIBindingSetItem<APITag>::ConstantBuffer(Shader::GBufferBindingViewConstants, this->m_GBufferCB))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(Shader::GBufferBindingMaterialSampler, this->m_CommonPasses->m_AnisotropicWrapSampler))
 			.Build()
 			);
 	}
@@ -474,20 +474,20 @@ namespace Parting {
 	inline auto GBufferFillPass<APITag>::CreateMaterialBindingCache(CommonRenderPasses<APITag>& commonPasses) -> SharedPtr<MaterialBindingCache<APITag>> {
 		using enum MaterialResource;
 		Vector<MaterialResourceBinding> materialBindings{
-			MaterialResourceBinding{.Resource{ ConstantBuffer },		.Slot{ GBUFFER_BINDING_MATERIAL_CONSTANTS } },
-			MaterialResourceBinding{.Resource{ DiffuseTexture },		.Slot{ GBUFFER_BINDING_MATERIAL_DIFFUSE_TEXTURE } },
-			MaterialResourceBinding{.Resource{ SpecularTexture },		.Slot{ GBUFFER_BINDING_MATERIAL_SPECULAR_TEXTURE } },
-			MaterialResourceBinding{.Resource{ NormalTexture },			.Slot{ GBUFFER_BINDING_MATERIAL_NORMAL_TEXTURE } },
-			MaterialResourceBinding{.Resource{ EmissiveTexture },		.Slot{ GBUFFER_BINDING_MATERIAL_EMISSIVE_TEXTURE } },
-			MaterialResourceBinding{.Resource{ OcclusionTexture },		.Slot{ GBUFFER_BINDING_MATERIAL_OCCLUSION_TEXTURE } },
-			MaterialResourceBinding{.Resource{ TransmissionTexture },	.Slot{ GBUFFER_BINDING_MATERIAL_TRANSMISSION_TEXTURE } },
-			MaterialResourceBinding{.Resource{ OpacityTexture },		.Slot{ GBUFFER_BINDING_MATERIAL_OPACITY_TEXTURE } }
+			MaterialResourceBinding{.Resource{ ConstantBuffer },		.Slot{ Shader::GBufferBindingMaterialConstants } },
+			MaterialResourceBinding{.Resource{ DiffuseTexture },		.Slot{ Shader::GBufferBindingMaterialDiffuseTexture } },
+			MaterialResourceBinding{.Resource{ SpecularTexture },		.Slot{ Shader::GBufferBindingMaterialSpecularTexture } },
+			MaterialResourceBinding{.Resource{ NormalTexture },			.Slot{ Shader::GBufferBindingMaterialNormalTexture } },
+			MaterialResourceBinding{.Resource{ EmissiveTexture },		.Slot{ Shader::GBufferBindingMaterialEmissiveTexture } },
+			MaterialResourceBinding{.Resource{ OcclusionTexture },		.Slot{ Shader::GBufferBindingMaterialOcclusionTexture } },
+			MaterialResourceBinding{.Resource{ TransmissionTexture },	.Slot{ Shader::GBufferBindingMaterialTransmissionTexture } },
+			MaterialResourceBinding{.Resource{ OpacityTexture },		.Slot{ Shader::GBufferBindingMaterialOpacityTexture } }
 		};
 
 		return MakeShared<MaterialBindingCache<APITag>>(
 			this->m_Device,
 			RHI::RHIShaderType::Pixel,
-			/* registerSpace = */ GBUFFER_SPACE_MATERIAL,
+			/* registerSpace = */ Shader::GBufferSpaceMaterial,
 			/* registerSpaceIsDescriptorSet = */ true,
 			materialBindings,
 			commonPasses.m_AnisotropicWrapSampler,
@@ -563,7 +563,7 @@ namespace Parting {
 			this->m_MaterialBindings = this->CreateMaterialBindingCache(*this->m_CommonPasses);
 
 		this->m_GBufferCB = this->m_Device->CreateBuffer(RHI::RHIBufferDescBuilder{}
-			.Set_ByteSize(sizeof(GBufferFillConstants))
+			.Set_ByteSize(sizeof(Shader::GBufferFillConstants))
 			.Set_MaxVersions(params.NumConstantBufferVersions)
 			.Set_DebugName(_W("GBufferFillConstants"))
 			.Set_IsVolatile(true)

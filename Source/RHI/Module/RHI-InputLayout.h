@@ -97,14 +97,15 @@ namespace RHI {
 		friend class RHIResource<Derived>;
 		protected:
 			RHIInputLayout(void) = default;
-			virtual ~RHIInputLayout(void) = default;
+			~RHIInputLayout(void) = default;
 
 		public:
 			STDNODISCARD Uint32 Get_AttributeCount(void)const { return this->Get_Derived()->Imp_Get_AttributeCount(); }
 			STDNODISCARD const RHIVertexAttributeDesc* Get_AttributeDesc(Uint32 Index)const { return this->Get_Derived()->Imp_Get_AttributeDesc(Index); }
 
 		private:
-			STDNODISCARD constexpr Derived* Get_Derived(void) const { return static_cast<Derived*>(this); }
+			STDNODISCARD Derived* Get_Derived(void)noexcept { return static_cast<Derived*>(this); }
+			STDNODISCARD const Derived* Get_Derived(void)const noexcept { return static_cast<const Derived*>(this); }
 		private:
 			Uint32 Imp_Get_AttributeCount(void)const { LOG_ERROR("No Imp"); return 0; }
 			const RHIVertexAttributeDesc* Imp_Get_AttributeDesc(Uint32 Index)const { LOG_ERROR("No Imp"); return nullptr; }

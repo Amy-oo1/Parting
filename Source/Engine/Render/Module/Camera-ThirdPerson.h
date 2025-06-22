@@ -59,7 +59,7 @@ namespace Parting {
 		~ThirdPersonCamera(void) = default;
 
 	public:
-		Math::VecF3 GetTargetPosition(void) const { return this->m_TargetPos; }
+		Math::VecF3 Get_TargetPosition(void) const { return this->m_TargetPos; }
 		float Get_Distance(void) const { return this->m_Distance; }
 		float Get_RotationYaw(void) const { return this->m_Yaw; }
 		float Get_RotationPitch(void) const { return this->m_Pitch; }

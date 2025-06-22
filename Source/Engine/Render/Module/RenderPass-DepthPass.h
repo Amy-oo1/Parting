@@ -139,7 +139,7 @@ namespace Parting {
 			else
 				this->m_MaterialBindings = this->CreateMaterialBindingCache(*this->m_CommonRenderPasses);
 
-			this->m_DepthCB = this->m_Device->CreateBuffer(RHI::RHIBufferDescBuilder::CreateVolatileConstantBufferDesc(sizeof(DepthPassConstants), params.numConstantBufferVersions));
+			this->m_DepthCB = this->m_Device->CreateBuffer(RHI::RHIBufferDescBuilder::CreateVolatileConstantBufferDesc(sizeof(Shader::DepthPassConstants), params.numConstantBufferVersions));
 			Tie(this->m_ViewBindingLayout, this->m_ViewBindingSet) = CreateViewBindings(params);
 
 		}
@@ -241,9 +241,9 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	inline auto DepthPass<APITag>::CreateInputBindingSet(const BufferGroup<APITag>* bufferGroup) -> RHI::RefCountPtr<Imp_BindingSet> {
 		return this->m_Device->CreateBindingSet(RHI::RHIBindingSetDescBuilder<APITag>{}
-		.AddBinding(RHI::RHIBindingSetItem<APITag>::StructuredBuffer_SRV(DepthBindingInstanceBuffer, bufferGroup->InstanceBuffer))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(DepthBindingVertexBuffer, bufferGroup->VertexBuffer))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(DepthBindingPushConstants, sizeof(DepthPushConstants)))
+		.AddBinding(RHI::RHIBindingSetItem<APITag>::StructuredBuffer_SRV(Shader::DepthBindingInstanceBuffer, bufferGroup->InstanceBuffer))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(Shader::DepthBindingVertexBuffer, bufferGroup->VertexBuffer))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(Shader::DepthBindingPushConstants, sizeof(Shader::DepthPushConstants)))
 			.Build(),
 			this->m_InputBindingLayout
 			);
@@ -256,10 +256,10 @@ namespace Parting {
 
 		return this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Vertex)
-			.Set_RegisterSpace(DepthSapceInput)
-			.AddBinding(RHI::RHIBindingLayoutItem::StructuredBuffer_SRV(DepthBindingInstanceBuffer))
-			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(DepthBindingVertexBuffer))
-			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(DepthBindingPushConstants, sizeof(DepthPushConstants)))
+			.Set_RegisterSpace(Shader::DepthSapceInput)
+			.AddBinding(RHI::RHIBindingLayoutItem::StructuredBuffer_SRV(Shader::DepthBindingInstanceBuffer))
+			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(Shader::DepthBindingVertexBuffer))
+			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(Shader::DepthBindingPushConstants, sizeof(Shader::DepthPushConstants)))
 			.Build()
 		);
 	}
@@ -267,15 +267,15 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	inline auto DepthPass<APITag>::CreateMaterialBindingCache(CommonRenderPasses<APITag>& commonPasses) -> SharedPtr<MaterialBindingCache<APITag>> {
 		Vector<MaterialResourceBinding> materialBindings{
-			MaterialResourceBinding{.Resource{ MaterialResource::DiffuseTexture }, .Slot{ DepthBindingMaterialDiffuseTexture } },
-			MaterialResourceBinding{.Resource{ MaterialResource::OpacityTexture }, .Slot{ DepthBindingMaterialOpacityTexture } },
-			MaterialResourceBinding{.Resource{ MaterialResource::ConstantBuffer }, .Slot{ DepthBindingMaterialConstants } }
+			MaterialResourceBinding{.Resource{ MaterialResource::DiffuseTexture }, .Slot{ Shader::DepthBindingMaterialDiffuseTexture } },
+			MaterialResourceBinding{.Resource{ MaterialResource::OpacityTexture }, .Slot{ Shader::DepthBindingMaterialOpacityTexture } },
+			MaterialResourceBinding{.Resource{ MaterialResource::ConstantBuffer }, .Slot{ Shader::DepthBindingMaterialConstants } }
 		};
 
 		return MakeShared<MaterialBindingCache<APITag>>(
 			this->m_Device,
 			RHI::RHIShaderType::Pixel,
-			DepthSpaceMaterial,
+			Shader::DepthSpaceMaterial,
 			true,//not use d3d11 opengl...
 			materialBindings,
 			commonPasses.m_AnisotropicWrapSampler.Get(),
@@ -288,15 +288,15 @@ namespace Parting {
 		auto layout{ this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Vertex | RHI::RHIShaderType::Pixel)
 			.Set_RegisterSpace(DepthSpaceView)
-			.AddBinding(RHI::RHIBindingLayoutItem::VolatileConstantBuffer(DepthBindingViewConstants))
-			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(DepthBindingMaterialSampler))
+			.AddBinding(RHI::RHIBindingLayoutItem::VolatileConstantBuffer(Shader::DepthBindingViewConstants))
+			.AddBinding(RHI::RHIBindingLayoutItem::Sampler(Shader::DepthBindingMaterialSampler))
 			.Build()
 		) };
 
 		auto bindingset{ this->m_Device->CreateBindingSet(RHI::RHIBindingSetDescBuilder<APITag>{}
 			.Set_TrackLiveness(params.TrackLiveness)
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::ConstantBuffer(DepthBindingViewConstants,this->m_DepthCB))
-			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(DepthBindingMaterialSampler, this->m_CommonRenderPasses->m_AnisotropicWrapSampler))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::ConstantBuffer(Shader::DepthBindingViewConstants,this->m_DepthCB))
+			.AddBinding(RHI::RHIBindingSetItem<APITag>::Sampler(Shader::DepthBindingMaterialSampler, this->m_CommonRenderPasses->m_AnisotropicWrapSampler))
 			.Build(),
 			layout.Get()
 		) };
@@ -342,7 +342,7 @@ namespace Parting {
 	inline void DepthPass<APITag>::SetupView(GeometryPassContext& abstractContext, Imp_CommandList* commandList, const IView* view, const IView* viewPrev) {
 		auto& context{ static_cast<Context&>(abstractContext) };
 
-		DepthPassConstants depthConstants{};
+		Shader::DepthPassConstants depthConstants{};
 		depthConstants.MatWorldToClip = view->Get_ViewProjectionMatrix();
 		commandList->WriteBuffer(this->m_DepthCB, &depthConstants, sizeof(depthConstants));
 
@@ -436,7 +436,7 @@ namespace Parting {
 
 		auto& context{ static_cast<Context&>(abstractContext) };
 
-		DepthPushConstants constants{
+		Shader::DepthPushConstants constants{
 			.StartInstanceLocation{ args.StartInstanceLocation },
 			.StartVertexLocation{ args.StartVertexLocation },
 			.PositionOffset{ context.PositionOffset },

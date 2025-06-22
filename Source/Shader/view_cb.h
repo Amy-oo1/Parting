@@ -29,4 +29,8 @@ struct PlanarViewConstants {
 	Math::VecF4			CameraDirectionOrPosition;
 };
 
+namespace Shader {
+	using PlanarViewConstants = ::PlanarViewConstants;
+}
+
 #endif // VIEW_CB_H

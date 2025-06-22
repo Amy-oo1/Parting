@@ -71,9 +71,9 @@ namespace Parting {
 
 	private:
 		struct Resource final {
-			Vector<MaterialConstants> MaterialData;
-			Vector<GeometryData> GeometryData;
-			Vector<InstanceData> InstanceData;
+			Vector<Shader::MaterialConstants> MaterialData;
+			Vector<Shader::GeometryData> GeometryData;
+			Vector<Shader::InstanceData> InstanceData;
 		};
 
 	public:
@@ -109,32 +109,12 @@ namespace Parting {
 
 		void UpdateMaterial(const SharedPtr<Material<APITag>>& material) { material->FillConstantBuffer(this->m_Resources->MaterialData[material->MaterialID]); }
 
-		void UpdateGeometry(const SharedPtr<MeshInfo<APITag>>& mesh) {
-			for (const auto& geometry : mesh->Geometries) {
-				Uint32 indexOffset{ mesh->IndexOffset + geometry->IndexOffsetInMesh };
-				Uint32 vertexOffset{ mesh->VertexOffset + geometry->VertexOffsetInMesh };
-
-				GeometryData& gdata{ this->m_Resources->GeometryData[geometry->GlobalGeometryIndex] };
-				gdata.NumIndices = geometry->NumIndices;
-				gdata.NumVertices = geometry->NumVertices;
-				gdata.IndexOffset = indexOffset * sizeof(Uint32);
-				gdata.PositionOffset = mesh->Buffers->HasAttribute(RHI::RHIVertexAttribute::Position) ? Uint32(vertexOffset * sizeof(Math::VecF3) + mesh->Buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Position).Offset) : ~0u;
-				gdata.PrevPositionOffset = mesh->Buffers->HasAttribute(RHI::RHIVertexAttribute::PrevPosition) ? Uint32(vertexOffset * sizeof(Math::VecF3) + mesh->Buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::PrevPosition).Offset) : ~0u;
-				gdata.TexCoord1Offset = mesh->Buffers->HasAttribute(RHI::RHIVertexAttribute::TexCoord1) ? Uint32(vertexOffset * sizeof(Math::VecF2) + mesh->Buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord1).Offset) : ~0u;
-				gdata.TexCoord2Offset = mesh->Buffers->HasAttribute(RHI::RHIVertexAttribute::TexCoord2) ? Uint32(vertexOffset * sizeof(Math::VecF2) + mesh->Buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::TexCoord2).Offset) : ~0u;
-				gdata.NormalOffset = mesh->Buffers->HasAttribute(RHI::RHIVertexAttribute::Normal) ? Uint32(vertexOffset * sizeof(Uint32) + mesh->Buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Normal).Offset) : ~0u;
-				gdata.TangentOffset = mesh->Buffers->HasAttribute(RHI::RHIVertexAttribute::Tangent) ? Uint32(vertexOffset * sizeof(Uint32) + mesh->Buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::Tangent).Offset) : ~0u;
-				gdata.CurveRadiusOffset = mesh->Buffers->HasAttribute(RHI::RHIVertexAttribute::CurveRadius) ? Uint32(vertexOffset * sizeof(float) + mesh->Buffers->Get_VertexBufferRange(RHI::RHIVertexAttribute::CurveRadius).Offset) : ~0u;
-				gdata.MaterialIndex = nullptr != geometry->Material ? geometry->Material->MaterialID : ~0u;
-			}
-		}
-
 		void UpdateInstance(const SharedPtr<MeshInstance<APITag>>& instance) {
 			SceneGraphNode<APITag>* node{ instance->Get_Node() };
 			if (nullptr == node)
 				return;
 
-			InstanceData& idata{ this->m_Resources->InstanceData[instance->Get_InstanceIndex()] };
+			Shader::InstanceData& idata{ this->m_Resources->InstanceData[instance->Get_InstanceIndex()] };
 			Math::AffineToColumnMajor(node->Get_LocalToWorldTransformFloat(), idata.Transform);
 			Math::AffineToColumnMajor(node->Get_PrevLocalToWorldTransformFloat(), idata.PrevTransform);
 
@@ -145,7 +125,7 @@ namespace Parting {
 			idata.Flags = 0u;
 
 			if (MeshType::CurveDisjointOrthogonalTriangleStrips == mesh->Type)
-				idata.Flags |= InstanceFlags_CurveDisjointOrthogonalTriangleStrips;
+				idata.Flags |= Shader::InstanceFlags_CurveDisjointOrthogonalTriangleStrips;
 		}
 
 		void UpdateSkinnedMeshes(Imp_CommandList* commandList, Uint32 frameIndex);
@@ -224,7 +204,7 @@ namespace Parting {
 
 		this->m_SkinningBindingLayout = this->m_Device->CreateBindingLayout(RHI::RHIBindingLayoutDescBuilder{}
 			.Set_Visibility(RHI::RHIShaderType::Compute)
-			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(0, sizeof(SkinningConstants)))
+			.AddBinding(RHI::RHIBindingLayoutItem::PushConstants(0, sizeof(Shader::SkinningConstants)))
 			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(0))
 			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_SRV(1))
 			.AddBinding(RHI::RHIBindingLayoutItem::RawBuffer_UAV(0))
@@ -573,7 +553,7 @@ namespace Parting {
 
 				skinnedInstance->SkinningBindingSet = this->m_Device->CreateBindingSet(
 					RHI::RHIBindingSetDescBuilder<APITag>{}
-				.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(0, sizeof(SkinningConstants)))
+				.AddBinding(RHI::RHIBindingSetItem<APITag>::PushConstants(0, sizeof(Shader::SkinningConstants)))
 					.AddBinding(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(0, prototypeBuffers->VertexBuffer))
 					.AddBinding(RHI::RHIBindingSetItem<APITag>::RawBuffer_SRV(1, skinnedInstance->JointBuffer))
 					.AddBinding(RHI::RHIBindingSetItem<APITag>::RawBuffer_UAV(0, skinnedBuffers->VertexBuffer))

@@ -52,4 +52,10 @@ struct LightProbeConstants final {
 	Math::VecF4 FrustumPlanes[6];
 };
 
+namespace Shader{
+	using ShadowConstants = ::ShadowConstants;
+	using LightConstants = ::LightConstants;
+	using LightProbeConstants = ::LightProbeConstants;
+}
+
 #endif // LIGHT_CB_H

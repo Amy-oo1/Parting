@@ -131,7 +131,7 @@ namespace Parting {
 
 		bool Is_LitOutOfBounds(void) const override { return this->m_Cascades[0]->Is_LitOutOfBounds(); }
 
-		void FillShadowConstants(ShadowConstants& constants) const override { ASSERT(false); }
+		void FillShadowConstants(Shader::ShadowConstants& constants) const override { ASSERT(false); }
 
 
 	};

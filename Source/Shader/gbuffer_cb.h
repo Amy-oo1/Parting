@@ -22,19 +22,41 @@
 #define GBUFFER_BINDING_VIEW_CONSTANTS 2
 #define GBUFFER_BINDING_MATERIAL_SAMPLER 0
 
-struct GBufferFillConstants {
-	PlanarViewConstants		View;
-	PlanarViewConstants		ViewPrev;
-};
+namespace Shader {
+	constexpr Uint32 GBufferSpaceMaterial{ GBUFFER_SPACE_MATERIAL };
+	constexpr Uint32 GBufferBindingMaterialConstants{ GBUFFER_BINDING_MATERIAL_CONSTANTS };
+	constexpr Uint32 GBufferBindingMaterialDiffuseTexture{ GBUFFER_BINDING_MATERIAL_DIFFUSE_TEXTURE };
+	constexpr Uint32 GBufferBindingMaterialSpecularTexture{ GBUFFER_BINDING_MATERIAL_SPECULAR_TEXTURE };
+	constexpr Uint32 GBufferBindingMaterialNormalTexture{ GBUFFER_BINDING_MATERIAL_NORMAL_TEXTURE };
+	constexpr Uint32 GBufferBindingMaterialEmissiveTexture{ GBUFFER_BINDING_MATERIAL_EMISSIVE_TEXTURE };
+	constexpr Uint32 GBufferBindingMaterialOcclusionTexture{ GBUFFER_BINDING_MATERIAL_OCCLUSION_TEXTURE };
+	constexpr Uint32 GBufferBindingMaterialTransmissionTexture{ GBUFFER_BINDING_MATERIAL_TRANSMISSION_TEXTURE };
+	constexpr Uint32 GBufferBindingMaterialOpacityTexture{ GBUFFER_BINDING_MATERIAL_OPACITY_TEXTURE };
+	
+	constexpr Uint32 GBufferSpaceInput{ GBUFFER_SPACE_INPUT };
+	constexpr Uint32 GBufferBindingPushConstants{ GBUFFER_BINDING_PUSH_CONSTANTS };
+	constexpr Uint32 GBufferBindingInstanceBuffer{ GBUFFER_BINDING_INSTANCE_BUFFER };
+	constexpr Uint32 GBufferBindingVertexBuffer{ GBUFFER_BINDING_VERTEX_BUFFER };
+	
+	constexpr Uint32 GBufferSpaceView{ GBUFFER_SPACE_VIEW };
+	constexpr Uint32 GBufferBindingViewConstants{ GBUFFER_BINDING_VIEW_CONSTANTS };
+	constexpr Uint32 GBufferBindingMaterialSampler{ GBUFFER_BINDING_MATERIAL_SAMPLER };
 
-struct GBufferPushConstants {
-	Uint32					StartInstanceLocation;
-	Uint32					StartVertexLocation;
-	Uint32					PositionOffset;
-	Uint32					PrevPositionOffset;
-	Uint32					TexCoordOffset;
-	Uint32					NormalOffset;
-	Uint32					TangentOffset;
-};
+	struct GBufferFillConstants {
+		PlanarViewConstants		View;
+		PlanarViewConstants		ViewPrev;
+	};
+
+	struct GBufferPushConstants {
+		Uint32					StartInstanceLocation;
+		Uint32					StartVertexLocation;
+		Uint32					PositionOffset;
+		Uint32					PrevPositionOffset;
+		Uint32					TexCoordOffset;
+		Uint32					NormalOffset;
+		Uint32					TangentOffset;
+	};
+}
+
 
 #endif // GBUFFER_CB_H

@@ -45,6 +45,20 @@ PARTING_SUBMODE_IMPORT(Common)
 
 namespace RHI::D3D12 {
 
+	STDNODISCARD constexpr D3D12_SHADER_VISIBILITY ConvertShaderStage(RHIShaderType s) {
+		switch (s) {
+			using enum RHIShaderType;
+		case Vertex:return D3D12_SHADER_VISIBILITY_VERTEX;
+		case Hull:return D3D12_SHADER_VISIBILITY_HULL;
+		case Domain:return D3D12_SHADER_VISIBILITY_DOMAIN;
+		case Geometry:return D3D12_SHADER_VISIBILITY_GEOMETRY;
+		case Pixel:return D3D12_SHADER_VISIBILITY_PIXEL;
+		case Amplification:return D3D12_SHADER_VISIBILITY_AMPLIFICATION;
+		case Mesh:return D3D12_SHADER_VISIBILITY_MESH;
+		default:return D3D12_SHADER_VISIBILITY_ALL;
+		}
+	}
+
 	class Shader final :public RHIShader<Shader> {
 		friend class RHIResource<Shader>;
 		friend class RHIShader<Shader>;

@@ -50,4 +50,8 @@ struct TemporalAntiAliasingConstants
 	Uint32 Padding1;
 };
 
+namespace Shader {
+	using TemporalAntiAliasingConstants = ::TemporalAntiAliasingConstants;
+}
+
 #endif // TAA_CB_H

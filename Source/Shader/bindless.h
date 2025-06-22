@@ -26,8 +26,6 @@ struct GeometryData {
 	Uint32 pad2;
 };
 
-static const Uint32 InstanceFlags_CurveDisjointOrthogonalTriangleStrips = 0x00000001u;
-
 struct InstanceData {
 	Uint32 Flags;
 	Uint32 FirstGeometryInstanceIndex; // index into global list of geometry instances. 
@@ -43,6 +41,13 @@ struct InstanceData {
 
 	/*bool IsCurveDOTS() { return (flags & InstanceFlags_CurveDisjointOrthogonalTriangleStrips) != 0; }*/
 };
+
+namespace Shader {
+	constexpr Uint32 InstanceFlags_CurveDisjointOrthogonalTriangleStrips = 0x00000001u;
+	
+	using GeometryData = ::GeometryData;
+	using InstanceData = ::InstanceData;
+}
 
 #ifndef __cplusplus
 

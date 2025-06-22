@@ -144,6 +144,10 @@ namespace RHI {
 
 	PARTING_EXPORT template<APITagConcept APITag>
 		struct RHIBindingSetItem final {
+		using Imp_Sampler = typename RHITypeTraits<APITag>::Imp_Sampler;
+		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
+		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
+		
 		RHIShaderBindingResources<APITag> ResourcePtr{ nullptr };
 
 		Uint32 Slot;
@@ -283,7 +287,12 @@ namespace RHI {
 		struct BindingSetItemHash final {
 			Uint64 operator()(const RHIBindingSetItem<APITag>& item) {
 				Uint64 hash{ 0 };
-			/*	hash = ::HashCombine(hash, Hash<RHIShaderBindingResources<APITag>>{}(item.ResourcePtr));*/
+				if (::GetIf<RefCountPtr<Imp_Texture>>(&item.ResourcePtr))
+					hash = ::HashCombine(hash, ::HashVoidPtr{}(::Get<RefCountPtr<Imp_Texture>>(item.ResourcePtr).Get()));
+				else if (::GetIf<RefCountPtr<Imp_Buffer>>(&item.ResourcePtr))
+					hash = ::HashCombine(hash, ::HashVoidPtr{}(::Get<RefCountPtr<Imp_Buffer>>(item.ResourcePtr).Get()));
+				else if (::GetIf<RefCountPtr<Imp_Sampler>>(&item.ResourcePtr))
+					hash = ::HashCombine(hash, ::HashVoidPtr{}(::Get<RefCountPtr<Imp_Sampler>>(item.ResourcePtr).Get()));
 				hash = ::HashCombine(hash, HashUint32{}(item.Slot));
 				hash = ::HashCombine(hash, Hash<RHIResourceType>{}(item.Type));
 				hash = ::HashCombine(hash, Hash<RHITextureDimension>{}(item.Dimension));

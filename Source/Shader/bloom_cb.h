@@ -23,13 +23,16 @@
 #ifndef BLOOM_CB_H
 #define BLOOM_CB_H
 
-struct BloomConstants {
-	Math::VecF2			Pixstep;
-	float				ArgumentScale;
-	float				NormalizationScale;
+namespace Shader {
+	struct BloomConstants {
+		Math::VecF2			Pixstep;
+		float				ArgumentScale;
+		float				NormalizationScale;
 
-	Math::VecF3			Padding;
-	float				NumSamples;
-};
+		Math::VecF3			Padding;
+		float				NumSamples;
+	};
+
+}
 
 #endif // BLOOM_CB_H

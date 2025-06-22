@@ -125,7 +125,7 @@ namespace Parting {
 
 		bool Is_LitOutOfBounds(void) const override { return this->m_IsLitOutOfBounds; }
 
-		void FillShadowConstants(ShadowConstants& constants) const override {
+		void FillShadowConstants(Shader::ShadowConstants& constants) const override {
 			constants.MatWorldToUvzwShadow = this->Get_WorldToUvzwMatrix();
 			constants.ShadowMapArrayIndex = this->m_View->Get_Subresources().BaseArraySlice;
 			Math::BoxF2 uvRange{ this->Get_UVRange() };

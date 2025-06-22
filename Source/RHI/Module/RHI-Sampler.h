@@ -136,7 +136,8 @@ namespace RHI {
 		STDNODISCARD const RHISamplerDesc& Get_Desc(void)const { return this->Get_Derived()->Imp_Get_Desc(); }
 	
 	private:
-		STDNODISCARD Derived* Get_Derived(void)const noexcept { return static_cast<Derived*>(this); }
+		STDNODISCARD Derived* Get_Derived(void)noexcept { return static_cast<Derived*>(this); }
+		STDNODISCARD const Derived* Get_Derived(void)const noexcept { return static_cast<const Derived*>(this); }
 	private:
 		const RHISamplerDesc& Imp_Get_Desc(void)const { LOG_ERROR("No Imp");  return RHISamplerDesc{}; }
 

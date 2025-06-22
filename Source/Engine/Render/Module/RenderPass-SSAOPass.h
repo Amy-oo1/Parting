@@ -146,7 +146,7 @@ namespace Parting {
 		m_QuantizedGbufferTextureSize{ static_cast<float>(params.Dimensions.X),static_cast<float>(params.Dimensions.Y) } {
 
 		this->m_ConstantBuffer = device->CreateBuffer(RHI::RHIBufferDescBuilder{}
-			.Set_ByteSize(sizeof(SsaoConstants))
+			.Set_ByteSize(sizeof(Shader::SsaoConstants))
 			.Set_MaxVersions(c_MaxRenderPassConstantBufferVersions)
 			.Set_DebugName(_W("SSAOConstants"))
 			.Set_IsConstantBuffer(true)
@@ -317,7 +317,7 @@ namespace Parting {
 				(viewExtent.Extent.Height + 3) / 4
 			);
 
-			SsaoConstants ssaoConstants{};
+			Shader::SsaoConstants ssaoConstants{};
 			view->FillPlanarViewConstants(ssaoConstants.View);
 
 			ssaoConstants.ClipToView = Math::VecF2{
