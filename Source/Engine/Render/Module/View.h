@@ -383,7 +383,7 @@ namespace Parting {
 
 	inline bool PlanarView::Is_ReverseDepth(void) const { this->EnsureCacheIsValid(); return this->m_ReverseDepth; }
 
-	inline bool PlanarView::Is_OrthographicProjection(void) const { return this->m_ProjMatrix[2][2] == 0.f; }
+	inline bool PlanarView::Is_OrthographicProjection(void) const { return this->m_ProjMatrix[2][3] == 0.f; }
 
 	inline  bool PlanarView::Is_StereoView(void) const { return false; }
 
@@ -407,7 +407,7 @@ namespace Parting {
 
 	inline Math::MatF44 PlanarView::Get_ProjectionMatrix(bool includeOffset) const { this->EnsureCacheIsValid(); return includeOffset ? this->m_ProjMatrix * this->m_PixelOffsetMatrix : this->m_ProjMatrix; }
 
-	inline Math::MatF44 PlanarView::Get_InverseProjectionMatrix(bool includeOffset) const { this->EnsureCacheIsValid(); return includeOffset ? this->m_ProjMatrixInv * this->m_PixelOffsetMatrixInv : this->m_ProjMatrixInv; }
+	inline Math::MatF44 PlanarView::Get_InverseProjectionMatrix(bool includeOffset) const { this->EnsureCacheIsValid(); return includeOffset ? this->m_PixelOffsetMatrixInv * this->m_ProjMatrixInv : this->m_ProjMatrixInv; }
 
 	inline Math::MatF44 PlanarView::Get_ViewProjectionMatrix(bool includeOffset) const { this->EnsureCacheIsValid(); return includeOffset ? this->m_ViewProjOffsetMatrix : this->m_ViewProjMatrix; }
 
@@ -551,10 +551,10 @@ namespace Parting {
 		Math::MatF44 faceProjMatrix;
 		if (useReverseInfiniteProjections)
 			faceProjMatrix = Math::MatF44(
-				1.f,	0.f,	0.f,	0.f,
-				0.f,	1.f,	0.f,	0.f,
-				0.f,	0.f,	0.f,	1.f,
-				0.f,	0.f,	zNear,	0.f
+				1.f, 0.f, 0.f, 0.f,
+				0.f, 1.f, 0.f, 0.f,
+				0.f, 0.f, 0.f, 1.f,
+				0.f, 0.f, zNear, 0.f
 			);
 		else
 			faceProjMatrix = Math::PerspProjD3DStyle(-1.f, 1.f, -1.f, 1.f, zNear, cullDistance);

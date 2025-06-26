@@ -214,6 +214,7 @@ namespace RHI::D3D12 {
 			UAVDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 			UAVDesc.Buffer.FirstElement = range.Offset / sizeof(Uint32);
 			UAVDesc.Buffer.NumElements = static_cast<Uint32>(range.ByteSize / sizeof(Uint32));
+			UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;//Add
 			break;
 
 		case RHIResourceType::TypedBuffer_UAV:
@@ -245,7 +246,7 @@ namespace RHI::D3D12 {
 		ASSERT(this->m_Desc.CanHaveUAVs);
 
 		if (g_InvalidDescriptorIndex == this->m_ClearUAV) {
-			this->m_ClearUAV = this->m_DeviceResourcesRef.ShaderResourceViewHeap.AllocateDescriptor(1);
+			this->m_ClearUAV = this->m_DeviceResourcesRef.ShaderResourceViewHeap.AllocateDescriptor();
 
 			this->CreateUAV(this->m_DeviceResourcesRef.ShaderResourceViewHeap.Get_CPUHandle(this->m_ClearUAV), g_EntireBuffer, RHIFormat::R32_UINT, RHIResourceType::TypedBuffer_UAV);
 			this->m_DeviceResourcesRef.ShaderResourceViewHeap.CopyToShaderVisibleHeap(this->m_ClearUAV);

@@ -144,6 +144,11 @@ namespace Parting {
 
 		}
 
+		void ResetBindingCache(void) {
+			this->m_MaterialBindings->Clear();
+			this->m_InputBindingSets.clear();
+		}
+
 	private:
 		auto CreateVertexShader(ShaderFactory<APITag>& shaderFactory, const CreateParameters& params) -> RHI::RefCountPtr<Imp_Shader>;
 

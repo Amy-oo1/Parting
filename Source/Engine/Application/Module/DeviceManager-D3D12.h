@@ -59,12 +59,6 @@ namespace Parting {
 		D3D12DeviceManager(void) = default;
 		~D3D12DeviceManager(void) = default;
 
-	public:
-
-
-	public:
-
-
 	private:
 		static bool MoveWindowOntoAdapter(IDXGIAdapter* targetAdapter, RECT& rect) {//TODO 
 			ASSERT(nullptr != targetAdapter);
@@ -134,7 +128,7 @@ namespace Parting {
 
 		String										m_RendererString;
 
-	private:
+	public:
 		bool Imp_CreateInstance(void);
 		bool Imp_CreateDevice(void);
 		bool Imp_CreateSwapChain(void);
@@ -264,12 +258,12 @@ namespace Parting {
 		D3D12_CHECK(this->m_D3D12Device->CreateCommandQueue(&queueDes, PARTING_IID_PPV_ARGS(&this->m_GraphicsQueue)));
 		if (this->m_DeviceParams.EnableComputeQueue) {
 			queueDes.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
-			D3D12_CHECK(this->m_D3D12Device->CreateCommandQueue(&queueDes, PARTING_IID_PPV_ARGS(&this->m_GraphicsQueue)));
+			D3D12_CHECK(this->m_D3D12Device->CreateCommandQueue(&queueDes, PARTING_IID_PPV_ARGS(&this->m_ComputeQueue)));
 		}
 
 		if (this->m_DeviceParams.EnableCopyQueue) {
 			queueDes.Type = D3D12_COMMAND_LIST_TYPE_COPY;
-			D3D12_CHECK(this->m_D3D12Device->CreateCommandQueue(&queueDes, PARTING_IID_PPV_ARGS(&this->m_GraphicsQueue)));
+			D3D12_CHECK(this->m_D3D12Device->CreateCommandQueue(&queueDes, PARTING_IID_PPV_ARGS(&this->m_CopyQueue)));
 		}
 
 

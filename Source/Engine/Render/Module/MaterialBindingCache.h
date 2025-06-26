@@ -89,6 +89,11 @@ namespace Parting {
 
 		auto CreateMaterialBindingSet(const Material<APITag>* material) -> RHI::RefCountPtr<Imp_BindingSet>;
 
+		void Clear(void) {
+			LockGuard lockGuard{ this->m_Mutex };
+			this->m_BindingSets.clear();
+		}
+
 	private:
 		RHI::RHIBindingSetItem<APITag> Get_TextureBindingSetItem(Uint32 slot, const SharedPtr<LoadedTexture<APITag>>& texture) const {
 			return RHI::RHIBindingSetItem<APITag>::Texture_SRV(slot, nullptr != texture && nullptr != texture->Texture ? texture->Texture.Get() : this->m_FallbackTexture.Get());

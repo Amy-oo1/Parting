@@ -118,7 +118,7 @@ namespace Parting {
 		CommonRenderPasses(Imp_Device* device, SharedPtr<ShaderFactory<APITag>> shaderFactory) :m_Device{ device } {
 			{
 				Vector<ShaderMacro> VSMacros{
-					ShaderMacro{.Name{ String{ "QUAD_Z" } }, .Definition{ String{ "1" } } },
+					ShaderMacro{.Name{ String{ "QUAD_Z" } }, .Definition{ String{ "0" } } },
 				};
 				this->m_FullscreenVS = shaderFactory->CreateShader(String{ "Parting/fullscreen_vs" }, String{ "main" }, &VSMacros, RHI::RHIShaderType::Vertex);
 

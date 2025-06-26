@@ -1281,7 +1281,7 @@ namespace Parting {
 	template<RHI::APITagConcept APITag>
 	inline Math::VecD3 Light<APITag>::Get_Position(void) const {
 		if (auto node{ this->Get_Node() }; nullptr == node)
-			return node->Get_LocalToWorldTransform().m_translation;
+			return node->Get_LocalToWorldTransform().m_Translation;
 		else
 			return Math::VecD3::Zero();
 
@@ -1306,7 +1306,7 @@ namespace Parting {
 		}
 
 		SceneGraphNode<APITag>* parent{ node->Get_Parent() };
-		Math::VecD3 parentToWorld{ Math::VecD3::Identity() };
+		Math::AffineD3 parentToWorld{ Math::AffineD3::Identity() };
 		if (nullptr != parent)
 			parentToWorld = parent->Get_LocalToWorldTransform();
 

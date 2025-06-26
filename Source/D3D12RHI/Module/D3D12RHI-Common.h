@@ -26,6 +26,8 @@ PARTING_SUBMODE_IMPORT(Traits)
 #else
 #pragma once
 
+#include <fstream>
+
 #include "Core/ModuleBuild.h"
 
 #include "D3D12RHI/Include/DirectXMacros.h"
@@ -167,12 +169,12 @@ namespace RHI::D3D12 {
 		D3D12_CPU_DESCRIPTOR_HANDLE m_StartCPUHandle{ 0 };
 		D3D12_CPU_DESCRIPTOR_HANDLE m_StartCPUHandleShaderVisible{ 0 };
 		D3D12_GPU_DESCRIPTOR_HANDLE m_StartGPUHandleShaderVisible{ 0 };
-		Uint32 m_Stride{ 0 };
-		Uint32 m_DescriptorCount{ 0 };
+		Uint32 m_Stride{ 0u };
+		Uint32 m_DescriptorCount{ 0u };
 
 		BitVector m_AllocatedDescriptors;
-		Uint32 m_SearchStart{ 0 };
-		Uint32 m_AllocatedCount{ 0 };
+		Uint32 m_SearchStart{ 0u };
+		Uint32 m_AllocatedCount{ 0u };
 	private:
 		void D3D12Grow(Uint32 minRequiredSize);
 

@@ -85,6 +85,8 @@ namespace Parting {
 		);
 		~LightProbeProcessingPass(void) = default;
 
+		void ResetCaches(void);
+
 
 	private:
 		RHI::RefCountPtr<Imp_Device> m_Device;
@@ -178,6 +180,15 @@ namespace Parting {
 			.Set_InitialState(RHI::RHIResourceState::ShaderResource)
 			.Build()
 		);
+	}
+
+	template<RHI::APITagConcept APITag>
+	inline void LightProbeProcessingPass<APITag>::ResetCaches(void){
+		this->m_BLITPSOCache.clear();
+		this->m_DiffusePSOCache.clear();
+		this->m_SpecularPSOCache.clear();//TODO : ?
+		this->m_FrameBufferCache.clear();
+		this->m_BindingSetCache.clear();
 	}
 
 }

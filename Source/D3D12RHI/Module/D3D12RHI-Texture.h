@@ -410,7 +410,7 @@ namespace RHI::D3D12 {
 		if (g_InvalidDescriptorIndex != DescriptorIndex)
 			return DescriptorIndex;
 
-		DescriptorIndex = this->m_DeviceResourcesRef.ShaderResourceViewHeap.AllocateDescriptor(1);
+		DescriptorIndex = { this->m_DeviceResourcesRef.ShaderResourceViewHeap.AllocateDescriptor() };
 		RHITextureSubresourceSet Subresources{
 			.BaseMipLevel{ MipLevel },
 			.MipLevelCount{ 1 },

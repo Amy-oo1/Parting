@@ -232,17 +232,17 @@ struct SmaplerUIData final {
 	AntiAliasingMode												AntiAliasingMode{ AntiAliasingMode::TEMPORAL };
 	Parting::TemporalAntiAliasingJitter								TemporalAntiAliasingJitter{ Parting::TemporalAntiAliasingJitter::MSAA };
 
-	bool															ShowUI{ true /*false*/ };
-	bool															UseDeferredShading{ true /*false*/ };
+	bool															ShowUI{ true /*false*/ };// Good !!!
+	bool															UseDeferredShading{ true /*false*/ };// Good !!!
 	bool															Stereo{ false };
 	bool															EnableSSAO{ /*true*/ false };
-	bool															UseThirdPersonCamera{ false };
+	bool															UseThirdPersonCamera{ false };// Good !!!
 	bool															EnableAnimations{ false };
-	bool															ShaderReloadRequested{ false };
+	bool															ShaderReloadRequested{ false };//TODO : Remove
 
 	bool															EnableVsync{ true };
 
-	bool															EnableProceduralSky{ true /*false*/ };
+	bool															EnableProceduralSky{ true /*false*/ };// Good !!!
 	bool															EnableBloom{ /*true*/ false };
 	float															BloomSigma{ 32.f };
 	float															BloomAlpha{ 0.05f };
@@ -256,6 +256,10 @@ struct SmaplerUIData final {
 	float															CsmExponent{ 4.f };
 	bool															DisplayShadowMap{ false };
 	bool															TestMipMapGen{ false };
+
+	SharedPtr<Parting::Material<CurrentAPI>>						SelectedMaterial;
+	SharedPtr<Parting::SceneGraphNode<CurrentAPI>>					SelectedNode;
+	String															ScreenshotFileName;//TODO : 
 
 	Parting::SkyPass<CurrentAPI>::Parameters						SkyParams;
 	Parting::SSAOPass<CurrentAPI>::Parameters						SSAOParams;
@@ -627,7 +631,7 @@ public:
 
 
 public:
-	bool KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) {
+	bool KeyboardUpdate(Int32 key, Int32 scancode, Int32 action, Int32 mods) override {
 		if (GLFW_KEY_ESCAPE == key && GLFW_PRESS == action) {
 			this->m_UIData.ShowUI = !this->m_UIData.ShowUI;
 			return true;
@@ -658,7 +662,7 @@ public:
 		return true;
 	}
 
-	bool MousePosUpdate(double xpos, double ypos) {
+	bool MousePosUpdate(double xpos, double ypos) override {
 		if (nullptr == this->m_UIData.ActiveSceneCamera) {
 			if (this->m_UIData.UseThirdPersonCamera)
 				this->m_ThirdPersonCamera.MousePosUpdate(xpos, ypos);
@@ -670,7 +674,7 @@ public:
 		return true;
 	}
 
-	bool MouseScrollUpdate(double xoffset, double yoffset) {
+	bool MouseScrollUpdate(double xoffset, double yoffset) override {
 		if (nullptr == this->m_UIData.ActiveSceneCamera) {
 			if (this->m_UIData.UseThirdPersonCamera)
 				this->m_ThirdPersonCamera.MouseScrollUpdate(xoffset, yoffset);
@@ -681,7 +685,7 @@ public:
 		return true;
 	}
 
-	bool MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) {
+	bool MouseButtonUpdate(Int32 button, Int32 action, Int32 mods) override {
 		if (nullptr == this->m_UIData.ActiveSceneCamera) {
 			if (this->m_UIData.UseThirdPersonCamera)
 				this->m_ThirdPersonCamera.MouseButtonUpdate(button, action, mods);
@@ -694,7 +698,6 @@ public:
 
 		return true;
 	}
-
 
 	void Animate(float fElapsedTimeSeconds) override {
 		if (nullptr == this->m_UIData.ActiveSceneCamera) {
@@ -1057,6 +1060,29 @@ public:
 		//TODO :PrintSceneGraph
 	}
 
+	void SceneUnloading(void) {
+		this->Parting::ApplicationBase<CurrentAPI>::SceneUnloading();
+
+		if (nullptr != this->m_ForwardPass)
+			this->m_ForwardPass->ResetBindingCache();
+		if (nullptr != this->m_DeferredLightingPass)
+			this->m_DeferredLightingPass->ResetBindingCache();
+		if (nullptr != this->m_GBufferPass)
+			this->m_GBufferPass->ResetBindingCache();
+		if (nullptr != this->m_LightProbePass)
+			this->m_LightProbePass->ResetCaches();
+		if (nullptr != this->m_ShadowDepthPass)
+			this->m_ShadowDepthPass->ResetBindingCache();
+
+		this->m_BindingCache.Clear();
+		this->m_SunLight.reset();
+		this->m_UIData.SelectedMaterial = nullptr;
+		this->m_UIData.SelectedNode = nullptr;
+
+		for (auto& probe : this->m_LightProbes)
+			probe->Enabled = false;
+	}
+
 };
 
 class SamplerUIRender final :public Parting::UIRenderer<CurrentAPI> {
@@ -1131,12 +1157,9 @@ public:
 		const String& sceneDir{ this->m_APP->Get_SceneDir().generic_string() };
 
 		//TODO :
-		auto getRelativePath = [&sceneDir](String const& name) {
-			return
-				Path{ name }.parent_path() == sceneDir
-				? name.c_str() + sceneDir.size()
-				: name.c_str();
-			};
+		auto getRelativePath = [&sceneDir](StringView name) {
+			return (name.starts_with(sceneDir) ? name.substr(sceneDir.size()) : name).data();
+		};
 
 		const String currentScene{ this->m_APP->Get_CurrentSceneName() };
 		if (ImGui::BeginCombo("Scene", getRelativePath(currentScene))) {
