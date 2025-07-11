@@ -67,7 +67,6 @@ namespace RHI {
 		RemoveCV<decltype(g_MaxRenderTargetCount)>::type ColorAttachmentCount{ 0 };
 
 		RHIFrameBufferAttachment<APITag> DepthStencilAttachment;
-		RHIFrameBufferAttachment<APITag> ShadingRateAttachment;
 	};
 
 	PARTING_EXPORT template<APITagConcept APITag>
@@ -83,8 +82,7 @@ namespace RHI {
 				return *this;
 			}
 			constexpr RHIFrameBufferDescBuilder& Set_DepthStencilAttachment(const RHIFrameBufferAttachment<APITag>& attachment) { this->m_Desc.DepthStencilAttachment = attachment; return *this; }
-			constexpr RHIFrameBufferDescBuilder& Set_ShadingRateAttachment(const RHIFrameBufferAttachment<APITag>& attachment) { this->m_Desc.ShadingRateAttachment = attachment; return *this; }
-
+			
 			RHIFrameBufferDescBuilder& AddColorAttachment(Imp_Texture* texture) { this->m_Desc.ColorAttachments[this->m_Desc.ColorAttachmentCount++] = RHIFrameBufferAttachment<APITag>{ .Texture { texture } }; return *this; }
 
 			STDNODISCARD constexpr const RHIFrameBufferDesc<APITag>& Build(void) { return this->m_Desc; }

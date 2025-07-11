@@ -44,3 +44,5 @@ using AddPointer = std::add_pointer<_Ty>;
 
 PARTING_EXPORT template<typename... _Ty>
 using CommonType = std::common_type_t<_Ty...>;
+
+template <class _Ty>std::add_rvalue_reference_t<_Ty> Declval() noexcept { static_assert(false, "Calling declval is ill-formed, see N4950 [declval]/2."); }

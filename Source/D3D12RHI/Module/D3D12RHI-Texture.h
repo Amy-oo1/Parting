@@ -76,6 +76,8 @@ namespace RHI::D3D12 {
 			m_DeviceResourcesRef{ resource },
 			m_Desc{ desc },
 			m_ResourceDesc{ d3d12resourcedesc } {
+
+			this->m_StateExtension.StateInitialized = true;
 		}
 
 		~Texture(void);
@@ -107,7 +109,6 @@ namespace RHI::D3D12 {
 		const D3D12_RESOURCE_DESC m_ResourceDesc;
 		RefCountPtr<ID3D12Resource> m_Resource;
 		Uint8 m_PlaneCount{ Max_Uint8 };//TODO 0 or Max_Uint8 both is err (map uint init 0...
-		HANDLE m_SharedHandle{ nullptr };
 
 		RefCountPtr<Heap> m_Heap;
 
@@ -500,11 +501,8 @@ namespace RHI::D3D12 {
 
 	inline RHIObject Texture::Imp_GetNativeObject(RHIObjectType type)const noexcept {
 		switch (type) {
-		case RHI::RHIObjectType::SharedHandle: return RHIObject{ .Pointer{ this->m_SharedHandle } };
 		case RHI::RHIObjectType::D3D12_Resource: return RHIObject{ .Pointer{ this->m_Resource.Get() } };
-		default:
-			ASSERT(false);
-			return RHIObject{};
+		default:ASSERT(false); return RHIObject{};
 		}
 	}
 
@@ -627,6 +625,7 @@ namespace RHI::D3D12 {
 
 	private:
 		RHIObject Imp_GetNativeObject(RHIObjectType type)const noexcept;
+
 		const RHITextureDesc& Imp_Get_Desc(void)const { return this->m_Desc; }
 	};
 

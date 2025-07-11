@@ -56,7 +56,7 @@ namespace RHI::D3D12 {
 		friend class CommandList;
 		friend class Device;
 	public:
-		FrameBuffer(D3D12DeviceResources& resource) :
+		explicit FrameBuffer(D3D12DeviceResources& resource) :
 			RHIFrameBuffer<FrameBuffer, D3D12Tag>{},
 			m_DeviceResourcesRef{ resource } {
 		}

@@ -114,13 +114,11 @@ namespace RHI::D3D12 {
 
 		RefCountPtr<ID3D12Fence> m_LastUseFence;
 		Uint64 m_LastUseFenceValue{ 0 };
-		HANDLE m_SharedHandle{ nullptr };
 
 	private:
 		RHIObject Imp_GetNativeObject(RHIObjectType type)const noexcept;
 
 		const RHIBufferDesc& Imp_Get_Desc(void) const { return this->m_Desc; }
-		GPUVirtualAddress Imp_Get_GPUVirtualAddress(void) const { return this->m_GPUVirtualAddress; }
 	};
 
 	//Src
@@ -259,7 +257,6 @@ namespace RHI::D3D12 {
 
 	RHIObject Buffer::Imp_GetNativeObject(RHIObjectType type)const noexcept {
 		switch (type) {
-		case RHIObjectType::SharedHandle: return RHIObject{ .Pointer{ this->m_SharedHandle } };
 		case RHIObjectType::D3D12_Resource: return RHIObject{ .Pointer{ this->m_Resource.Get() } };
 		default: { LOG_ERROR("No Imp"); return RHIObject{}; }
 		}

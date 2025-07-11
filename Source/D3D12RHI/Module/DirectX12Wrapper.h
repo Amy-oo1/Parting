@@ -20,11 +20,12 @@ PARTING_MODULE(DirectX12Wrapper)
 #define NOMINMAX
 #endif // !NOMINMAX
 #include<Windows.h>
-#include<time.h>
+
+#define DXGI_DEBUG
+#define D3D12_DEBUG
 #include<dxgi1_6.h>
-#ifdef _DEBUG
+
 #include<dxgidebug.h>
-#endif // _DEBUG
 
 #include<d3d12.h>
 #include<d3dcompiler.h>

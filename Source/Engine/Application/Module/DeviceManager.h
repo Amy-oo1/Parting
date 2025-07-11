@@ -31,5 +31,6 @@ PARTING_EXPORT PARTING_SUBMODE_IMPORT(DeviceManager, D3D12)
 
 #include "Engine/Application/Module/DeviceManager-Base.h"
 #include "Engine/Application/Module/DeviceManager-D3D12.h"
+#include "Engine/Application/Module/DeviceManager-Vulkan.h"
 
 #endif // PARTING_MODULE_BUILD

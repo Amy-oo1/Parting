@@ -45,8 +45,8 @@
 
 using CurrentAPI = RHI::D3D12Tag;
 
-using IRenderPass = Parting::IRenderPass<RHI::D3D12Tag>;
-using ApplicationBase = Parting::ApplicationBase<RHI::D3D12Tag>;
+using IRenderPass = Parting::IRenderPass<CurrentAPI>;
+using ApplicationBase = Parting::ApplicationBase<CurrentAPI>;
 
 using DeviceManager = Parting::ManageTypeTraits<CurrentAPI>::DeviceManager;
 
@@ -358,8 +358,8 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 
 	Parting::DeviceCreationParameters deviceParams;
 
-	deviceParams.BackBufferWidth = 1920;
-	deviceParams.BackBufferHeight = 1080;
+	/*deviceParams.BackBufferWidth = 1920;
+	deviceParams.BackBufferHeight = 1080;*/
 
 	deviceParams.StartFullscreen = false;
 	deviceParams.VsyncEnabled = true;

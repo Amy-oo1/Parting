@@ -186,6 +186,7 @@ namespace RHI::D3D12 {
 
 		void Imp_Open(void);
 		void Imp_Close(void);
+		void Imp_ClearState(void);
 		void Imp_ClearTextureFloat(Texture* texture, RHITextureSubresourceSet subresources, const Color& color);
 		void Imp_ClearDepthStencilTexture(Texture* texture, RHITextureSubresourceSet subresources, Optional<float> depth, Optional<Uint8> stencil);
 		void Imp_ClearTextureUInt(Texture* texture, RHITextureSubresourceSet subresources, Uint32 clearColor);
@@ -214,7 +215,6 @@ namespace RHI::D3D12 {
 		void Imp_EndMarker(void);
 		void Imp_SetEnableAutomaticBarriers(bool enable);
 		void Imp_SetResourceStatesForBindingSet(BindingSet* bindingSet);
-		void Imp_SetResourceStatesForFramebuffer(FrameBuffer* framebuffer);
 		void Imp_SetEnableUAVBarriersForTexture(Texture* texture, bool enable);
 		void Imp_SetEnableUAVBarriersForBuffer(Buffer* buffer, bool enable);
 		void Imp_BeginTrackingTextureState(Texture* texture, RHITextureSubresourceSet subresources, RHIResourceState state);
@@ -631,6 +631,14 @@ namespace RHI::D3D12 {
 		this->m_VolatileConstantBufferAddresses.clear();
 	}
 
+	void CommandList::Imp_ClearState(void) {
+		this->m_ActiveCommandList->CommandList->ClearState(nullptr);
+
+		this->ClearStateCache();
+
+		this->CommitDescriptorHeaps();
+	}
+
 	inline void CommandList::Imp_ClearTextureFloat(Texture* texture, RHITextureSubresourceSet subresources, const Color& color) {
 		subresources = subresources.Resolve(texture->m_Desc, false);
 
@@ -980,8 +988,8 @@ namespace RHI::D3D12 {
 		for (int plane = 0; plane < dest->m_PlaneCount; plane++)
 			for (Uint32 arrayIndex = 0; arrayIndex < dstSR.ArraySliceCount; ++arrayIndex)
 				for (Uint32 mipLevel = 0; mipLevel < dstSR.MipLevelCount; ++mipLevel) {
-					uint32_t dstSubresource = CalcSubresource(mipLevel + dstSR.BaseMipLevel, arrayIndex + dstSR.BaseArraySlice, plane, dest->m_Desc.MipLevelCount, dest->m_Desc.ArrayCount);
-					uint32_t srcSubresource = CalcSubresource(mipLevel + srcSR.BaseMipLevel, arrayIndex + srcSR.BaseArraySlice, plane, src->m_Desc.MipLevelCount, src->m_Desc.ArrayCount);
+					Uint32 dstSubresource = CalcSubresource(mipLevel + dstSR.BaseMipLevel, arrayIndex + dstSR.BaseArraySlice, plane, dest->m_Desc.MipLevelCount, dest->m_Desc.ArrayCount);
+					Uint32 srcSubresource = CalcSubresource(mipLevel + srcSR.BaseMipLevel, arrayIndex + srcSR.BaseArraySlice, plane, src->m_Desc.MipLevelCount, src->m_Desc.ArrayCount);
 					this->m_ActiveCommandList->CommandList->ResolveSubresource(dest->m_Resource, dstSubresource, src->m_Resource, srcSubresource, formatMapping.RTVFormat);
 				}
 	}
@@ -1514,20 +1522,6 @@ namespace RHI::D3D12 {
 				break;// do nothing
 			}
 		}
-	}
-
-	inline void CommandList::Imp_SetResourceStatesForFramebuffer(FrameBuffer* framebuffer) {
-		const auto& desc{ framebuffer->Get_Desc() };
-
-		for (const auto& attachment : Span<const RHI::RHIFrameBufferAttachment<D3D12Tag>>(desc.ColorAttachments.data(), desc.ColorAttachmentCount))
-			this->SetTextureState(attachment.Texture, attachment.Subresources, RHIResourceState::RenderTarget);
-
-		if (desc.DepthStencilAttachment.Is_Valid())
-			this->SetTextureState(
-				desc.DepthStencilAttachment.Texture,
-				desc.DepthStencilAttachment.Subresources,
-				desc.DepthStencilAttachment.IsReadOnly ? RHIResourceState::DepthRead : RHIResourceState::DepthWrite
-			);
 	}
 
 	inline void CommandList::Imp_SetEnableUAVBarriersForTexture(Texture* texture, bool enable) {

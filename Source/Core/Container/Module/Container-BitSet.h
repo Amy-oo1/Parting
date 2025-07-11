@@ -46,7 +46,6 @@ public:
 	~BitSetAllocator(void) = default;
 
 public:
-
 	Uint32 Allocate(void) {
 		auto Re{ Max_Uint32 };
 

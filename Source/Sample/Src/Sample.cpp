@@ -41,10 +41,10 @@
 
 #endif // PARTING_MODULE_BUILD
 
-using CurrentAPI = RHI::D3D12Tag;
+using CurrentAPI = RHI::VulkanTag;
 
-using IRenderPass = Parting::IRenderPass<RHI::D3D12Tag>;
-using ApplicationBase = Parting::ApplicationBase<RHI::D3D12Tag>;
+using IRenderPass = Parting::IRenderPass<CurrentAPI>;
+using ApplicationBase = Parting::ApplicationBase<CurrentAPI>;
 
 using DeviceManager = Parting::ManageTypeTraits<CurrentAPI>::DeviceManager;
 
@@ -229,25 +229,25 @@ enum class AntiAliasingMode :Uint8 {
 struct SmaplerUIData final {
 	SharedPtr<Parting::SceneCamera<CurrentAPI>>	ActiveSceneCamera;
 
-	AntiAliasingMode												AntiAliasingMode{ AntiAliasingMode::TEMPORAL };
-	Parting::TemporalAntiAliasingJitter								TemporalAntiAliasingJitter{ Parting::TemporalAntiAliasingJitter::MSAA };
+	AntiAliasingMode												AntiAliasingMode{ AntiAliasingMode::TEMPORAL };// Good !!!
+	Parting::TemporalAntiAliasingJitter								TemporalAntiAliasingJitter{ Parting::TemporalAntiAliasingJitter::MSAA };// Good !!!
 
 	bool															ShowUI{ true /*false*/ };// Good !!!
 	bool															UseDeferredShading{ true /*false*/ };// Good !!!
-	bool															Stereo{ false };
+	bool															Stereo{ true /*false*/ };// Good !!!
 	bool															EnableSSAO{ /*true*/ false };
 	bool															UseThirdPersonCamera{ false };// Good !!!
 	bool															EnableAnimations{ false };
-	bool															ShaderReloadRequested{ false };//TODO : Remove
+	bool															ShaderReloadRequested{ false };// Good !!!
 
-	bool															EnableVsync{ true };
+	bool															EnableVsync{ true };// Good !!!
 
 	bool															EnableProceduralSky{ true /*false*/ };// Good !!!
-	bool															EnableBloom{ /*true*/ false };
+	bool															EnableBloom{ true /*false*/ };// Good !!!
 	float															BloomSigma{ 32.f };
 	float															BloomAlpha{ 0.05f };
-	bool															EnableTranslucency{ /*true*/ false };
-	bool															EnableMaterialEvents{ false };
+	bool															EnableTranslucency{ true /*false*/ };// Good !!!
+	bool															EnableMaterialEvents{ true /*false*/ };// Good !!!
 	bool															EnableShadows{ /*true*/ false };
 	float															AmbientIntensity{ 1.0f };
 	bool															EnableLightProbe{ /*true*/ false };
@@ -480,7 +480,38 @@ public:
 		bool topologyChanged{ false };
 
 		if (this->m_UIData.Stereo) {
-			ASSERT(false);
+			LOG_ERROR("No VR tostereo support yet");
+
+			if (nullptr==stereoView){
+				this->m_View = stereoView = MakeShared<Parting::StereoPlanarView>();
+				this->m_ViewPrevious = MakeShared<Parting::StereoPlanarView>();
+				topologyChanged = true;
+			}
+
+			stereoView->LeftView.Set_Viewport(RHI::RHIViewport::Build(renderTargetSize.X * 0.5f, renderTargetSize.Y));
+			stereoView->LeftView.Set_PixelOffset(pixelOffset);
+
+			stereoView->RightView.Set_Viewport(RHI::RHIViewport(renderTargetSize.X * 0.5f, renderTargetSize.X, 0.f, renderTargetSize.Y, 0.f, 1.f));
+			stereoView->RightView.Set_PixelOffset(pixelOffset);
+
+			{
+				Math::MatF44 projection{ Math::PerspProjD3DStyleReverse(verticalFov, renderTargetSize.X / renderTargetSize.Y * 0.5f, zNear) };
+
+				Math::AffineF3 leftView{ viewMatrix };
+				stereoView->LeftView.Set_Matrices(leftView, projection);
+
+				Math::AffineF3 rightView{ leftView };
+				rightView.m_Translation -= Math::VecF3{ 0.2f, 0.f, 0.f };
+				stereoView->RightView.Set_Matrices(rightView, projection);
+			}
+
+			stereoView->LeftView.UpdateCache();
+			stereoView->RightView.UpdateCache();
+
+			this->m_ThirdPersonCamera.Set_View(stereoView->LeftView);
+
+			if (topologyChanged)
+				*StaticPointerCast<Parting::StereoPlanarView>(this->m_ViewPrevious) = *StaticPointerCast<Parting::StereoPlanarView>(this->m_View);
 		}
 		else {
 			if (nullptr == planarView) {
@@ -762,7 +793,6 @@ public:
 			if (this->m_UIData.ShaderReloadRequested) {
 				this->m_ShaderFactory->ClearCache();
 				needNewPasses = true;
-				ASSERT(false);
 			}
 
 			if (needNewPasses)
@@ -1204,8 +1234,12 @@ public:
 			ImGui::EndCombo();
 		}
 
-		ImGui::Combo("AA Mode", (int*)&this->m_UIData.AntiAliasingMode, "None\0TemporalAA\0MSAA 2x\0MSAA 4x\0MSAA 8x\0");//TODO
-		ImGui::Combo("TAA Camera Jitter", (int*)&this->m_UIData.TemporalAntiAliasingJitter, "MSAA\0Halton\0R2\0White Noise\0");
+		Int32 TempAntiAliasingMode{ static_cast<Int32>(this->m_UIData.AntiAliasingMode) };
+		Int32 TempTemporalAntiAliasingJitter{ static_cast<Int32>(this->m_UIData.TemporalAntiAliasingJitter) };
+		ImGui::Combo("AA Mode", &TempAntiAliasingMode, "None\0TemporalAA\0MSAA 2x\0MSAA 4x\0MSAA 8x\0");
+		ImGui::Combo("TAA Camera Jitter", &TempTemporalAntiAliasingJitter, "MSAA\0Halton\0R2\0White Noise\0");
+		this->m_UIData.AntiAliasingMode = static_cast<AntiAliasingMode>(TempAntiAliasingMode);
+		this->m_UIData.TemporalAntiAliasingJitter = static_cast<Parting::TemporalAntiAliasingJitter>(TempTemporalAntiAliasingJitter);
 
 		ImGui::SliderFloat("Ambient Intensity", &this->m_UIData.AmbientIntensity, 0.f, 1.f);
 

@@ -1340,7 +1340,7 @@ namespace Parting {
 		StackItem context{
 			.dstParent{ root },
 			.srcNodes{ objects->scene->nodes },
-			.srcCount{ objects->nodes_count }
+			.srcCount{ objects->scene->nodes_count }
 		};
 
 		while (context.srcCount > 0) {
@@ -1417,7 +1417,7 @@ namespace Parting {
 				}
 			}
 
-			if (src->children_count > 0) {
+			if (0 != src->children_count) {
 				stack.push_back(context);
 				context.dstParent = dst;
 				context.srcNodes = src->children;

@@ -26,8 +26,6 @@ PARTING_IMPORT Utility;
 
 //NOTE :Forward declaration this be sorted althoug maybe equal
 namespace RHI {
-	struct D3D12Tag {};
-
 	namespace D3D12 {
 		class MessageCallback;
 

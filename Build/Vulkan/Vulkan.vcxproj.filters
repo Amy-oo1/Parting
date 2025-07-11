@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Include">
+      <UniqueIdentifier>{4e5fb23c-97bf-435f-b313-7867952c0263}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Module">
+      <UniqueIdentifier>{16410c4d-1903-4fab-bb13-c97715830e1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src">
+      <UniqueIdentifier>{bc3f932f-6ee4-4e38-8b0b-afdc8e541101}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanWrapper.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-Common.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-Format.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-Heap.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-Buffer.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-Texture.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-Sampler.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-InputLayout.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-Shader.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-BlendState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-RasterState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-DepthStencilState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-FrameBuffer.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-ShaderBinding.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-Pipeline.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-CommandList.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-Device.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-Traits.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VulkanRHI\Module\VulkanRHI-ViewportState.h">
+      <Filter>Module</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Source\VulkanRHI\Src\VulaknEmptySrc.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -172,7 +172,7 @@ namespace Parting {
 
 		bool EnableComputeQueue{ false };
 		bool EnableCopyQueue{ false };
-		Uint8 AdapterIndex{ 0 };
+		Uint8 AdapterIndex{ 0 };//TODO :Remove
 
 		// Set this to true if the application implements UI scaling for DPI explicitly instead of relying
 		// on ImGUI's DisplayFramebufferScale. This produces crisp text and lines at any scale
@@ -196,6 +196,22 @@ namespace Parting {
 
 		//NOTE :Vk
 		Uint32 MaxFramesInFlight{ 2 };
+
+		String VulkanLibraryName;
+
+		Vector<String> RequiredVulkanInstanceExtensions;
+		Vector<String> RequiredVulkanLayers;
+		Vector<String> OptionalVulkanInstanceExtensions;
+		Vector<String> OptionalVulkanLayers;
+
+		Vector<String> RequiredVulkanDeviceExtensions;
+		Vector<String> OptionalVulkanDeviceExtensions;
+
+		// This pointer specifies an optional structure to be put at the end of the chain for 'vkGetPhysicalDeviceFeatures2' call.
+		// The structure may also be a chain, and must be alive during the device initialization process.
+		// The elements of this structure will be populated before 'deviceCreateInfoCallback' is called,
+		// thereby allowing applications to determine if certain features may be enabled on the device.
+		void* PhysicalDeviceFeatures2Extensions{ nullptr };
 	};
 
 	template<typename Derived, RHI::APITagConcept APITag>
@@ -438,7 +454,7 @@ namespace Parting {
 		updateAxis(GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, axisValues[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]);
 		updateAxis(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, axisValues[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER]);
 
-		for (Uint32 buttonIndex = 0; const auto & button : gamepadState.buttons) {
+		for (Uint32 buttonIndex = 0; const auto& button : gamepadState.buttons) {
 			for (auto& pass : passes)
 				if (pass->JoystickButtonUpdate(buttonIndex, GLFW_PRESS == button))
 					break;

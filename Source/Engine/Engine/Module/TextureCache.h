@@ -260,7 +260,6 @@ namespace Parting {
 				this->m_CommandList->Close();
 				this->m_Device->ExecuteCommandList(this->m_CommandList);
 				this->m_Device->RunGarbageCollection();
-
 			}
 		}
 

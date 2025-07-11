@@ -43,8 +43,8 @@
 
 using CurrentAPI = RHI::D3D12Tag;
 
-using IRenderPass = Parting::IRenderPass<RHI::D3D12Tag>;
-using ApplicationBase = Parting::ApplicationBase<RHI::D3D12Tag>;
+using IRenderPass = Parting::IRenderPass<CurrentAPI>;
+using ApplicationBase = Parting::ApplicationBase<CurrentAPI>;
 
 using DeviceManager = Parting::ManageTypeTraits<CurrentAPI>::DeviceManager;
 

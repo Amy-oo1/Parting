@@ -348,7 +348,7 @@ namespace Parting {
 
 		auto viewportState{ this->Get_ViewportState() };
 		const auto& viewport{ viewportState.Viewports[0] };
-		constants.ViewportOrigin = Math::VecF2{ static_cast<float>(viewport.MinX,viewport.MinY) };
+		constants.ViewportOrigin = Math::VecF2{ static_cast<float>(viewport.MinX), static_cast<float>(viewport.MinY) };
 		constants.ViewportSize = Math::VecF2{ static_cast<float>(viewport.Width()), static_cast<float>(viewport.Height()) };
 		constants.ViewportSizeInv = 1.f / constants.ViewportSize;
 
@@ -501,7 +501,7 @@ namespace Parting {
 
 	template<typename ChildType> inline bool StereoView<ChildType>::Is_StereoView(void) const { return true; }
 
-	template<typename ChildType> inline bool StereoView<ChildType>::Is_CubemapView(void) const { return true; }
+	template<typename ChildType> inline bool StereoView<ChildType>::Is_CubemapView(void) const { return false; }
 
 	template<typename ChildType>inline bool StereoView<ChildType>::Is_BoxVisible(const Math::BoxF3& bbox) const { return this->LeftView.Is_BoxVisible(bbox) || this->RightView.Is_BoxVisible(bbox); }
 
@@ -516,7 +516,7 @@ namespace Parting {
 		auto right{ this->RightView.Get_ViewFrustum() };
 
 		// not robust but should work for regular stereo views
-		left.m_Planes[Tounderlying(Math::Frustum::PlaneType::Right)] = right.m_Planes[Tounderlying(Math::Frustum::PlaneType::Left)];
+		left.m_Planes[Tounderlying(Math::Frustum::PlaneType::Right)] = right.m_Planes[Tounderlying(Math::Frustum::PlaneType::Right)];
 
 		return left;
 	}
@@ -526,18 +526,21 @@ namespace Parting {
 		auto right{ this->RightView.Get_ProjectionFrustum() };
 
 		// not robust but should work for regular stereo views
-		left.m_Planes[Tounderlying(Math::Frustum::PlaneType::Right)] = right.m_Planes[Tounderlying(Math::Frustum::PlaneType::Left)];
+		left.m_Planes[Tounderlying(Math::Frustum::PlaneType::Right)] = right.m_Planes[Tounderlying(Math::Frustum::PlaneType::Right)];
 
 		return left;
 	}
 
 	template<typename ChildType> inline RHI::RHIRect2D StereoView<ChildType>::Get_ViewExtent(void) const {
-		//auto left{ this->LeftView.Get_ViewExtent() };
-		//auto right{ this->RightView.Get_ViewExtent() };
+		auto a{ this->LeftView.Get_ViewExtent() };
+		auto b{ this->RightView.Get_ViewExtent() };
 
-		//return RHI::RHIRect2D::Merge(left, right);//TODO 
-
-		ASSERT(false);
+		return RHI::RHIRect2D{
+				RHI::RHIOffset2D{.X{ Math::Min(a.Offset.X, b.Offset.X) }, .Y{ Math::Min(a.Offset.Y, b.Offset.Y) } },
+				RHI::RHIExtent2D{
+					.Width{ Math::Max(a.Offset.X + a.Extent.Width, b.Offset.X + b.Extent.Width) - Math::Min(a.Offset.X, b.Offset.X) },
+					.Height{ Math::Max(a.Offset.Y + a.Extent.Height, b.Offset.Y + b.Extent.Height) - Math::Min(a.Offset.Y, b.Offset.Y) } }
+		};
 	}
 
 	template<typename ChildType> inline Math::VecF2 StereoView<ChildType>::Get_PixelOffset(void) const { return this->LeftView.Get_PixelOffset(); }

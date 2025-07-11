@@ -48,8 +48,9 @@ namespace RHI {
 		const RHITextureDesc& DescRef;
 		Imp_Texture* ParentTextureRef;
 		RHIResourceState PermanentState{ RHIResourceState::Unknown };
-	};
 
+		bool StateInitialized{ false };//For Vulkan....TODO :
+	};
 
 	PARTING_EXPORT struct RHIBufferState final {
 		RHIResourceState State{ RHIResourceState::Unknown };
@@ -215,8 +216,14 @@ namespace RHI {
 	template<APITagConcept APITag>
 	inline RHIResourceState RHICommandListResourceStateTracker<APITag>::Get_TextureSubresourceState(RHITextureStateExtension<APITag>* texture, Uint32 arraySlice, Uint32 mipLevel) {
 		auto tracking{ this->Get_TextureStateTracking(texture, false) };
-		if (!tracking)
-			return texture->DescRef.KeepInitialState ? texture->DescRef.InitialState : RHIResourceState::Unknown;
+		if (!tracking) {
+			if constexpr (std::is_same_v<APITag, VulkanTag>)
+				return texture->DescRef.KeepInitialState ?
+				(texture->StateInitialized ? texture->DescRef.InitialState : RHIResourceState::Common) :
+				RHIResourceState::Unknown;
+			else
+				return texture->DescRef.KeepInitialState ? texture->DescRef.InitialState : RHIResourceState::Unknown;
+		}
 
 		// whole resource
 		if (tracking->SubresourceStates.empty())
@@ -413,6 +420,15 @@ namespace RHI {
 		}
 		this->m_PermanentBufferStates.clear();
 
+		if constexpr (std::is_same_v<APITag, RHI::VulkanTag>) {
+			// For Vulkan, we need to ensure that the initial state is set for all textures
+			// that have keepInitialState set, so that they can be used in the next command list.
+			for (const auto& [texture, stateTracking] : this->m_TextureStates) {
+				if (texture->DescRef.KeepInitialState && !texture->StateInitialized)
+					texture->StateInitialized = true;
+			}
+		}
+
 		this->m_TextureStates.clear();
 		this->m_BufferStates.clear();
 	}
@@ -432,6 +448,14 @@ namespace RHI {
 
 		if (texture->DescRef.KeepInitialState)
 			Tracking->State = texture->DescRef.InitialState;
+
+		if constexpr (std::is_same_v<APITag, RHI::VulkanTag>) {
+			// For Vulkan, we need to ensure that the initial state is set for all textures
+			// that have keepInitialState set, so that they can be used in the next command list.
+			if (texture->DescRef.KeepInitialState)
+				Tracking->State = texture->StateInitialized ? texture->DescRef.InitialState : RHIResourceState::Common;
+		}
+
 
 		return Tracking;
 	}

@@ -902,6 +902,8 @@ namespace Parting {
 				}
 			}
 
+			ASSERT(false);
+
 			// go over the new nodes and patch the cloned animations and skinned groups to use the *new* nodes
 			/*walker = SceneGraphIterator<APITag>{ attachedChild.get() };
 			while (walker) {

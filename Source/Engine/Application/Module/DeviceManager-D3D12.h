@@ -128,7 +128,7 @@ namespace Parting {
 
 		String										m_RendererString;
 
-	public:
+	private:
 		bool Imp_CreateInstance(void);
 		bool Imp_CreateDevice(void);
 		bool Imp_CreateSwapChain(void);

@@ -43,8 +43,8 @@
 
 using CurrentAPI = RHI::D3D12Tag;
 
-using IRenderPass = Parting::IRenderPass<RHI::D3D12Tag>;
-using ApplicationBase = Parting::ApplicationBase<RHI::D3D12Tag>;
+using IRenderPass = Parting::IRenderPass<CurrentAPI>;
+using ApplicationBase = Parting::ApplicationBase<CurrentAPI>;
 
 using DeviceManager = Parting::ManageTypeTraits<CurrentAPI>::DeviceManager;
 
@@ -65,7 +65,7 @@ public:
 	using IRenderPass::IRenderPass;
 
 	bool Init(void) {
-		Path appShaderPath{ ::Get_CatallogDirectory() / "Shaders/Triangle" };
+		Path appShaderPath{ ::Get_CatallogDirectory() / "Shaders/Triangle"/RHI::RHITypeTraits<CurrentAPI>::ShaderType };
 
 		auto nativeFS{ MakeShared<NativeFileSystem>() };
 		Parting::ShaderFactory<CurrentAPI> shaderFactory(this->m_DeviceManager->Get_Device(), nativeFS, appShaderPath);

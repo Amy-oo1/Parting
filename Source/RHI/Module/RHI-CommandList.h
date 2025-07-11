@@ -158,6 +158,21 @@ namespace RHI {
 			//	 command lists from opening.
 			// - DX12, Vulkan: Creates or reuses the command list or buffer object and the command allocator (DX12),
 			//	 starts tracking the resources being referenced in the command list.
+
+			void SetResourceStatesForFramebuffer(Imp_FrameBuffer* framebuffer) {
+				const auto& desc{ framebuffer->Get_Desc() };
+
+				for (const auto& attachment : Span<const RHI::RHIFrameBufferAttachment<APITag>>(desc.ColorAttachments.data(), desc.ColorAttachmentCount))
+					this->SetTextureState(attachment.Texture, attachment.Subresources, RHIResourceState::RenderTarget);
+
+				if (desc.DepthStencilAttachment.Is_Valid())
+					this->SetTextureState(
+						desc.DepthStencilAttachment.Texture,
+						desc.DepthStencilAttachment.Subresources,
+						desc.DepthStencilAttachment.IsReadOnly ? RHIResourceState::DepthRead : RHIResourceState::DepthWrite
+					);
+			}
+
 		public:
 			void Open(void) { this->Get_Derived()->Imp_Open(); }
 
@@ -221,8 +236,6 @@ namespace RHI {
 
 			void SetResourceStatesForBindingSet(Imp_BindingSet* bindingSet) { this->Get_Derived()->Imp_SetResourceStatesForBindingSet(bindingSet); }
 
-			void SetResourceStatesForFramebuffer(Imp_FrameBuffer* framebuffer) { this->Get_Derived()->Imp_SetResourceStatesForFramebuffer(framebuffer); }
-
 			void SetEnableUAVBarriersForTexture(Imp_Texture* texture, bool enable) { this->Get_Derived()->Imp_SetEnableUAVBarriersForTexture(texture, enable); }
 
 			void SetEnableUAVBarriersForBuffer(Imp_Buffer* buffer, bool enable) { this->Get_Derived()->Imp_SetEnableUAVBarriersForBuffer(buffer, enable); }
@@ -284,7 +297,6 @@ namespace RHI {
 			void Imp_EndMarker(void) { LOG_ERROR("No Imp"); }
 			void Imp_SetEnableAutomaticBarriers(bool) { LOG_ERROR("No Imp"); }
 			void Imp_SetResourceStatesForBindingSet(Imp_BindingSet*) { LOG_ERROR("No Imp"); }
-			void Imp_SetResourceStatesForFramebuffer(Imp_FrameBuffer*) { LOG_ERROR("No Imp"); }
 			void Imp_SetEnableUAVBarriersForTexture(Imp_Texture*, bool) { LOG_ERROR("No Imp"); }
 			void Imp_SetEnableUAVBarriersForBuffer(Imp_Buffer*, bool) { LOG_ERROR("No Imp"); }
 			void Imp_BeginTrackingTextureState(Imp_Texture*, RHITextureSubresourceSet, RHIResourceState) { LOG_ERROR("No Imp"); }

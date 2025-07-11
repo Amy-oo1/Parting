@@ -23,6 +23,9 @@ PARTING_IMPORT Utility;
 #endif // PARTING_MODULE_BUILD
 
 namespace RHI {
+	struct D3D12Tag {};
+
+	struct VulkanTag {};
 
 	PARTING_EXPORT template<typename Tag>
 		concept APITagConcept = requires{sizeof(Tag) == 1; };

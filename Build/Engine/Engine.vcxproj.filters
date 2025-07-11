@@ -249,6 +249,9 @@
     <ClInclude Include="..\..\Source\Shader\view_cb.h">
       <Filter>Shader</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\Engine\Application\Module\DeviceManager-Vulkan.h">
+      <Filter>Application\Module</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\Engine\EnghineSrcEmpty.cpp" />

@@ -67,7 +67,7 @@ namespace RHI {
 		RawBuffer_UAV,
 		ConstantBuffer,
 		VolatileConstantBuffer,
-		Sampler,
+		Sampler,//TODO:
 		PushConstants,
 
 		Count
@@ -147,7 +147,7 @@ namespace RHI {
 		using Imp_Sampler = typename RHITypeTraits<APITag>::Imp_Sampler;
 		using Imp_Texture = typename RHITypeTraits<APITag>::Imp_Texture;
 		using Imp_Buffer = typename RHITypeTraits<APITag>::Imp_Buffer;
-		
+
 		RHIShaderBindingResources<APITag> ResourcePtr{ nullptr };
 
 		Uint32 Slot;

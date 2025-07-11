@@ -52,7 +52,14 @@ namespace RHI {
 		Mirror,
 		MirrorOnce,
 
-		COUNT
+		COUNT,
+
+		// Vulkan names
+		ClampToEdge = Clamp,
+		Repeat = Wrap,
+		ClampToBorder = Border,
+		MirroredRepeat = Mirror,
+		MirrorClampToEdge = MirrorOnce
 	};
 
 	PARTING_EXPORT enum class RHISamplerReductionType : Uint8{
